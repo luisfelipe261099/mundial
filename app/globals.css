@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────
+   Design tokens — paleta "Trust Blue + Orange" do ui-ux-pro-max
+   (linha SaaS/Service, já ajustada para contraste WCAG) + tipografia
+   "Geometric Modern" (Outfit / Work Sans) e mono técnico (JetBrains).
+   No Tailwind v4 cada --color-* vira utilitário (bg-brand, text-ink…).
+   ─────────────────────────────────────────────────────────────── */
+@theme {
+  --color-bg: #f5f8fd;
+  --color-surface: #ffffff;
+  --color-ink: #0b1220;
+  --color-body: #3a4760;
+  --color-muted: #64748b;
+  --color-line: #e3e9f2;
+
+  --color-brand: #2563eb;
+  --color-brand-strong: #1d4ed8;
+  --color-brand-soft: #e9f1ff;
+
+  --color-accent: #ea580c;
+  --color-accent-strong: #c2410c;
+  --color-accent-soft: #fff2e9;
+
+  --color-steel: #1e293b;
+  --color-steel-700: #334155;
+
+  --color-star: #f59e0b;
+
+  --font-display: var(--font-outfit);
+  --font-sans: var(--font-work-sans);
+  --font-mono: var(--font-mono-tech);
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 10px 30px -16px rgba(15, 23, 42, 0.22);
+  --shadow-lift: 0 1px 2px rgba(15, 23, 42, 0.05),
+    0 28px 56px -24px rgba(37, 99, 235, 0.32);
+  --shadow-accent: 0 12px 28px -10px rgba(234, 88, 12, 0.45);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-body);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+section {
+  scroll-margin-top: 5.5rem;
+}
+
+/* Texto utilitário "técnico" — usado em rótulos tipo número-de-peça */
+.tech-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* Grade de blueprint — atmosfera de engenharia sem pesar */
+.blueprint {
+  background-image: linear-gradient(
+      to right,
+      rgba(37, 99, 235, 0.07) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(37, 99, 235, 0.07) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+.blueprint-fade {
+  -webkit-mask-image: radial-gradient(
+    ellipse 75% 65% at 50% 35%,
+    #000 35%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(
+    ellipse 75% 65% at 50% 35%,
+    #000 35%,
+    transparent 78%
+  );
+}
+
+/* Brilho radial suave para fundos de seção */
+.aura {
+  background: radial-gradient(
+      40rem 28rem at 78% -10%,
+      rgba(37, 99, 235, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      32rem 24rem at 8% 6%,
+      rgba(234, 88, 12, 0.1),
+      transparent 55%
+    );
+}
+
+/* Cantos com colchetes técnicos (decorativo) */
+.bracket-corners {
+  position: relative;
+}
+.bracket-corners::before,
+.bracket-corners::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--color-brand);
+  opacity: 0.5;
+}
+.bracket-corners::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+.bracket-corners::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+}

@@ -1,0 +1,169 @@
+/* ════════════════════════════════════════════════════════════════════
+   OPÇÃO B — "OFICINA NOTURNA"
+   Editorial industrial / motorsport. Tema escuro cinematográfico, um único
+   acento vermelho-sinal (puxado do scanner LAUNCH da própria oficina),
+   tipografia-pôster e textura de grão. Tudo escopado em .v2-root para não
+   vazar pro tema da Opção A (raiz). Sem @theme global — tokens via CSS vars
+   + valores arbitrários do Tailwind, que sempre resolvem.
+   ════════════════════════════════════════════════════════════════════ */
+
+.v2-root {
+  /* Tons de tinta (quase-preto → superfícies elevadas) */
+  --ink: #0a0a0c;
+  --ink-2: #121217;
+  --ink-3: #17171d;
+  --ink-4: #1e1e25;
+
+  /* Papel quente (texto) */
+  --paper: #ece8df;
+  --paper-2: #b4afa4;
+  --muted: #807b72;
+
+  /* Linhas/hairlines */
+  --line: #26262e;
+  --line-2: #34343e;
+
+  /* Acento único — azul elétrico (pop em fundo escuro) */
+  --signal: #2f7bff;
+  --signal-2: #1b5fe0;
+  --signal-soft: rgba(47, 123, 255, 0.16);
+
+  /* Latão discreto só pra detalhes de instrumento */
+  --brass: #c9a24a;
+
+  --shadow-deep: 0 30px 80px -30px rgba(0, 0, 0, 0.85);
+
+  font-family: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  color: var(--paper);
+  background-color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* O body global da raiz é claro (#f5f8fd). Quando a rota /v2 está montada,
+   forçamos a tela inteira pro escuro (inclusive overscroll e scrollbar). */
+html:has(.v2-root) {
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+body:has(.v2-root) {
+  background-color: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  html:has(.v2-root) {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Tipografia utilitária ─────────────────────────────────────────── */
+.v2-display {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.94;
+}
+.v2-mono {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.v2-root ::selection {
+  background: var(--signal);
+  color: #fff;
+}
+.v2-root :focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Texturas / atmosfera ──────────────────────────────────────────── */
+/* Grão de filme — coloque <div class="grain"/> dentro de um pai relative */
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.45;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+/* Grão fixo de página inteira, bem sutil */
+.grain-fixed {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(
+    120% 90% at 50% 38%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+/* Tratamento "duotone" pras fotos reais ficarem cinematográficas no escuro */
+.duotone {
+  filter: grayscale(0.35) contrast(1.08) brightness(0.72) saturate(0.85);
+}
+.signal-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--signal);
+  mix-blend-mode: color;
+  opacity: 0.12;
+}
+
+/* Régua técnica (ticks tipo escala de instrumento) */
+.ruler {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--line) 0 1px,
+    transparent 1px 28px
+  );
+}
+
+/* ── Marquee / ticker (pit-lane) ───────────────────────────────────── */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: v2-marquee 38s linear infinite;
+}
+.marquee:hover {
+  animation-play-state: paused;
+}
+@keyframes v2-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    animation: none;
+  }
+}
+
+/* ── Linha animada do hero (sublinhado-régua) ─────────────────────── */
+.grow-line {
+  transform-origin: left;
+}
+
+/* Cursor de seção / detalhe diagonal */
+.diag {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--line) 0 1px,
+    transparent 1px 8px
+  );
+}
