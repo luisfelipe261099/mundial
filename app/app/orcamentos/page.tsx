@@ -1,20 +1,26 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { orcamentos, brl } from "../_data/mock";
+import { requireClientId } from "@/lib/auth";
+import { getOrcamentos } from "@/lib/client-data";
 import { orcamentoBadge } from "../_components/category";
+import { brl } from "../_data/mock";
 
-export default function OrcamentosPage() {
+export default async function OrcamentosPage() {
+  const clientId = await requireClientId();
+  const orcamentos = await getOrcamentos(clientId);
+
   return (
     <div className="space-y-4 px-5 pb-8 pt-3">
       <p className="text-sm t-muted">{orcamentos.length} orçamentos</p>
+      {orcamentos.length === 0 && (
+        <div className="app-card p-5 text-sm t-muted">Nenhum orçamento no momento.</div>
+      )}
       <div className="space-y-3">
         {orcamentos.map((o) => (
           <Link key={o.id} href={`/app/orcamentos/${o.id}`} className="app-card block p-4">
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs t-muted">{o.id}</span>
-              <span className={orcamentoBadge[o.status].cls}>
-                {orcamentoBadge[o.status].label}
-              </span>
+              <span className={orcamentoBadge[o.status].cls}>{orcamentoBadge[o.status].label}</span>
             </div>
             <p className="mt-1.5 font-semibold t-ink">{o.veiculoNome}</p>
             <p className="text-xs t-muted">

@@ -6,7 +6,7 @@ import {
   Wrench,
   ChevronRight,
 } from "lucide-react";
-import { catalogoServicos } from "../_data/mock";
+import { getCatalogoServicos } from "@/lib/client-data";
 import { CatChip } from "../_components/category";
 
 const ATALHOS = [
@@ -16,7 +16,9 @@ const ATALHOS = [
   { label: "Histórico", desc: "Serviços já feitos", href: "/app/historico", icon: Wrench },
 ];
 
-export default function ServicosPage() {
+export default async function ServicosPage() {
+  const catalogo = await getCatalogoServicos();
+
   return (
     <div className="space-y-6 px-5 pb-8 pt-3">
       <section>
@@ -39,11 +41,9 @@ export default function ServicosPage() {
       </section>
 
       <section>
-        <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">
-          Catálogo de serviços
-        </h2>
+        <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Catálogo de serviços</h2>
         <div className="app-card divide-y divide-[var(--app-line)] px-4">
-          {catalogoServicos.map((s) => (
+          {catalogo.map((s) => (
             <Link key={s.nome} href="/app/agendar" className="flex items-center gap-3 py-3">
               <CatChip categoria={s.categoria} />
               <span className="flex-1 text-[0.95rem] font-semibold t-ink">{s.nome}</span>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Check, ChevronLeft, ChevronRight, CalendarCheck, RotateCcw } from "lucide-react";
 import { CatChip } from "./category";
+import { criarAgendamento } from "../agendar/actions";
 
 interface VeiculoOpt {
   id: string;
@@ -40,6 +41,7 @@ export function BookingFlow({
   const [servico, setServico] = useState<ServicoOpt | null>(null);
   const [data, setData] = useState<string | null>(null);
   const [hora, setHora] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
   const selecionado = [veiculo, servico, data, hora][step];
   const ultimo = step === PASSOS.length - 1;
@@ -199,7 +201,23 @@ export function BookingFlow({
         <button
           type="button"
           disabled={!selecionado}
-          onClick={() => (ultimo ? setDone(true) : setStep((s) => s + 1))}
+          onClick={() => {
+            if (!ultimo) {
+              setStep((s) => s + 1);
+              return;
+            }
+            setDone(true);
+            if (veiculo && servico && data && hora) {
+              startTransition(() =>
+                criarAgendamento({
+                  veiculoNome: veiculo.modelo,
+                  servico: servico.nome,
+                  data,
+                  hora,
+                })
+              );
+            }
+          }}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--app-brand)] py-3 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
         >
           {ultimo ? "Confirmar agendamento" : "Continuar"}

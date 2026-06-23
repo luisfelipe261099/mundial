@@ -7,7 +7,9 @@ import {
   FileCheck2,
   Download,
 } from "lucide-react";
-import { documentos, type TipoDocumento } from "../_data/mock";
+import { requireClientId } from "@/lib/auth";
+import { getDocumentos } from "@/lib/client-data";
+import type { TipoDocumento } from "../_data/mock";
 
 const ICON: Record<TipoDocumento, LucideIcon> = {
   "Nota fiscal": Receipt,
@@ -25,10 +27,17 @@ const ORDEM: TipoDocumento[] = [
   "Comprovante",
 ];
 
-export default function DocumentosPage() {
+export default async function DocumentosPage() {
+  const clientId = await requireClientId();
+  const documentos = await getDocumentos(clientId);
+
   return (
     <div className="space-y-6 px-5 pb-8 pt-3">
       <p className="text-sm t-muted">Todos os seus documentos em PDF, em um só lugar.</p>
+
+      {documentos.length === 0 && (
+        <div className="app-card p-5 text-sm t-muted">Nenhum documento disponível ainda.</div>
+      )}
 
       {ORDEM.map((tipo) => {
         const docs = documentos.filter((d) => d.tipo === tipo);

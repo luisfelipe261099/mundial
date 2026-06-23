@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CalendarPlus, Wrench } from "lucide-react";
-import { getVeiculo, ordensServico } from "../../_data/mock";
+import { requireClientId } from "@/lib/auth";
+import { getVeiculo, getOrdensVeiculo } from "@/lib/client-data";
 import { manutencaoBadge } from "../../_components/category";
 import { VehicleCard } from "../../_components/vehicle-card";
 import { OsRow } from "../../_components/os-row";
@@ -18,10 +19,11 @@ export default async function VeiculoDetalhe({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const veiculo = getVeiculo(id);
+  const clientId = await requireClientId();
+  const veiculo = await getVeiculo(id, clientId);
   if (!veiculo) notFound();
 
-  const historico = ordensServico.filter((o) => o.veiculoId === id);
+  const historico = await getOrdensVeiculo(id, clientId);
 
   const ficha = [
     { label: "Versão", value: veiculo.versao },
@@ -36,7 +38,6 @@ export default async function VeiculoDetalhe({
     <div className="space-y-6 px-5 pb-8 pt-3">
       <VehicleCard veiculo={veiculo} interactive={false} />
 
-      {/* Ficha técnica */}
       <section>
         <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Ficha técnica</h2>
         <div className="app-card grid grid-cols-2 gap-x-4 gap-y-4 p-4">
@@ -53,31 +54,27 @@ export default async function VeiculoDetalhe({
         </div>
       </section>
 
-      {/* Próximas manutenções */}
-      <section>
-        <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">
-          Próximas manutenções
-        </h2>
-        <div className="app-card divide-y divide-[var(--app-line)] px-4">
-          {veiculo.proximasManutencoes.map((m) => (
-            <div key={m.item} className="flex items-center gap-3 py-3">
-              <span
-                className="size-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: DOT[m.status] }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-[0.95rem] font-semibold t-ink">{m.item}</p>
-                <p className="text-xs t-muted">{m.quando}</p>
+      {veiculo.proximasManutencoes.length > 0 && (
+        <section>
+          <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Próximas manutenções</h2>
+          <div className="app-card divide-y divide-[var(--app-line)] px-4">
+            {veiculo.proximasManutencoes.map((m) => (
+              <div key={m.item} className="flex items-center gap-3 py-3">
+                <span
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: DOT[m.status] }}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[0.95rem] font-semibold t-ink">{m.item}</p>
+                  <p className="text-xs t-muted">{m.quando}</p>
+                </div>
+                <span className={manutencaoBadge[m.status].cls}>{manutencaoBadge[m.status].label}</span>
               </div>
-              <span className={manutencaoBadge[m.status].cls}>
-                {manutencaoBadge[m.status].label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Ações */}
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/app/agendar"
@@ -95,12 +92,9 @@ export default async function VeiculoDetalhe({
         </Link>
       </div>
 
-      {/* Histórico deste veículo */}
       {historico.length > 0 && (
         <section>
-          <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">
-            Últimos serviços
-          </h2>
+          <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Últimos serviços</h2>
           <div className="app-card divide-y divide-[var(--app-line)] px-4">
             {historico.map((os) => (
               <OsRow key={os.id} os={os} />

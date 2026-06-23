@@ -9,7 +9,13 @@ import Drawer from "./drawer";
 // "Casca" do app: no desktop renderiza um frame de celular centralizado; no
 // mobile ocupa a viewport inteira. O <main> rola por dentro; top bar e bottom
 // nav ficam fixos. O Drawer é um overlay absoluto dentro do próprio frame.
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({
+  children,
+  unread,
+}: {
+  children: React.ReactNode;
+  unread: number;
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -25,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </span>
         </div>
 
-        <TopBar onMenu={() => setDrawerOpen(true)} />
+        <TopBar onMenu={() => setDrawerOpen(true)} unread={unread} />
 
         <main className="no-scrollbar min-h-0 flex-1 overflow-y-auto">{children}</main>
 

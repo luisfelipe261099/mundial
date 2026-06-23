@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Check, X, RotateCcw } from "lucide-react";
 import { brl, type Orcamento, type StatusOrcamento } from "../_data/mock";
 import { orcamentoBadge } from "./category";
+import { setBudgetStatus } from "../orcamentos/actions";
 
 export function BudgetDetail({ orcamento }: { orcamento: Orcamento }) {
   const [status, setStatus] = useState<StatusOrcamento>(orcamento.status);
+  const [, startTransition] = useTransition();
+
+  // atualização otimista + grava no banco
+  function update(novo: StatusOrcamento) {
+    setStatus(novo);
+    startTransition(() => {
+      setBudgetStatus(orcamento.id, novo);
+    });
+  }
 
   return (
     <div className="space-y-5 px-5 pb-8 pt-3">
@@ -72,7 +82,7 @@ export function BudgetDetail({ orcamento }: { orcamento: Orcamento }) {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => setStatus("rejeitado")}
+            onClick={() => update("rejeitado")}
             className="flex items-center justify-center gap-2 rounded-xl border border-rose-500/40 py-3 text-sm font-semibold text-rose-300 transition-colors hover:bg-rose-500/10"
           >
             <X className="size-4" />
@@ -80,7 +90,7 @@ export function BudgetDetail({ orcamento }: { orcamento: Orcamento }) {
           </button>
           <button
             type="button"
-            onClick={() => setStatus("aprovado")}
+            onClick={() => update("aprovado")}
             className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
           >
             <Check className="size-4" />
@@ -96,7 +106,7 @@ export function BudgetDetail({ orcamento }: { orcamento: Orcamento }) {
           </p>
           <button
             type="button"
-            onClick={() => setStatus("pendente")}
+            onClick={() => update("pendente")}
             className="flex items-center gap-1.5 text-sm font-semibold t-brand"
           >
             <RotateCcw className="size-4" />

@@ -11,16 +11,9 @@ import {
   LogOut,
   ChevronRight,
 } from "lucide-react";
-import { cliente } from "../_data/mock";
+import { requireClientId } from "@/lib/auth";
+import { getCliente } from "@/lib/client-data";
 import { logout } from "../../login/actions";
-
-const DADOS = [
-  { icon: Hash, label: "CPF", value: cliente.cpf },
-  { icon: Phone, label: "Telefone", value: cliente.telefone },
-  { icon: Smartphone, label: "WhatsApp", value: cliente.whatsapp },
-  { icon: Mail, label: "E-mail", value: cliente.email },
-  { icon: MapPin, label: "Endereço", value: cliente.endereco },
-];
 
 const AJUSTES = [
   { icon: Bell, label: "Notificações" },
@@ -28,10 +21,21 @@ const AJUSTES = [
   { icon: Settings, label: "Preferências" },
 ];
 
-export default function PerfilPage() {
+export default async function PerfilPage() {
+  const clientId = await requireClientId();
+  const cliente = await getCliente(clientId);
+  if (!cliente) return null;
+
+  const DADOS = [
+    { icon: Hash, label: "CPF", value: cliente.cpf },
+    { icon: Phone, label: "Telefone", value: cliente.telefone },
+    { icon: Smartphone, label: "WhatsApp", value: cliente.whatsapp },
+    { icon: Mail, label: "E-mail", value: cliente.email },
+    { icon: MapPin, label: "Endereço", value: cliente.endereco },
+  ];
+
   return (
     <div className="space-y-6 px-5 pb-8 pt-4">
-      {/* avatar */}
       <div className="flex flex-col items-center text-center">
         <span className="app-display grid size-20 place-items-center rounded-full bg-[var(--app-brand)] text-2xl font-bold text-white">
           {cliente.iniciais}
@@ -40,7 +44,6 @@ export default function PerfilPage() {
         <p className="text-sm t-muted">{cliente.email}</p>
       </div>
 
-      {/* instalar app */}
       <div className="app-card flex items-center gap-3 p-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--app-brand)]/15">
           <Smartphone className="size-5 t-brand" />
@@ -52,7 +55,6 @@ export default function PerfilPage() {
         <Download className="size-5 shrink-0 t-muted" />
       </div>
 
-      {/* dados pessoais */}
       <section>
         <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Dados pessoais</h2>
         <div className="app-card divide-y divide-[var(--app-line)] px-4">
@@ -71,7 +73,6 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      {/* ajustes */}
       <section>
         <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Ajustes</h2>
         <div className="app-card divide-y divide-[var(--app-line)] px-4">

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Bell, ArrowLeft } from "lucide-react";
-import { notificacoes } from "../_data/mock";
 
 const TAB_ROOTS = ["/app", "/app/veiculos", "/app/servicos", "/app/perfil"];
 
@@ -30,11 +29,11 @@ function parentFor(path: string): string {
   return "/app";
 }
 
-export default function TopBar({ onMenu }: { onMenu: () => void }) {
+export default function TopBar({ onMenu, unread }: { onMenu: () => void; unread: number }) {
   const path = usePathname() ?? "/app";
   const isTabRoot = TAB_ROOTS.includes(path);
   const title = titleFor(path);
-  const naoLidas = notificacoes.filter((n) => !n.lido).length;
+  const naoLidas = unread;
   const showBell = !path.startsWith("/app/notificacoes");
 
   return (

@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import crypto from "node:crypto";
 
 const COOKIE = "mundial_session";
@@ -57,4 +58,18 @@ export function homeFor(kind: SessionKind): string {
   if (kind === "admin") return "/oficina";
   if (kind === "mecanico") return "/mecanico";
   return "/app";
+}
+
+export async function requireSession(): Promise<Session> {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  return session;
+}
+
+// Garante sessão de cliente e devolve o id do cliente (para escopar queries).
+export async function requireClientId(): Promise<string> {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.kind !== "cliente") redirect(homeFor(session.kind));
+  return session.id;
 }
