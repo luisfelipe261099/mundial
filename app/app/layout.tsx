@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./app.css";
 import AppShell from "./_components/app-shell";
 
@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   title: "App do Cliente — Auto Mecânica Mundial",
   description: "Protótipo do aplicativo do cliente da Auto Mecânica Mundial.",
   robots: { index: false, follow: false },
+  // Comporta-se como app ao ser instalado na tela inicial (iOS).
+  appleWebApp: { capable: true, title: "Mundial", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0e17",
 };
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

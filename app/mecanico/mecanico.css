@@ -1,0 +1,70 @@
+/* ════════════════════════════════════════════════════════════════════
+   ÁREA DO MECÂNICO — mobile-first (uso no celular dentro do box), mesmo
+   navy do app/admin. Escopado em .mec-root. Tokens --mec-* + helpers.
+   ════════════════════════════════════════════════════════════════════ */
+
+.mec-root {
+  --mec-bg: #0a0e17;
+  --mec-surface: #121826;
+  --mec-surface-2: #19212f;
+  --mec-line: #232c3d;
+  --mec-ink: #f4f7fb;
+  --mec-muted: #8b95a7;
+  --mec-brand: #2563eb;
+  --mec-brand-2: #3b82f6;
+
+  color: var(--mec-ink);
+  background-color: var(--mec-bg);
+  font-family: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+html:has(.mec-root) {
+  color-scheme: dark;
+}
+body:has(.mec-root) {
+  background-color: #05070c;
+}
+.mec-root :focus-visible {
+  outline: 2px solid var(--mec-brand-2);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.mec-display {
+  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+.mec-card {
+  background-color: var(--mec-surface);
+  border: 1px solid var(--mec-line);
+  border-radius: 1rem;
+}
+.mec-card-2 {
+  background-color: var(--mec-surface-2);
+  border: 1px solid var(--mec-line);
+  border-radius: 0.75rem;
+}
+.mec-ink { color: var(--mec-ink); }
+.mec-muted { color: var(--mec-muted); }
+.mec-brand { color: var(--mec-brand-2); }
+
+/* Badges de status de OS (espelham os do admin). */
+.osb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.osb-aberta     { color: #93c5fd; background: rgba(37, 99, 235, 0.16); }
+.osb-aguardando { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
+.osb-execucao   { color: #5eead4; background: rgba(13, 148, 136, 0.16); }
+.osb-finalizada { color: #86efac; background: rgba(22, 163, 74, 0.16); }
+.osb-entregue   { color: #a3a3a3; background: rgba(120, 120, 130, 0.18); }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

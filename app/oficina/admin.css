@@ -1,0 +1,76 @@
+/* ════════════════════════════════════════════════════════════════════
+   PAINEL DA OFICINA (admin) — desktop-first, mesmo navy do app do cliente
+   para coesão de produto. Escopado em .admin-root (não vaza pro site nem
+   pro app). Tokens --ad-* + helpers mínimos; o resto via Tailwind.
+   ════════════════════════════════════════════════════════════════════ */
+
+.admin-root {
+  --ad-bg: #0a0e17;
+  --ad-surface: #121826;
+  --ad-surface-2: #19212f;
+  --ad-line: #232c3d;
+  --ad-ink: #f4f7fb;
+  --ad-muted: #8b95a7;
+  --ad-brand: #2563eb;
+  --ad-brand-2: #3b82f6;
+
+  color: var(--ad-ink);
+  background-color: var(--ad-bg);
+  font-family: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+html:has(.admin-root) {
+  color-scheme: dark;
+}
+body:has(.admin-root) {
+  background-color: var(--ad-bg);
+}
+.admin-root :focus-visible {
+  outline: 2px solid var(--ad-brand-2);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.adm-display {
+  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.adm-card {
+  background-color: var(--ad-surface);
+  border: 1px solid var(--ad-line);
+  border-radius: 1rem;
+}
+.adm-card-2 {
+  background-color: var(--ad-surface-2);
+  border: 1px solid var(--ad-line);
+  border-radius: 0.75rem;
+}
+
+.adm-ink { color: var(--ad-ink); }
+.adm-muted { color: var(--ad-muted); }
+.adm-brand { color: var(--ad-brand-2); }
+
+.adm-row + .adm-row { border-top: 1px solid var(--ad-line); }
+.adm-hover:hover { background-color: var(--ad-surface-2); }
+
+/* ── Badges de status de OS ─────────────────────────────────────────── */
+.osb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.osb-aberta     { color: #93c5fd; background: rgba(37, 99, 235, 0.16); }
+.osb-aguardando { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
+.osb-execucao   { color: #5eead4; background: rgba(13, 148, 136, 0.16); }
+.osb-finalizada { color: #86efac; background: rgba(22, 163, 74, 0.16); }
+.osb-entregue   { color: #a3a3a3; background: rgba(120, 120, 130, 0.18); }
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
