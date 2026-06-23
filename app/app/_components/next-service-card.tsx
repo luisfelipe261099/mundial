@@ -9,7 +9,7 @@ export function NextServiceCard({ veiculo }: { veiculo: Veiculo }) {
 
   return (
     <Link href={`/app/veiculos/${veiculo.id}`} className="app-card flex items-center gap-4 p-4">
-      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--app-brand)]/15">
+      <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--app-brand)]/15">
         <Calendar className="size-6 t-brand" />
       </span>
       <div className="min-w-0 flex-1">

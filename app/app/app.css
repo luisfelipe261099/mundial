@@ -70,21 +70,22 @@ body:has(.app-root) {
   place-items: center;
   width: 2.75rem;
   height: 2.75rem;
-  border-radius: 0.9rem;
+  border-radius: 9999px; /* círculo sólido, como na referência */
   flex: none;
+  color: #fff; /* ícone branco */
 }
-.chip-oleo      { color: #34d399; background: rgba(16, 163, 74, 0.16); }
-.chip-freio     { color: #60a5fa; background: rgba(37, 99, 235, 0.18); }
-.chip-filtro    { color: #c084fc; background: rgba(124, 58, 237, 0.18); }
-.chip-revisao   { color: #38bdf8; background: rgba(2, 132, 199, 0.18); }
-.chip-suspensao { color: #fbbf24; background: rgba(217, 119, 6, 0.16); }
-.chip-eletrica  { color: #f472b6; background: rgba(219, 39, 119, 0.16); }
-.chip-pneus     { color: #a3a3a3; background: rgba(120, 120, 130, 0.18); }
-.chip-bateria   { color: #4ade80; background: rgba(22, 163, 74, 0.16); }
-.chip-geral     { color: #93c5fd; background: rgba(59, 130, 246, 0.16); }
-.chip-promo     { color: #fb923c; background: rgba(234, 88, 12, 0.16); }
-.chip-ipva      { color: #38bdf8; background: rgba(2, 132, 199, 0.18); }
-.chip-licenciamento { color: #fbbf24; background: rgba(217, 119, 6, 0.16); }
+.chip-oleo      { background: #16a34a; }
+.chip-freio     { background: #2563eb; }
+.chip-filtro    { background: #7c3aed; }
+.chip-revisao   { background: #0284c7; }
+.chip-suspensao { background: #d97706; }
+.chip-eletrica  { background: #db2777; }
+.chip-pneus     { background: #475569; }
+.chip-bateria   { background: #16a34a; }
+.chip-geral     { background: #2563eb; }
+.chip-promo     { background: #ea580c; }
+.chip-ipva      { background: #0284c7; }
+.chip-licenciamento { background: #d97706; }
 
 /* ── Badges de status ───────────────────────────────────────────────── */
 .badge {
