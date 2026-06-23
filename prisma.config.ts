@@ -1,11 +1,16 @@
 import "dotenv/config";
-import { defineConfig, env } from "@prisma/config";
+import { defineConfig } from "@prisma/config";
 
-// Prisma 7: a URL de migração/introspecção fica aqui (não mais no schema).
-// O runtime (PrismaClient) usa um driver adapter — ver lib/prisma.ts.
+// Usamos process.env (e NÃO env()) de propósito: env() lança erro se a variável
+// não existir, o que quebrava o `prisma generate` do postinstall no build do
+// Vercel (lá não há .env). Com process.env + fallback, o generate roda sempre.
+// Migração/db push reais continuam exigindo um DATABASE_URL válido (no .env
+// local, ou nas Environment Variables do projeto Vercel).
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-    url: env("DATABASE_URL"),
+    url:
+      process.env.DATABASE_URL ??
+      "postgresql://placeholder:placeholder@localhost:5432/placeholder",
   },
 });
