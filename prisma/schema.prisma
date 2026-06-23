@@ -1,0 +1,199 @@
+// Schema do banco — Auto Mecânica Mundial. Postgres (Retool DB / Neon).
+// Prisma 7: gerador novo `prisma-client` com output próprio (fora de app/).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Client {
+  id            String         @id @default(cuid())
+  name          String
+  cpf           String?
+  phone         String?
+  whatsapp      String?
+  email         String?
+  city          String?
+  address       String?
+  since         String?
+  password      String? // hash bcrypt — login do cliente (e-mail ou placa + senha)
+  createdAt     DateTime       @default(now())
+  vehicles      Vehicle[]
+  serviceOrders ServiceOrder[]
+  budgets       Budget[]
+  appointments  Appointment[]
+  documents     Document[]
+  notifications Notification[]
+
+  @@map("clients")
+}
+
+model Vehicle {
+  id               String         @id @default(cuid())
+  clientId         String
+  client           Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  brand            String
+  model            String
+  year             Int
+  version          String?
+  color            String?
+  plate            String         @unique
+  renavam          String?
+  chassis          String?
+  fuel             String?
+  km               Int            @default(0)
+  nextRevisionDate String?
+  nextRevisionKm   Int?
+  maintenances     Json?
+  serviceOrders    ServiceOrder[]
+
+  @@map("vehicles")
+}
+
+model ServiceOrder {
+  id           String             @id // ex.: OS-2098
+  clientId     String?
+  client       Client?            @relation(fields: [clientId], references: [id])
+  vehicleId    String?
+  vehicle      Vehicle?           @relation(fields: [vehicleId], references: [id])
+  clientName   String
+  vehicleName  String
+  plate        String?
+  date         String
+  km           Int                @default(0)
+  defect       String?
+  status       String
+  mechanic     String?
+  category     String?
+  total        Int                @default(0)
+  observations String?
+  warranty     String?
+  responsible  String?
+  photos       Json?
+  items        ServiceOrderItem[]
+  createdAt    DateTime           @default(now())
+
+  @@map("service_orders")
+}
+
+model ServiceOrderItem {
+  id             String       @id @default(cuid())
+  serviceOrderId String
+  serviceOrder   ServiceOrder @relation(fields: [serviceOrderId], references: [id], onDelete: Cascade)
+  type           String // Peça | Serviço
+  description    String
+  qty            Int          @default(1)
+  value          Int          @default(0)
+
+  @@map("service_order_items")
+}
+
+model Budget {
+  id          String       @id // ex.: ORC-318
+  clientId    String?
+  client      Client?      @relation(fields: [clientId], references: [id])
+  vehicleName String
+  date        String
+  status      String // pendente | aprovado | rejeitado
+  subtotal    Int          @default(0)
+  discount    Int          @default(0)
+  total       Int          @default(0)
+  items       BudgetItem[]
+
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id          String @id @default(cuid())
+  budgetId    String
+  budget      Budget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  kind        String // peca | servico
+  description String
+  qty         Int    @default(1)
+  value       Int    @default(0)
+
+  @@map("budget_items")
+}
+
+model Appointment {
+  id          String  @id @default(cuid())
+  clientId    String?
+  client      Client? @relation(fields: [clientId], references: [id])
+  vehicleName String
+  service     String
+  date        String
+  time        String
+  status      String
+
+  @@map("appointments")
+}
+
+model Product {
+  id    String  @id @default(cuid())
+  name  String
+  brand String?
+  code  String  @unique
+  qty   Int     @default(0)
+  min   Int     @default(0)
+
+  @@map("products")
+}
+
+model Notification {
+  id       String  @id @default(cuid())
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+  type     String
+  title    String
+  text     String?
+  when     String?
+  read     Boolean @default(false)
+
+  @@map("notifications")
+}
+
+model Document {
+  id       String  @id @default(cuid())
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id])
+  name     String
+  type     String
+  date     String?
+
+  @@map("documents")
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  type        String // receita | despesa
+  description String
+  category    String?
+  value       Int      @default(0)
+  date        String?
+  createdAt   DateTime @default(now())
+
+  @@map("transactions")
+}
+
+model Service {
+  id       String  @id @default(cuid())
+  name     String
+  category String?
+
+  @@map("services")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      String   @default("admin") // admin | mecanico | cliente
+  password  String? // placeholder até o login/auth ser implementado
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
