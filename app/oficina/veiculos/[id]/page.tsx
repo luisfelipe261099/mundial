@@ -1,12 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import {
-  getVeiculoAdmin,
-  ordens,
-  brl,
-  osBadgeClass,
-} from "../../_data/mock";
+import { brl, osBadgeClass } from "../../_data/mock";
+import { getVeiculoDetalhe } from "@/lib/admin-data";
 
 export default async function VeiculoAdminDetalhe({
   params,
@@ -14,10 +10,9 @@ export default async function VeiculoAdminDetalhe({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const veiculo = getVeiculoAdmin(id);
-  if (!veiculo) notFound();
-
-  const os = ordens.filter((o) => o.placa === veiculo.placa);
+  const data = await getVeiculoDetalhe(id);
+  if (!data) notFound();
+  const { veiculo, ordens } = data;
 
   const ficha = [
     { label: "Proprietário", value: veiculo.proprietario },
@@ -38,7 +33,6 @@ export default async function VeiculoAdminDetalhe({
         <p className="font-mono text-sm adm-muted">{veiculo.placa}</p>
       </div>
 
-      {/* ficha */}
       <div className="adm-card grid grid-cols-2 gap-x-4 gap-y-4 p-5 sm:grid-cols-4">
         {ficha.map((f) => (
           <div key={f.label}>
@@ -56,14 +50,13 @@ export default async function VeiculoAdminDetalhe({
         </div>
       </div>
 
-      {/* histórico de OS */}
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
           <h3 className="adm-display font-bold adm-ink">Histórico de serviços</h3>
         </div>
         <div className="divide-y divide-[var(--ad-line)]">
-          {os.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhuma OS registrada.</p>}
-          {os.map((o) => (
+          {ordens.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhuma OS registrada.</p>}
+          {ordens.map((o) => (
             <Link key={o.id} href={`/oficina/ordens/${o.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[var(--ad-surface-2)]">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold adm-ink">

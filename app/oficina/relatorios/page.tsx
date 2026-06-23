@@ -1,13 +1,18 @@
 import { AlertTriangle } from "lucide-react";
-import { relatorios, brl } from "../_data/mock";
+import { brl } from "../_data/mock";
+import { getRelatorios } from "@/lib/admin-data";
 import { Panel } from "../_components/ui";
 
-export default function RelatoriosPage() {
-  const maxReceita = Math.max(...relatorios.servicosMaisVendidos.map((s) => s.receita));
+export default async function RelatoriosPage() {
+  const relatorios = await getRelatorios();
+  const maxReceita = Math.max(1, ...relatorios.servicosMaisVendidos.map((s) => s.receita));
 
   return (
     <div className="space-y-6">
       <Panel title="Serviços mais vendidos" bodyClass="divide-y divide-[var(--ad-line)]">
+        {relatorios.servicosMaisVendidos.length === 0 && (
+          <p className="px-5 py-4 text-sm adm-muted">Sem dados ainda.</p>
+        )}
         {relatorios.servicosMaisVendidos.map((s) => (
           <div key={s.servico} className="px-5 py-3.5">
             <div className="flex items-center justify-between text-sm">
@@ -41,6 +46,9 @@ export default function RelatoriosPage() {
         </Panel>
 
         <Panel title="Revisões pendentes" bodyClass="divide-y divide-[var(--ad-line)]">
+          {relatorios.revisoesPendentes.length === 0 && (
+            <p className="px-5 py-4 text-sm adm-muted">Nenhuma revisão vencida.</p>
+          )}
           {relatorios.revisoesPendentes.map((v) => (
             <div key={v.placa} className="flex items-center gap-3 px-5 py-3.5">
               <AlertTriangle className="size-5 shrink-0 text-amber-400" />

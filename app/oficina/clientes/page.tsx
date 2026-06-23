@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { Plus, ChevronRight } from "lucide-react";
-import { clientes, brl } from "../_data/mock";
+import { brl } from "../_data/mock";
+import { getClientes } from "@/lib/admin-data";
 
-export default function ClientesPage() {
+export default async function ClientesPage() {
+  const clientes = await getClientes();
+
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">

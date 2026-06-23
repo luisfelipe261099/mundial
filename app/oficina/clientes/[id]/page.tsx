@@ -12,13 +12,8 @@ import {
   Wallet,
   ChevronRight,
 } from "lucide-react";
-import {
-  getCliente,
-  veiculosAdmin,
-  ordens,
-  brl,
-  osBadgeClass,
-} from "../../_data/mock";
+import { brl, osBadgeClass } from "../../_data/mock";
+import { getClienteDetalhe } from "@/lib/admin-data";
 
 export default async function ClienteDetalhe({
   params,
@@ -26,11 +21,9 @@ export default async function ClienteDetalhe({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const cliente = getCliente(id);
-  if (!cliente) notFound();
-
-  const veiculos = veiculosAdmin.filter((v) => v.proprietario === cliente.nome);
-  const os = ordens.filter((o) => o.cliente === cliente.nome);
+  const data = await getClienteDetalhe(id);
+  if (!data) notFound();
+  const { cliente, veiculos, ordens } = data;
 
   const contato = [
     { icon: Hash, label: "CPF", value: cliente.cpf },
@@ -42,7 +35,7 @@ export default async function ClienteDetalhe({
 
   const kpis = [
     { icon: Car, label: "Veículos", value: veiculos.length.toString() },
-    { icon: ClipboardList, label: "Ordens de serviço", value: os.length.toString() },
+    { icon: ClipboardList, label: "Ordens de serviço", value: ordens.length.toString() },
     { icon: Wallet, label: "Gasto total", value: brl(cliente.gastoTotal) },
   ];
 
@@ -53,7 +46,6 @@ export default async function ClienteDetalhe({
         Clientes
       </Link>
 
-      {/* cabeçalho */}
       <div className="flex items-center gap-4">
         <span className="adm-display grid size-14 shrink-0 place-items-center rounded-full bg-[var(--ad-brand)]/15 text-lg font-bold adm-brand">
           {cliente.nome.split(" ").map((n) => n[0]).slice(0, 2).join("")}
@@ -64,7 +56,6 @@ export default async function ClienteDetalhe({
         </div>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {kpis.map((k) => {
           const Icon = k.icon;
@@ -78,7 +69,6 @@ export default async function ClienteDetalhe({
         })}
       </div>
 
-      {/* contato */}
       <div className="adm-card p-5">
         <h3 className="adm-display mb-4 font-bold adm-ink">Contato</h3>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -97,7 +87,6 @@ export default async function ClienteDetalhe({
         </div>
       </div>
 
-      {/* veículos */}
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
           <h3 className="adm-display font-bold adm-ink">Veículos</h3>
@@ -117,14 +106,13 @@ export default async function ClienteDetalhe({
         </div>
       </div>
 
-      {/* ordens */}
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
           <h3 className="adm-display font-bold adm-ink">Ordens de serviço</h3>
         </div>
         <div className="divide-y divide-[var(--ad-line)]">
-          {os.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhuma OS registrada.</p>}
-          {os.map((o) => (
+          {ordens.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhuma OS registrada.</p>}
+          {ordens.map((o) => (
             <Link key={o.id} href={`/oficina/ordens/${o.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[var(--ad-surface-2)]">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold adm-ink">

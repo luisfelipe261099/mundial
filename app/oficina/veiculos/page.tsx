@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Plus, ChevronRight } from "lucide-react";
-import { veiculosAdmin } from "../_data/mock";
+import { getVeiculos } from "@/lib/admin-data";
 
-export default function VeiculosAdminPage() {
+export default async function VeiculosAdminPage() {
+  const veiculos = await getVeiculos();
+
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">
-        <p className="text-sm adm-muted">{veiculosAdmin.length} veículos cadastrados</p>
+        <p className="text-sm adm-muted">{veiculos.length} veículos cadastrados</p>
         <Link
           href="/oficina/veiculos/novo"
           className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
@@ -31,7 +33,7 @@ export default function VeiculosAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {veiculosAdmin.map((v) => (
+              {veiculos.map((v) => (
                 <tr
                   key={v.id}
                   className="border-b border-[var(--ad-line)] transition-colors last:border-0 hover:bg-[var(--ad-surface-2)]"

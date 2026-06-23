@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { ordens, osBadgeClass } from "../oficina/_data/mock";
+import { osBadgeClass } from "../oficina/_data/mock";
+import { getOrdens } from "@/lib/admin-data";
 
-export default function MecanicoHome() {
-  const ativas = ordens.filter((o) => o.status !== "Entregue");
+export default async function MecanicoHome() {
+  const todas = await getOrdens();
+  const ativas = todas.filter((o) => o.status !== "Entregue");
 
   return (
     <div className="space-y-4 px-5 pb-8 pt-3">
       <p className="text-sm mec-muted">{ativas.length} ordens atribuídas a você</p>
+      {ativas.length === 0 && (
+        <div className="mec-card p-5 text-sm mec-muted">Nenhuma ordem em aberto.</div>
+      )}
       <div className="space-y-3">
         {ativas.map((o) => (
           <Link key={o.id} href={`/mecanico/${o.id}`} className="mec-card block p-4">

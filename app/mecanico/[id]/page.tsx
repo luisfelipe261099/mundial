@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getOrdem } from "../../oficina/_data/mock";
+import { getOrdem } from "@/lib/admin-data";
 import { MechanicOrder } from "../_components/mechanic-order";
 
 export default async function MecanicoOrdem({
@@ -8,7 +8,7 @@ export default async function MecanicoOrdem({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const os = getOrdem(id);
+  const os = await getOrdem(id);
   if (!os) notFound();
 
   return <MechanicOrder os={os} />;

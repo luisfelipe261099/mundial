@@ -1,4 +1,4 @@
-import { agendaHoje } from "../_data/mock";
+import { getAgendaHoje } from "@/lib/admin-data";
 import { Panel } from "../_components/ui";
 
 const DIAS = [
@@ -10,7 +10,9 @@ const DIAS = [
   { label: "Sáb 27", hoje: false },
 ];
 
-export default function AgendaPage() {
+export default async function AgendaPage() {
+  const agenda = await getAgendaHoje();
+
   return (
     <div className="space-y-5">
       <div className="no-scrollbar flex gap-2 overflow-x-auto">
@@ -29,11 +31,9 @@ export default function AgendaPage() {
         ))}
       </div>
 
-      <Panel
-        title="Agendamentos de hoje · Ter 23/06"
-        bodyClass="divide-y divide-[var(--ad-line)]"
-      >
-        {agendaHoje.map((a, i) => (
+      <Panel title="Agendamentos de hoje · Ter 23/06" bodyClass="divide-y divide-[var(--ad-line)]">
+        {agenda.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhum agendamento para hoje.</p>}
+        {agenda.map((a, i) => (
           <div key={i} className="flex items-center gap-4 px-5 py-4">
             <div className="w-14 shrink-0 text-center">
               <p className="adm-display text-lg font-bold adm-ink">{a.hora}</p>
@@ -41,9 +41,7 @@ export default function AgendaPage() {
             <div className="h-10 w-px shrink-0 bg-[var(--ad-line)]" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold adm-ink">{a.servico}</p>
-              <p className="truncate text-xs adm-muted">
-                {a.cliente} · {a.veiculo}
-              </p>
+              <p className="truncate text-xs adm-muted">{a.cliente} · {a.veiculo}</p>
             </div>
             <span className={a.status === "Confirmado" ? "osb osb-finalizada" : "osb osb-aguardando"}>
               {a.status}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
@@ -25,6 +25,7 @@ export function CadastroForm({
   campos,
   sucessoTitulo,
   criarLabel,
+  onSubmit,
 }: {
   titulo: string;
   voltarHref: string;
@@ -32,9 +33,11 @@ export function CadastroForm({
   campos: Campo[];
   sucessoTitulo: string;
   criarLabel: string;
+  onSubmit?: (values: Record<string, string>) => Promise<void>;
 }) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [criado, setCriado] = useState(false);
+  const [pending, startTransition] = useTransition();
 
   const set = (name: string, v: string) => setValues((x) => ({ ...x, [name]: v }));
   const pode = campos.filter((c) => c.required).every((c) => (values[c.name] ?? "").trim() !== "");
@@ -109,12 +112,17 @@ export function CadastroForm({
 
       <button
         type="button"
-        disabled={!pode}
-        onClick={() => setCriado(true)}
+        disabled={!pode || pending}
+        onClick={() =>
+          startTransition(async () => {
+            if (onSubmit) await onSubmit(values);
+            setCriado(true);
+          })
+        }
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
       >
         <Check className="size-5" />
-        {criarLabel}
+        {pending ? "Salvando…" : criarLabel}
       </button>
     </div>
   );

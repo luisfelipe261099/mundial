@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Plus, Minus, PackagePlus, AlertTriangle, Check, X } from "lucide-react";
 import type { Produto } from "../_data/mock";
+import { movimentarEstoque, criarProduto } from "../actions";
 
 const inputCls =
   "w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]";
@@ -12,17 +13,21 @@ export function StockManager({ seed }: { seed: Produto[] }) {
   const [showForm, setShowForm] = useState(false);
   const [novo, setNovo] = useState({ produto: "", marca: "", codigo: "", qtd: 0, minimo: 0 });
 
+  const [, startTransition] = useTransition();
   const baixos = itens.filter((p) => p.qtd < p.minimo);
 
   function mov(id: string, delta: number) {
     setItens((x) => x.map((p) => (p.id === id ? { ...p, qtd: Math.max(0, p.qtd + delta) } : p)));
+    startTransition(() => movimentarEstoque(id, delta));
   }
 
   function addProduto() {
     if (!novo.produto.trim() || !novo.codigo.trim()) return;
+    const payload = { ...novo };
     setItens((x) => [{ id: `p${Date.now()}`, ...novo }, ...x]);
     setNovo({ produto: "", marca: "", codigo: "", qtd: 0, minimo: 0 });
     setShowForm(false);
+    startTransition(() => criarProduto(payload));
   }
 
   return (

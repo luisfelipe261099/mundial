@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import { Check, Camera, ChevronRight } from "lucide-react";
 import {
@@ -8,6 +8,7 @@ import {
   type OrdemServicoAdmin,
   type StatusOS,
 } from "../../oficina/_data/mock";
+import { avancarStatus, salvarObservacoes } from "../actions";
 
 const FLUXO: StatusOS[] = [
   "Aberta",
@@ -25,6 +26,7 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
   ]);
   const [obs, setObs] = useState(os.observacoes);
   const [salvo, setSalvo] = useState(false);
+  const [, startTransition] = useTransition();
 
   const idx = FLUXO.indexOf(status);
   const proximo = idx < FLUXO.length - 1 ? FLUXO[idx + 1] : null;
@@ -68,7 +70,10 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
           {proximo ? (
             <button
               type="button"
-              onClick={() => setStatus(proximo)}
+              onClick={() => {
+                setStatus(proximo);
+                startTransition(() => avancarStatus(os.id, proximo));
+              }}
               className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--mec-brand)] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
             >
               Avançar para “{proximo}”
@@ -125,7 +130,10 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
         />
         <button
           type="button"
-          onClick={() => setSalvo(true)}
+          onClick={() => {
+            setSalvo(true);
+            startTransition(() => salvarObservacoes(os.id, obs));
+          }}
           className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--mec-line)] py-3 text-sm font-semibold mec-ink transition-colors hover:bg-[var(--mec-surface-2)]"
         >
           {salvo ? (

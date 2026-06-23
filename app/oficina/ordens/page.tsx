@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { ordens } from "../_data/mock";
+import { getOrdens } from "@/lib/admin-data";
 import { OrdersTable } from "../_components/orders-table";
 
-export default function OrdensPage() {
+export default async function OrdensPage() {
+  const ordens = await getOrdens();
+
   return (
     <div>
       <div className="mb-5 flex items-center justify-between">

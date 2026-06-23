@@ -1,10 +1,13 @@
 import { CadastroForm, type Campo } from "../../_components/cadastro-form";
-import { clientes } from "../../_data/mock";
+import { getClientesVeiculosParaOS } from "@/lib/admin-data";
+import { criarVeiculo } from "../../actions";
 
-export default function NovoVeiculoPage() {
+export default async function NovoVeiculoPage() {
+  const { clientes } = await getClientesVeiculosParaOS();
+
   const campos: Campo[] = [
     { name: "proprietario", label: "Proprietário", type: "select", options: clientes.map((c) => c.nome), full: true, required: true },
-    { name: "modelo", label: "Modelo", required: true },
+    { name: "modelo", label: "Modelo (marca + modelo)", required: true },
     { name: "placa", label: "Placa", required: true },
     { name: "ano", label: "Ano", type: "number" },
     { name: "km", label: "Quilometragem", type: "number" },
@@ -20,6 +23,7 @@ export default function NovoVeiculoPage() {
       campos={campos}
       sucessoTitulo="Veículo cadastrado!"
       criarLabel="Cadastrar veículo"
+      onSubmit={criarVeiculo}
     />
   );
 }

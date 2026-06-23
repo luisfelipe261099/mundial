@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight, Plus } from "lucide-react";
 import { brl } from "../_data/mock";
+import { criarLancamento } from "../actions";
 
 export interface Lancamento {
   id: string;
@@ -27,6 +28,7 @@ export function FinanceManager({ seed }: { seed: Lancamento[] }) {
   const [descricao, setDescricao] = useState("");
   const [categoria, setCategoria] = useState("Serviços");
   const [valor, setValor] = useState<number>(0);
+  const [, startTransition] = useTransition();
 
   const totalR = lancs.filter((l) => l.tipo === "receita").reduce((s, l) => s + l.valor, 0);
   const totalD = lancs.filter((l) => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
@@ -45,12 +47,14 @@ export function FinanceManager({ seed }: { seed: Lancamento[] }) {
 
   function add() {
     if (!descricao.trim() || valor <= 0) return;
+    const payload = { tipo, descricao, categoria, valor };
     setLancs((x) => [
       { id: `l${Date.now()}`, tipo, descricao, categoria, valor, data: "Hoje" },
       ...x,
     ]);
     setDescricao("");
     setValor(0);
+    startTransition(() => criarLancamento(payload));
   }
 
   return (

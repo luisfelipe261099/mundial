@@ -1,4 +1,5 @@
 import { CadastroForm, type Campo } from "../../_components/cadastro-form";
+import { criarCliente } from "../../actions";
 
 const CAMPOS: Campo[] = [
   { name: "nome", label: "Nome completo", full: true, required: true },
@@ -19,6 +20,7 @@ export default function NovoClientePage() {
       campos={CAMPOS}
       sucessoTitulo="Cliente cadastrado!"
       criarLabel="Cadastrar cliente"
+      onSubmit={criarCliente}
     />
   );
 }

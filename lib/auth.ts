@@ -73,3 +73,10 @@ export async function requireClientId(): Promise<string> {
   if (session.kind !== "cliente") redirect(homeFor(session.kind));
   return session.id;
 }
+
+export async function requireAdmin(): Promise<Session> {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.kind !== "admin") redirect(homeFor(session.kind));
+  return session;
+}

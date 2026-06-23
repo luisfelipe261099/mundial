@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Check, MessageCircle, FileDown, ChevronRight } from "lucide-react";
-import { getOrdem, brl, osBadgeClass, type StatusOS } from "../../_data/mock";
+import { brl, osBadgeClass, type StatusOS } from "../../_data/mock";
+import { getOrdem } from "@/lib/admin-data";
 
 const FLUXO: StatusOS[] = [
   "Aberta",
@@ -24,7 +25,7 @@ export default async function OrdemDetalhe({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const os = getOrdem(id);
+  const os = await getOrdem(id);
   if (!os) notFound();
 
   const atual = FLUXO.indexOf(os.status);
@@ -44,7 +45,6 @@ export default async function OrdemDetalhe({
         Ordens de Serviço
       </Link>
 
-      {/* cabeçalho */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-mono text-sm adm-muted">{os.id}</p>
@@ -53,7 +53,6 @@ export default async function OrdemDetalhe({
         <span className={osBadgeClass[os.status]}>{os.status}</span>
       </div>
 
-      {/* timeline de status */}
       <div className="adm-card p-5">
         <div className="flex items-center">
           {FLUXO.map((s, i) => {
@@ -77,11 +76,7 @@ export default async function OrdemDetalhe({
                   </span>
                 </div>
                 {i < FLUXO.length - 1 && (
-                  <div
-                    className={`mx-1 h-0.5 flex-1 ${
-                      i < atual ? "bg-[var(--ad-brand)]" : "bg-[var(--ad-surface-2)]"
-                    }`}
-                  />
+                  <div className={`mx-1 h-0.5 flex-1 ${i < atual ? "bg-[var(--ad-brand)]" : "bg-[var(--ad-surface-2)]"}`} />
                 )}
               </div>
             );
@@ -89,7 +84,6 @@ export default async function OrdemDetalhe({
         </div>
       </div>
 
-      {/* info + defeito */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="adm-card p-5 lg:col-span-2">
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
@@ -107,7 +101,6 @@ export default async function OrdemDetalhe({
         </div>
       </div>
 
-      {/* itens */}
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
           <h3 className="adm-display font-bold adm-ink">Itens da OS</h3>
@@ -126,9 +119,7 @@ export default async function OrdemDetalhe({
               {os.itens.map((it, i) => (
                 <tr key={i} className="border-b border-[var(--ad-line)] last:border-0">
                   <td className="px-5 py-3">
-                    <span className="rounded-md bg-[var(--ad-surface-2)] px-2 py-0.5 text-xs font-medium adm-muted">
-                      {it.tipo}
-                    </span>
+                    <span className="rounded-md bg-[var(--ad-surface-2)] px-2 py-0.5 text-xs font-medium adm-muted">{it.tipo}</span>
                   </td>
                   <td className="px-5 py-3 adm-ink">{it.descricao}</td>
                   <td className="px-5 py-3 text-center adm-muted">{it.qtd}</td>
@@ -138,9 +129,7 @@ export default async function OrdemDetalhe({
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={3} className="px-5 py-3.5 text-right font-semibold adm-muted">
-                  Total
-                </td>
+                <td colSpan={3} className="px-5 py-3.5 text-right font-semibold adm-muted">Total</td>
                 <td className="px-5 py-3.5 text-right">
                   <span className="adm-display text-lg font-bold adm-ink">{brl(os.total)}</span>
                 </td>
@@ -150,55 +139,35 @@ export default async function OrdemDetalhe({
         </div>
       </div>
 
-      {/* evidências */}
       <div>
         <h3 className="adm-display mb-3 font-bold adm-ink">Evidências (fotos)</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {EVIDENCIAS.map((f, i) => (
             <figure key={i} className="overflow-hidden rounded-xl border border-[var(--ad-line)]">
               <div className="relative aspect-[4/3]">
-                <Image
-                  src={f.src}
-                  alt={`${f.etapa} — ${os.id}`}
-                  fill
-                  sizes="(max-width: 1024px) 33vw, 240px"
-                  className="object-cover"
-                />
-                <span className="absolute left-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-xs font-semibold text-white">
-                  {f.etapa}
-                </span>
+                <Image src={f.src} alt={`${f.etapa} — ${os.id}`} fill sizes="(max-width: 1024px) 33vw, 240px" className="object-cover" />
+                <span className="absolute left-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-xs font-semibold text-white">{f.etapa}</span>
               </div>
             </figure>
           ))}
         </div>
       </div>
 
-      {/* observações */}
       <div className="adm-card p-5">
         <p className="text-xs uppercase tracking-wide adm-muted">Observações</p>
         <p className="mt-1.5 text-sm adm-ink">{os.observacoes}</p>
       </div>
 
-      {/* ações (mock) */}
       <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
-        >
+        <button type="button" className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]">
           Avançar status
           <ChevronRight className="size-4" />
         </button>
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink transition-colors hover:bg-[var(--ad-surface-2)]"
-        >
+        <button type="button" className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink transition-colors hover:bg-[var(--ad-surface-2)]">
           <MessageCircle className="size-4 text-emerald-400" />
           Avisar no WhatsApp
         </button>
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink transition-colors hover:bg-[var(--ad-surface-2)]"
-        >
+        <button type="button" className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink transition-colors hover:bg-[var(--ad-surface-2)]">
           <FileDown className="size-4 adm-brand" />
           Gerar PDF
         </button>

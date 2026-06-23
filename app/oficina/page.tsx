@@ -1,37 +1,23 @@
 import Link from "next/link";
-import {
-  Users,
-  Car,
-  ClipboardList,
-  Wallet,
-  AlertTriangle,
-  ChevronRight,
-} from "lucide-react";
-import {
-  kpis,
-  faturamentoMensal,
-  ordens,
-  estoque,
-  brl,
-  osBadgeClass,
-} from "./_data/mock";
+import { Users, Car, ClipboardList, Wallet, AlertTriangle, ChevronRight } from "lucide-react";
+import { brl, osBadgeClass } from "./_data/mock";
+import { getKpis, getOrdens, getEstoque, faturamentoMensal } from "@/lib/admin-data";
 import { KpiCard, BarChart, Panel } from "./_components/ui";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const [kpis, ordens, estoque] = await Promise.all([getKpis(), getOrdens(), getEstoque()]);
   const baixoEstoque = estoque.filter((p) => p.qtd < p.minimo);
   const recentes = ordens.slice(0, 5);
 
   return (
     <div className="space-y-6">
-      {/* KPIs */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard label="Clientes" value={kpis.clientes.toString()} icon={Users} />
         <KpiCard label="Veículos" value={kpis.veiculos.toString()} icon={Car} />
         <KpiCard label="OS abertas" value={kpis.osAbertas.toString()} icon={ClipboardList} hint="agora" />
-        <KpiCard label="Faturamento do mês" value={brl(kpis.faturamentoMes)} icon={Wallet} hint="Jun" />
+        <KpiCard label="Faturamento do mês" value={brl(kpis.faturamentoMes)} icon={Wallet} />
       </div>
 
-      {/* faturamento + resumo */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Panel title="Faturamento — últimos 6 meses" bodyClass="p-5">
@@ -41,7 +27,7 @@ export default function DashboardPage() {
         <Panel title="Resumo do ano" bodyClass="divide-y divide-[var(--ad-line)]">
           {[
             { label: "Faturamento no ano", value: brl(kpis.faturamentoAno) },
-            { label: "OS concluídas no mês", value: kpis.osConcluidasMes.toString() },
+            { label: "OS concluídas", value: kpis.osConcluidasMes.toString() },
             { label: "Ticket médio", value: brl(kpis.ticketMedio) },
           ].map((r) => (
             <div key={r.label} className="flex items-center justify-between px-5 py-4">
@@ -52,16 +38,11 @@ export default function DashboardPage() {
         </Panel>
       </div>
 
-      {/* OS recentes + alertas */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Panel
             title="Ordens de serviço recentes"
-            action={
-              <Link href="/oficina/ordens" className="text-sm font-semibold adm-brand">
-                Ver todas
-              </Link>
-            }
+            action={<Link href="/oficina/ordens" className="text-sm font-semibold adm-brand">Ver todas</Link>}
             bodyClass="divide-y divide-[var(--ad-line)]"
           >
             {recentes.map((os) => (
@@ -74,14 +55,10 @@ export default function DashboardPage() {
                   <p className="truncate text-sm font-semibold adm-ink">
                     <span className="font-mono adm-muted">{os.id}</span> · {os.cliente}
                   </p>
-                  <p className="truncate text-xs adm-muted">
-                    {os.veiculo} · {os.placa}
-                  </p>
+                  <p className="truncate text-xs adm-muted">{os.veiculo} · {os.placa}</p>
                 </div>
                 <span className={osBadgeClass[os.status]}>{os.status}</span>
-                <span className="hidden w-24 text-right text-sm font-semibold adm-ink sm:block">
-                  {brl(os.total)}
-                </span>
+                <span className="hidden w-24 text-right text-sm font-semibold adm-ink sm:block">{brl(os.total)}</span>
                 <ChevronRight className="size-4 shrink-0 adm-muted" />
               </Link>
             ))}
@@ -90,13 +67,10 @@ export default function DashboardPage() {
 
         <Panel
           title="Alertas de estoque"
-          action={
-            <Link href="/oficina/estoque" className="text-sm font-semibold adm-brand">
-              Estoque
-            </Link>
-          }
+          action={<Link href="/oficina/estoque" className="text-sm font-semibold adm-brand">Estoque</Link>}
           bodyClass="divide-y divide-[var(--ad-line)]"
         >
+          {baixoEstoque.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Estoque em dia.</p>}
           {baixoEstoque.map((p) => (
             <div key={p.id} className="flex items-center gap-3 px-5 py-3.5">
               <AlertTriangle className="size-5 shrink-0 text-amber-400" />
@@ -104,9 +78,7 @@ export default function DashboardPage() {
                 <p className="truncate text-sm font-semibold adm-ink">{p.produto}</p>
                 <p className="text-xs adm-muted">{p.marca}</p>
               </div>
-              <span className="text-sm font-semibold text-amber-400">
-                {p.qtd}/{p.minimo}
-              </span>
+              <span className="text-sm font-semibold text-amber-400">{p.qtd}/{p.minimo}</span>
             </div>
           ))}
         </Panel>
