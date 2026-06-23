@@ -1,6 +1,22 @@
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { ordens } from "../_data/mock";
 import { OrdersTable } from "../_components/orders-table";
 
 export default function OrdensPage() {
-  return <OrdersTable ordens={ordens} />;
+  return (
+    <div>
+      <div className="mb-5 flex items-center justify-between">
+        <p className="text-sm adm-muted">{ordens.length} ordens de serviço</p>
+        <Link
+          href="/oficina/ordens/nova"
+          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+        >
+          <Plus className="size-4" />
+          Nova OS
+        </Link>
+      </div>
+      <OrdersTable ordens={ordens} />
+    </div>
+  );
 }
