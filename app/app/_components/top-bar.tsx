@@ -44,7 +44,7 @@ export default function TopBar({ onMenu, unread }: { onMenu: () => void; unread:
             type="button"
             onClick={onMenu}
             aria-label="Abrir menu"
-            className="grid size-10 place-items-center rounded-full text-[var(--app-ink)] transition-colors hover:bg-[var(--app-surface-2)]"
+            className="grid size-10 place-items-center rounded-full text-[var(--app-ink)] transition-colors hover:bg-[var(--app-surface-2)] lg:hidden"
           >
             <Menu className="size-6" />
           </button>
