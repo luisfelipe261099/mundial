@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, SignalHigh, Wifi, BatteryFull } from "lucide-react";
+import { ArrowLeft, SignalHigh, Wifi, BatteryFull, LogOut } from "lucide-react";
 import { business } from "../../_data/business";
+import { logout } from "../../login/actions";
 
 export default function MecShell({ children }: { children: React.ReactNode }) {
   const path = usePathname() ?? "/mecanico";
@@ -46,6 +47,15 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
             </p>
             {!isDetail && <p className="text-[0.65rem] font-medium mec-muted">Área do mecânico</p>}
           </div>
+          <form action={logout}>
+            <button
+              type="submit"
+              aria-label="Sair"
+              className="grid size-10 place-items-center rounded-full mec-ink transition-colors hover:bg-[var(--mec-surface-2)]"
+            >
+              <LogOut className="size-5" />
+            </button>
+          </form>
         </header>
 
         <main className="no-scrollbar min-h-0 flex-1 overflow-y-auto">{children}</main>

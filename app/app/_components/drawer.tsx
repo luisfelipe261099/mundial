@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { X, MessageCircle, LogOut } from "lucide-react";
 import { drawerNav } from "./nav-items";
 import { business, whatsappUrl } from "../../_data/business";
+import { logout } from "../../login/actions";
 
 export default function Drawer({
   open,
@@ -98,14 +99,15 @@ export default function Drawer({
             <MessageCircle className="size-5 text-emerald-400" />
             Falar no WhatsApp
           </a>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[0.95rem] font-medium text-rose-300/90 transition-colors hover:bg-[var(--app-surface-2)]"
-          >
-            <LogOut className="size-5" />
-            Sair
-          </button>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[0.95rem] font-medium text-rose-300/90 transition-colors hover:bg-[var(--app-surface-2)]"
+            >
+              <LogOut className="size-5" />
+              Sair
+            </button>
+          </form>
         </div>
       </nav>
     </div>

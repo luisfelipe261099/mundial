@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cliente } from "../_data/mock";
+import { logout } from "../../login/actions";
 
 const DADOS = [
   { icon: Hash, label: "CPF", value: cliente.cpf },
@@ -87,13 +88,15 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      <button
-        type="button"
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-500/30 py-3 text-sm font-semibold text-rose-300 transition-colors hover:bg-rose-500/10"
-      >
-        <LogOut className="size-4" />
-        Sair da conta
-      </button>
+      <form action={logout}>
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-500/30 py-3 text-sm font-semibold text-rose-300 transition-colors hover:bg-rose-500/10"
+        >
+          <LogOut className="size-4" />
+          Sair da conta
+        </button>
+      </form>
     </div>
   );
 }

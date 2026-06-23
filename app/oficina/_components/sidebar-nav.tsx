@@ -3,9 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, LogOut } from "lucide-react";
 import { adminNav } from "./nav-items";
 import { business } from "../../_data/business";
+import { logout } from "../../login/actions";
 
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const path = usePathname() ?? "/oficina";
@@ -52,7 +53,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-[var(--ad-line)] p-3">
+      <div className="space-y-1 border-t border-[var(--ad-line)] p-3">
         <Link
           href="/"
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium adm-muted transition-colors hover:bg-[var(--ad-surface-2)]"
@@ -60,6 +61,15 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <ExternalLink className="size-[1.15rem]" />
           Ver site público
         </Link>
+        <form action={logout}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-300 transition-colors hover:bg-[var(--ad-surface-2)]"
+          >
+            <LogOut className="size-[1.15rem]" />
+            Sair
+          </button>
+        </form>
       </div>
     </div>
   );

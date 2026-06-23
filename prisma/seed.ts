@@ -1,7 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../lib/generated/prisma/client";
+import { PrismaClient, Prisma } from "../lib/generated/prisma/client";
 import {
   clientes,
   veiculosAdmin,
@@ -99,7 +99,7 @@ async function main() {
         fuel: rich?.combustivel,
         nextRevisionDate: v.proximaRevisao,
         nextRevisionKm: rich?.proximaRevisao.faltamKm,
-        maintenances: rich?.proximasManutencoes ?? undefined,
+        maintenances: (rich?.proximasManutencoes ?? undefined) as Prisma.InputJsonValue | undefined,
       },
     });
     vehicleByPlate.set(v.placa, created.id);
@@ -128,7 +128,7 @@ async function main() {
         { item: "Freios dianteiros", quando: "Verificar no próximo serviço", status: "proxima" },
         { item: "Correia dentada", quando: "Em 20.000 km", status: "ok" },
         { item: "Pneus", quando: "Rodízio recomendado", status: "proxima" },
-      ],
+      ] as Prisma.InputJsonValue,
     },
   });
   vehicleByPlate.set(voyage.plate, voyage.id);
@@ -185,7 +185,7 @@ async function main() {
         total: o.valor,
         warranty: o.garantia,
         responsible: o.responsavel,
-        photos: o.fotos,
+        photos: o.fotos as Prisma.InputJsonValue,
         items: {
           create: [{ type: "Serviço", description: o.servico, qty: 1, value: o.valor }],
         },

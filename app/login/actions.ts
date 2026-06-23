@@ -1,0 +1,55 @@
+"use server";
+
+import bcrypt from "bcryptjs";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { setSession, clearSession, homeFor, type Session } from "@/lib/auth";
+
+// normaliza placa: maiúsculas, só letras/números (ignora hífen/espaço)
+const normPlate = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+export type LoginState = { error?: string };
+
+export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
+  const identifier = String(formData.get("identifier") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  if (!identifier || !password) return { error: "Preencha e-mail/placa e senha." };
+
+  let session: Session | null = null;
+
+  if (identifier.includes("@")) {
+    // e-mail → primeiro usuário (admin/mecânico), depois cliente
+    const email = identifier.toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user?.password && (await bcrypt.compare(password, user.password))) {
+      session = { kind: user.role === "mecanico" ? "mecanico" : "admin", id: user.id, name: user.name };
+    } else {
+      const client = await prisma.client.findFirst({
+        where: { email: { equals: identifier, mode: "insensitive" } },
+      });
+      if (client?.password && (await bcrypt.compare(password, client.password))) {
+        session = { kind: "cliente", id: client.id, name: client.name };
+      }
+    }
+  } else {
+    // placa → veículo (normalizado) → cliente
+    const vehicles = await prisma.vehicle.findMany({ select: { plate: true, clientId: true } });
+    const match = vehicles.find((v) => normPlate(v.plate) === normPlate(identifier));
+    if (match) {
+      const client = await prisma.client.findUnique({ where: { id: match.clientId } });
+      if (client?.password && (await bcrypt.compare(password, client.password))) {
+        session = { kind: "cliente", id: client.id, name: client.name };
+      }
+    }
+  }
+
+  if (!session) return { error: "E-mail/placa ou senha inválidos." };
+
+  await setSession(session);
+  redirect(homeFor(session.kind));
+}
+
+export async function logout(): Promise<void> {
+  await clearSession();
+  redirect("/login");
+}
