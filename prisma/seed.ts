@@ -99,6 +99,7 @@ async function main() {
         fuel: rich?.combustivel,
         nextRevisionDate: v.proximaRevisao,
         nextRevisionKm: rich?.proximaRevisao.faltamKm,
+        revisionOverdue: v.revisaoVencida,
         maintenances: (rich?.proximasManutencoes ?? undefined) as Prisma.InputJsonValue | undefined,
       },
     });

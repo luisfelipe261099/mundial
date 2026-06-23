@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk, Space_Mono } from "next/font/google";
-import { business } from "../_data/business";
 import "./v2.css";
 
-// Tipografia da Opção B — escolhida pra NÃO encostar na Opção A
-// (Outfit/Work Sans/JetBrains). Display editorial com personalidade +
-// grotesco limpo no corpo + mono "instrumento" nos micro-rótulos.
+// Tipografia do site principal (tema escuro editorial "Oficina Noturna").
 const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-bricolage",
@@ -22,15 +18,8 @@ const spaceMono = Space_Mono({
   weight: ["400", "700"],
 });
 
-export const metadata: Metadata = {
-  title: `${business.name} — Opção B (Oficina Noturna)`,
-  description:
-    "Versão alternativa de layout (tema escuro editorial) para comparação. Auto Mecânica Mundial — Curitiba.",
-  // Página de comparação interna: não indexar.
-  robots: { index: false, follow: false },
-};
-
-export default function V2Layout({ children }: { children: React.ReactNode }) {
+// Sem metadata própria: o site herda o SEO real do layout raiz (indexável).
+export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={`v2-root ${bricolage.variable} ${hanken.variable} ${spaceMono.variable} relative min-h-screen overflow-x-hidden`}

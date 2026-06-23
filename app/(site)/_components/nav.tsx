@@ -61,7 +61,13 @@ export function Nav() {
           ))}
         </div>
 
-        <div className="hidden items-center gap-4 lg:flex">
+        <div className="hidden items-center gap-3 lg:flex">
+          <Link
+            href="/login"
+            className="v2-mono rounded-[3px] border border-[var(--line-2)] px-4 py-2.5 text-[11px] text-[var(--paper)] transition-colors hover:border-[var(--signal)] hover:text-[var(--signal)]"
+          >
+            Entrar
+          </Link>
           <WhatsAppCta label="WhatsApp" className="px-5 py-2.5 text-xs" />
         </div>
 
@@ -96,7 +102,14 @@ export function Nav() {
                   {l.label}
                 </a>
               ))}
-              <WhatsAppCta className="mt-4" onClick={() => setOpen(false)} />
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="v2-mono mt-3 rounded-[3px] border border-[var(--line-2)] py-3 text-center text-xs text-[var(--paper)] transition-colors hover:border-[var(--signal)] hover:text-[var(--signal)]"
+              >
+                Entrar
+              </Link>
+              <WhatsAppCta className="mt-3" onClick={() => setOpen(false)} />
             </div>
           </motion.div>
         )}

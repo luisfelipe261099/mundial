@@ -48,6 +48,7 @@ model Vehicle {
   km               Int            @default(0)
   nextRevisionDate String?
   nextRevisionKm   Int?
+  revisionOverdue  Boolean        @default(false)
   maintenances     Json?
   serviceOrders    ServiceOrder[]
 
