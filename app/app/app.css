@@ -1,0 +1,129 @@
+/* ════════════════════════════════════════════════════════════════════
+   APP DO CLIENTE — tema "fintech navy" (fiel à imagem de referência).
+   Escopado em .app-root para NÃO vazar pro site de marketing (que é claro).
+   Mesmo padrão de isolamento do /v2: html:has(.app-root) força o escuro.
+   Tokens via CSS vars + valores arbitrários do Tailwind (sem @theme global).
+   Fontes (--font-outfit / --font-work-sans) já vêm do root layout.
+   ════════════════════════════════════════════════════════════════════ */
+
+.app-root {
+  --app-bg: #0a0e17;
+  --app-surface: #121826;
+  --app-surface-2: #19212f;
+  --app-line: #232c3d;
+  --app-ink: #f4f7fb;
+  --app-muted: #8b95a7;
+  --app-brand: #2563eb;
+  --app-brand-2: #3b82f6;
+
+  color: var(--app-ink);
+  background-color: var(--app-bg);
+  font-family: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Quando o app está montado, força a tela inteira pro escuro (overscroll,
+   scrollbar, body claro do tema raiz). */
+html:has(.app-root) {
+  color-scheme: dark;
+}
+body:has(.app-root) {
+  background-color: #05070c;
+}
+
+.app-root ::selection {
+  background: var(--app-brand);
+  color: #fff;
+}
+.app-root :focus-visible {
+  outline: 2px solid var(--app-brand-2);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ── Tipografia ─────────────────────────────────────────────────────── */
+.app-display {
+  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ── Superfícies ────────────────────────────────────────────────────── */
+.app-card {
+  background-color: var(--app-surface);
+  border: 1px solid var(--app-line);
+  border-radius: 1.25rem;
+}
+.app-card-2 {
+  background-color: var(--app-surface-2);
+  border: 1px solid var(--app-line);
+  border-radius: 1rem;
+}
+
+.t-ink { color: var(--app-ink); }
+.t-muted { color: var(--app-muted); }
+.t-brand { color: var(--app-brand-2); }
+
+/* ── Chips de ícone por categoria (verde/azul/roxo/âmbar etc.) ───────── */
+.chip {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.9rem;
+  flex: none;
+}
+.chip-oleo      { color: #34d399; background: rgba(16, 163, 74, 0.16); }
+.chip-freio     { color: #60a5fa; background: rgba(37, 99, 235, 0.18); }
+.chip-filtro    { color: #c084fc; background: rgba(124, 58, 237, 0.18); }
+.chip-revisao   { color: #38bdf8; background: rgba(2, 132, 199, 0.18); }
+.chip-suspensao { color: #fbbf24; background: rgba(217, 119, 6, 0.16); }
+.chip-eletrica  { color: #f472b6; background: rgba(219, 39, 119, 0.16); }
+.chip-pneus     { color: #a3a3a3; background: rgba(120, 120, 130, 0.18); }
+.chip-bateria   { color: #4ade80; background: rgba(22, 163, 74, 0.16); }
+.chip-geral     { color: #93c5fd; background: rgba(59, 130, 246, 0.16); }
+.chip-promo     { color: #fb923c; background: rgba(234, 88, 12, 0.16); }
+.chip-ipva      { color: #38bdf8; background: rgba(2, 132, 199, 0.18); }
+.chip-licenciamento { color: #fbbf24; background: rgba(217, 119, 6, 0.16); }
+
+/* ── Badges de status ───────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-agendado    { color: #93c5fd; background: rgba(37, 99, 235, 0.16); }
+.badge-confirmado  { color: #5eead4; background: rgba(13, 148, 136, 0.16); }
+.badge-andamento   { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
+.badge-finalizado  { color: #86efac; background: rgba(22, 163, 74, 0.16); }
+.badge-pendente    { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
+.badge-aprovado    { color: #86efac; background: rgba(22, 163, 74, 0.16); }
+.badge-rejeitado   { color: #fca5a5; background: rgba(220, 38, 38, 0.16); }
+.badge-ok          { color: #86efac; background: rgba(22, 163, 74, 0.14); }
+.badge-proxima     { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
+.badge-vencida     { color: #fca5a5; background: rgba(220, 38, 38, 0.16); }
+
+/* ── Gradientes do card de veículo (sem asset de recorte do carro) ───── */
+.grad-blue {
+  background:
+    radial-gradient(120% 120% at 85% -10%, rgba(59, 130, 246, 0.55), transparent 55%),
+    linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 45%, #0b1220 100%);
+}
+.grad-steel {
+  background:
+    radial-gradient(120% 120% at 85% -10%, rgba(148, 163, 184, 0.4), transparent 55%),
+    linear-gradient(135deg, #334155 0%, #1e293b 50%, #0b1220 100%);
+}
+
+/* ── Utilidades ─────────────────────────────────────────────────────── */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-root * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
