@@ -34,7 +34,10 @@ export const faturamentoMensal = [
 export interface Cliente {
   id: string;
   nome: string;
+  cpf: string;
   telefone: string;
+  whatsapp: string;
+  email: string;
   cidade: string;
   veiculos: number;
   gastoTotal: number;
@@ -42,12 +45,12 @@ export interface Cliente {
 }
 
 export const clientes: Cliente[] = [
-  { id: "c1", nome: "João Mendes", telefone: "(41) 99999-0000", cidade: "Curitiba/PR", veiculos: 2, gastoTotal: 4820, desde: "2021" },
-  { id: "c2", nome: "Marina Schmidt", telefone: "(41) 98888-1122", cidade: "Curitiba/PR", veiculos: 1, gastoTotal: 2310, desde: "2022" },
-  { id: "c3", nome: "Rafael Antunes", telefone: "(41) 97777-3344", cidade: "Pinhais/PR", veiculos: 3, gastoTotal: 9140, desde: "2019" },
-  { id: "c4", nome: "Cláudia Pereira", telefone: "(41) 96666-5566", cidade: "Curitiba/PR", veiculos: 1, gastoTotal: 1580, desde: "2023" },
-  { id: "c5", nome: "Eduardo Nakamura", telefone: "(41) 95555-7788", cidade: "São José dos Pinhais/PR", veiculos: 2, gastoTotal: 6720, desde: "2020" },
-  { id: "c6", nome: "Patrícia Lopes", telefone: "(41) 94444-9900", cidade: "Curitiba/PR", veiculos: 1, gastoTotal: 980, desde: "2024" },
+  { id: "c1", nome: "João Mendes", cpf: "123.456.789-00", telefone: "(41) 99999-0000", whatsapp: "(41) 99999-0000", email: "joao.mendes@email.com", cidade: "Curitiba/PR", veiculos: 2, gastoTotal: 4820, desde: "2021" },
+  { id: "c2", nome: "Marina Schmidt", cpf: "234.567.890-11", telefone: "(41) 98888-1122", whatsapp: "(41) 98888-1122", email: "marina.s@email.com", cidade: "Curitiba/PR", veiculos: 1, gastoTotal: 2310, desde: "2022" },
+  { id: "c3", nome: "Rafael Antunes", cpf: "345.678.901-22", telefone: "(41) 97777-3344", whatsapp: "(41) 97777-3344", email: "rafael.antunes@email.com", cidade: "Pinhais/PR", veiculos: 3, gastoTotal: 9140, desde: "2019" },
+  { id: "c4", nome: "Cláudia Pereira", cpf: "456.789.012-33", telefone: "(41) 96666-5566", whatsapp: "(41) 96666-5566", email: "claudia.p@email.com", cidade: "Curitiba/PR", veiculos: 1, gastoTotal: 1580, desde: "2023" },
+  { id: "c5", nome: "Eduardo Nakamura", cpf: "567.890.123-44", telefone: "(41) 95555-7788", whatsapp: "(41) 95555-7788", email: "edu.nakamura@email.com", cidade: "São José dos Pinhais/PR", veiculos: 2, gastoTotal: 6720, desde: "2020" },
+  { id: "c6", nome: "Patrícia Lopes", cpf: "678.901.234-55", telefone: "(41) 94444-9900", whatsapp: "(41) 94444-9900", email: "patricia.lopes@email.com", cidade: "Curitiba/PR", veiculos: 1, gastoTotal: 980, desde: "2024" },
 ];
 
 export interface VeiculoAdmin {
@@ -248,6 +251,12 @@ export const relatorios = {
 
 export function getOrdem(id: string) {
   return ordens.find((o) => o.id === id);
+}
+export function getCliente(id: string) {
+  return clientes.find((c) => c.id === id);
+}
+export function getVeiculoAdmin(id: string) {
+  return veiculosAdmin.find((v) => v.id === id);
 }
 
 export const osBadgeClass: Record<StatusOS, string> = {

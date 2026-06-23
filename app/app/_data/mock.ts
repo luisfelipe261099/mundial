@@ -314,6 +314,30 @@ export const catalogoServicos: { nome: string; categoria: Categoria }[] = [
 // horários fictícios para o passo "horário" do agendamento
 export const horariosDisponiveis = ["08:00", "09:00", "10:30", "13:30", "15:00", "16:30"];
 
+export type TipoDocumento =
+  | "Nota fiscal"
+  | "Garantia"
+  | "Orçamento"
+  | "Ordem de serviço"
+  | "Comprovante";
+
+export interface Documento {
+  id: string;
+  nome: string;
+  tipo: TipoDocumento;
+  data: string;
+}
+
+export const documentos: Documento[] = [
+  { id: "d1", nome: "NF-e 2041 — Troca de óleo do motor", tipo: "Nota fiscal", data: "15/04/2026" },
+  { id: "d6", nome: "NF-e 2032 — Freios + filtro de ar", tipo: "Nota fiscal", data: "02/04/2026" },
+  { id: "d2", nome: "Garantia — Pastilhas de freio (3 meses)", tipo: "Garantia", data: "02/04/2026" },
+  { id: "d7", nome: "Garantia — Alinhamento (1 ano)", tipo: "Garantia", data: "20/02/2026" },
+  { id: "d3", nome: "Orçamento ORC-318 — Freios", tipo: "Orçamento", data: "20/06/2026" },
+  { id: "d4", nome: "OS-2041 — Relatório do serviço", tipo: "Ordem de serviço", data: "15/04/2026" },
+  { id: "d5", nome: "Comprovante de pagamento — PIX", tipo: "Comprovante", data: "15/04/2026" },
+];
+
 export function getVeiculo(id: string) {
   return veiculos.find((v) => v.id === id);
 }

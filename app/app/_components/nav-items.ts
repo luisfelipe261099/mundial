@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, Car, Wrench, User, Calendar, FileText, Bell } from "lucide-react";
+import { Home, Car, Wrench, User, Calendar, FileText, Bell, FolderOpen } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -22,6 +22,7 @@ export const drawerNav: NavItem[] = [
   { href: "/app/agendar", label: "Agendamentos", icon: Calendar },
   { href: "/app/historico", label: "Histórico", icon: Wrench },
   { href: "/app/orcamentos", label: "Orçamentos", icon: FileText },
+  { href: "/app/documentos", label: "Documentos", icon: FolderOpen },
   { href: "/app/notificacoes", label: "Notificações", icon: Bell },
   { href: "/app/perfil", label: "Perfil", icon: User },
 ];
