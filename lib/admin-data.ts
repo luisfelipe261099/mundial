@@ -148,6 +148,34 @@ export async function getOrdem(id: string): Promise<OrdemServicoAdmin | null> {
   return o ? mapOrdem(o) : null;
 }
 
+// OS + dados de contato do cliente e detalhes do veículo, para o PDF "completo".
+// Faz fallback aos campos denormalizados quando a OS não tem vínculo (client/vehicle nulos).
+export type OrdemPdf = OrdemServicoAdmin & {
+  clienteInfo: { cpf: string; telefone: string; cidade: string };
+  veiculoInfo: { ano: string; cor: string; combustivel: string };
+};
+
+export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
+  const o = await prisma.serviceOrder.findUnique({
+    where: { id },
+    include: { items: true, client: true, vehicle: true },
+  });
+  if (!o) return null;
+  return {
+    ...mapOrdem(o),
+    clienteInfo: {
+      cpf: o.client?.cpf ?? "—",
+      telefone: o.client?.phone ?? o.client?.whatsapp ?? "—",
+      cidade: o.client?.city ?? "—",
+    },
+    veiculoInfo: {
+      ano: o.vehicle?.year ? String(o.vehicle.year) : "—",
+      cor: o.vehicle?.color ?? "—",
+      combustivel: o.vehicle?.fuel ?? "—",
+    },
+  };
+}
+
 export async function getAgendaHoje(): Promise<Agendamento[]> {
   const rows = await prisma.appointment.findMany({ where: { date: "Hoje" }, include: { client: true }, orderBy: { time: "asc" } });
   return rows.map((a) => ({

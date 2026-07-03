@@ -167,10 +167,13 @@ export default async function OrdemDetalhe({
           <MessageCircle className="size-4 text-emerald-400" />
           Avisar no WhatsApp
         </button>
-        <button type="button" className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink transition-colors hover:bg-[var(--ad-surface-2)]">
+        <a
+          href={`/oficina/ordens/${encodeURIComponent(os.id)}/pdf`}
+          className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink transition-colors hover:bg-[var(--ad-surface-2)]"
+        >
           <FileDown className="size-4 adm-brand" />
           Gerar PDF
-        </button>
+        </a>
       </div>
     </div>
   );
