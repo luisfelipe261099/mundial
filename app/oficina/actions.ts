@@ -128,6 +128,25 @@ export async function criarLancamento(input: {
   revalidatePath("/oficina");
 }
 
+export async function salvarConfiguracoes(input: {
+  shopName: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+  notifOleo: boolean;
+  notifRevisao: boolean;
+  notifIpva: boolean;
+  notifPromo: boolean;
+}) {
+  await requireAdmin();
+  await prisma.settings.upsert({
+    where: { id: "default" },
+    create: { id: "default", ...input },
+    update: input,
+  });
+  revalidatePath("/oficina/configuracoes");
+}
+
 export async function criarCliente(values: Record<string, string>) {
   await requireAdmin();
   const senha = await bcrypt.hash("cliente123", 10);

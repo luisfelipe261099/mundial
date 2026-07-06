@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownRight, Plus } from "lucide-react";
 import { brl } from "../_data/mock";
 import { criarLancamento } from "../actions";
@@ -12,7 +12,15 @@ export interface Lancamento {
   categoria: string;
   valor: number;
   data: string;
+  iso: string;
 }
+
+type Periodo = "mes" | "d30" | "tudo";
+const PERIODOS: { key: Periodo; label: string }[] = [
+  { key: "mes", label: "Este mês" },
+  { key: "d30", label: "30 dias" },
+  { key: "tudo", label: "Tudo" },
+];
 
 const CATEGORIAS: Record<"receita" | "despesa", string[]> = {
   receita: ["Serviços", "Peças", "Outros"],
@@ -24,14 +32,25 @@ const inputCls =
 
 export function FinanceManager({ seed }: { seed: Lancamento[] }) {
   const [lancs, setLancs] = useState<Lancamento[]>(seed);
+  const [periodo, setPeriodo] = useState<Periodo>("mes");
   const [tipo, setTipo] = useState<"receita" | "despesa">("receita");
   const [descricao, setDescricao] = useState("");
   const [categoria, setCategoria] = useState("Serviços");
   const [valor, setValor] = useState<number>(0);
   const [, startTransition] = useTransition();
 
-  const totalR = lancs.filter((l) => l.tipo === "receita").reduce((s, l) => s + l.valor, 0);
-  const totalD = lancs.filter((l) => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
+  const visiveis = useMemo(() => {
+    if (periodo === "tudo") return lancs;
+    const agora = new Date();
+    const corte =
+      periodo === "mes"
+        ? new Date(agora.getFullYear(), agora.getMonth(), 1).getTime()
+        : agora.getTime() - 30 * 86_400_000;
+    return lancs.filter((l) => new Date(l.iso).getTime() >= corte);
+  }, [lancs, periodo]);
+
+  const totalR = visiveis.filter((l) => l.tipo === "receita").reduce((s, l) => s + l.valor, 0);
+  const totalD = visiveis.filter((l) => l.tipo === "despesa").reduce((s, l) => s + l.valor, 0);
   const saldo = totalR - totalD;
 
   const tiles = [
@@ -49,7 +68,7 @@ export function FinanceManager({ seed }: { seed: Lancamento[] }) {
     if (!descricao.trim() || valor <= 0) return;
     const payload = { tipo, descricao, categoria, valor };
     setLancs((x) => [
-      { id: `l${Date.now()}`, tipo, descricao, categoria, valor, data: "Hoje" },
+      { id: `l${Date.now()}`, tipo, descricao, categoria, valor, data: "Hoje", iso: new Date().toISOString() },
       ...x,
     ]);
     setDescricao("");
@@ -59,7 +78,25 @@ export function FinanceManager({ seed }: { seed: Lancamento[] }) {
 
   return (
     <div className="space-y-6">
-      {/* totais ao vivo */}
+      {/* período */}
+      <div className="flex items-center gap-2">
+        {PERIODOS.map((p) => (
+          <button
+            key={p.key}
+            type="button"
+            onClick={() => setPeriodo(p.key)}
+            className={`rounded-lg border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              periodo === p.key
+                ? "border-[var(--ad-brand)] bg-[var(--ad-brand)] text-white"
+                : "border-[var(--ad-line)] adm-muted hover:bg-[var(--ad-surface-2)]"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {/* totais (do período) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {tiles.map((t) => {
           const Icon = t.icon;
@@ -132,11 +169,15 @@ export function FinanceManager({ seed }: { seed: Lancamento[] }) {
 
       {/* lançamentos */}
       <div className="adm-card overflow-hidden">
-        <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
-          <h2 className="adm-display font-bold adm-ink">Lançamentos do mês</h2>
+        <div className="flex items-center justify-between border-b border-[var(--ad-line)] px-5 py-3.5">
+          <h2 className="adm-display font-bold adm-ink">Lançamentos</h2>
+          <span className="text-xs adm-muted">{visiveis.length} no período</span>
         </div>
         <div className="divide-y divide-[var(--ad-line)]">
-          {lancs.map((l) => {
+          {visiveis.length === 0 && (
+            <p className="px-5 py-4 text-sm adm-muted">Nenhum lançamento no período.</p>
+          )}
+          {visiveis.map((l) => {
             const receita = l.tipo === "receita";
             return (
               <div key={l.id} className="flex items-center gap-3 px-5 py-3.5">

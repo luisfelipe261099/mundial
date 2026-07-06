@@ -173,6 +173,22 @@ model StockMovement {
   @@map("stock_movements")
 }
 
+// Configurações da oficina (linha única, id fixo "default").
+model Settings {
+  id           String   @id @default("default")
+  shopName     String?
+  phone        String?
+  whatsapp     String?
+  address      String?
+  notifOleo    Boolean  @default(true)
+  notifRevisao Boolean  @default(true)
+  notifIpva    Boolean  @default(true)
+  notifPromo   Boolean  @default(false)
+  updatedAt    DateTime @updatedAt
+
+  @@map("settings")
+}
+
 model Notification {
   id       String  @id @default(cuid())
   clientId String?

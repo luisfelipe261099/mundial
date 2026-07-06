@@ -336,6 +336,20 @@ export async function getLancamentos() {
     categoria: t.category ?? "Outros",
     valor: t.value,
     data: t.date ?? "Hoje",
+    iso: t.createdAt.toISOString(), // p/ filtro por período no cliente
+  }));
+}
+
+export async function getSettings() {
+  return prisma.settings.findUnique({ where: { id: "default" } });
+}
+
+// Equipe real: usuários cadastrados (admin/mecânico).
+export async function getEquipe() {
+  const users = await prisma.user.findMany({ orderBy: { name: "asc" } });
+  return users.map((u) => ({
+    nome: u.name,
+    papel: u.role === "mecanico" ? "Mecânico" : u.role === "cliente" ? "Cliente" : "Administrador",
   }));
 }
 
