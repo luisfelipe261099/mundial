@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Hash,
   Phone,
@@ -56,7 +57,12 @@ export default async function PerfilPage() {
       </div>
 
       <section>
-        <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Dados pessoais</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="app-display text-[1.05rem] font-bold t-ink">Dados pessoais</h2>
+          <Link href="/app/perfil/editar" className="text-sm font-semibold t-brand">
+            Editar
+          </Link>
+        </div>
         <div className="app-card divide-y divide-[var(--app-line)] px-4">
           {DADOS.map((d) => {
             const Icon = d.icon;

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession, homeFor } from "@/lib/auth";
 import { business } from "../_data/business";
@@ -39,6 +40,13 @@ export default async function LoginPage() {
         <p className="mt-6 text-center text-xs leading-relaxed text-slate-500">
           Cliente: entre com o <strong className="text-slate-300">e-mail</strong> ou a{" "}
           <strong className="text-slate-300">placa do carro</strong> + senha.
+        </p>
+
+        <p className="mt-4 text-center text-sm text-slate-400">
+          Novo por aqui?{" "}
+          <Link href="/cadastro" className="font-semibold text-blue-400">
+            Criar conta
+          </Link>
         </p>
       </div>
     </main>
