@@ -229,3 +229,14 @@ export async function salvarTechChecklist(
   revalidatePath(`/mecanico/${osId}`);
   revalidatePath(`/oficina/ordens/${osId}`);
 }
+
+// Fotos da OS (URLs no Vercel Blob), salvas pela equipe.
+export async function salvarFotos(osId: string, fotos: string[]) {
+  await requireStaff();
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: { photos: fotos as Prisma.InputJsonValue },
+  });
+  revalidatePath(`/mecanico/${osId}`);
+  revalidatePath(`/oficina/ordens/${osId}`);
+}

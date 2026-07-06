@@ -209,6 +209,7 @@ export async function getOrdemControle(id: string) {
     inspection,
     mechanicId: o.mechanicId,
     techChecklist: (o.techChecklist ?? null) as { item: string; status: string }[] | null,
+    fotos: (o.photos ?? []) as string[],
     itens: o.items.map((i) => ({
       id: i.id,
       tipo: i.type,

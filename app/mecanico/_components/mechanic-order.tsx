@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
+import { upload } from "@vercel/blob/client";
 import { Check, Camera, ChevronRight, Plus, Trash2, ClipboardList } from "lucide-react";
 import { brl, osBadgeClass, type StatusOS, type Produto } from "../../oficina/_data/mock";
 import type { OsControle } from "@/lib/admin-data";
@@ -10,6 +11,7 @@ import {
   adicionarItemOS,
   removerItemOS,
   salvarTechChecklist,
+  salvarFotos,
 } from "../../oficina/os-actions";
 import { salvarObservacoes } from "../actions";
 
@@ -50,8 +52,41 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
   // itens
   const [draft, setDraft] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
 
-  // fotos (mock local até o storage)
-  const [fotos, setFotos] = useState<string[]>(["/images/real-diagnostic.jpg", "/images/real-garage.jpg"]);
+  // fotos (Vercel Blob)
+  const [fotos, setFotos] = useState<string[]>(os.fotos ?? []);
+  const [enviando, setEnviando] = useState(false);
+  const [erroFoto, setErroFoto] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function enviarFotos(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setErroFoto(null);
+    setEnviando(true);
+    try {
+      const novas: string[] = [];
+      for (const file of Array.from(files)) {
+        const blob = await upload(`os/${os.id}/${Date.now()}-${file.name}`, file, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+        });
+        novas.push(blob.url);
+      }
+      const todas = [...fotos, ...novas];
+      setFotos(todas);
+      run(() => salvarFotos(os.id, todas));
+    } catch {
+      setErroFoto("Não foi possível enviar. Configure o Vercel Blob (veja docs/INTEGRACOES.md).");
+    } finally {
+      setEnviando(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  function removerFoto(url: string) {
+    const todas = fotos.filter((f) => f !== url);
+    setFotos(todas);
+    run(() => salvarFotos(os.id, todas));
+  }
 
   // observações
   const [obs, setObs] = useState(os.observacoes);
@@ -227,17 +262,42 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
           <h2 className="mec-display text-[1.05rem] font-bold mec-ink">Fotos</h2>
           <button
             type="button"
-            onClick={() => setFotos((f) => [...f, f.length % 2 ? "/images/real-diagnostic.jpg" : "/images/real-garage.jpg"])}
-            className="flex items-center gap-1.5 text-sm font-semibold mec-brand"
+            onClick={() => fileRef.current?.click()}
+            disabled={enviando}
+            className="flex items-center gap-1.5 text-sm font-semibold mec-brand disabled:opacity-50"
           >
             <Camera className="size-4" />
-            Adicionar
+            {enviando ? "Enviando…" : "Adicionar"}
           </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            capture="environment"
+            hidden
+            onChange={(e) => enviarFotos(e.target.files)}
+          />
         </div>
+        {erroFoto && (
+          <p className="mb-2 rounded-lg bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{erroFoto}</p>
+        )}
+        {fotos.length === 0 && !enviando && <p className="text-sm mec-muted">Nenhuma foto ainda.</p>}
         <div className="grid grid-cols-3 gap-2">
-          {fotos.map((src, i) => (
-            <div key={i} className="relative aspect-square overflow-hidden rounded-lg border border-[var(--mec-line)]">
-              <Image src={src} alt={`Foto ${i + 1}`} fill sizes="120px" className="object-cover" />
+          {fotos.map((src) => (
+            <div
+              key={src}
+              className="group relative aspect-square overflow-hidden rounded-lg border border-[var(--mec-line)]"
+            >
+              <Image src={src} alt="Foto da OS" fill sizes="120px" className="object-cover" unoptimized />
+              <button
+                type="button"
+                onClick={() => removerFoto(src)}
+                aria-label="Remover foto"
+                className="absolute right-1 top-1 grid size-6 place-items-center rounded-md bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
             </div>
           ))}
         </div>

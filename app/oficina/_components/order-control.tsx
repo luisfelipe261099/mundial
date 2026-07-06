@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -324,6 +325,25 @@ export function OrderControl({
         <div className="adm-card p-5">
           <p className="text-xs uppercase tracking-wide adm-muted">Observações</p>
           <p className="mt-1.5 text-sm adm-ink">{os.observacoes}</p>
+        </div>
+      )}
+
+      {os.fotos.length > 0 && (
+        <div className="adm-card p-5">
+          <p className="text-xs uppercase tracking-wide adm-muted">Fotos do serviço</p>
+          <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
+            {os.fotos.map((src) => (
+              <a
+                key={src}
+                href={src}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative aspect-square overflow-hidden rounded-lg border border-[var(--ad-line)]"
+              >
+                <Image src={src} alt="Foto da OS" fill sizes="120px" className="object-cover" unoptimized />
+              </a>
+            ))}
+          </div>
         </div>
       )}
 
