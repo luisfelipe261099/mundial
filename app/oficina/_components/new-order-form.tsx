@@ -93,7 +93,7 @@ export function NewOrderForm({
           </div>
         </div>
         <div className="mt-5 flex justify-center gap-3">
-          <Link href="/oficina/ordens" className="rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8]">
+          <Link href="/oficina/ordens" className="rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1b5fe0]">
             Ver ordens
           </Link>
           <Link href={`/oficina/ordens/${criada}`} className="rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink hover:bg-[var(--ad-surface-2)]">
@@ -193,7 +193,7 @@ export function NewOrderForm({
         <textarea value={obs} onChange={(e) => setObs(e.target.value)} rows={2} placeholder="Observações internas (opcional)…" className={`${inputCls} resize-none`} />
       </div>
 
-      <button type="button" disabled={!podeCriar || pending} onClick={criar} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+      <button type="button" disabled={!podeCriar || pending} onClick={criar} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40">
         <Check className="size-5" />
         {pending ? "Criando…" : "Criar ordem de serviço"}
       </button>

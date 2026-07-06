@@ -52,7 +52,7 @@ export function AgendaManager({ seed }: { seed: AgendaItem[] }) {
         <button
           type="button"
           onClick={() => setShowForm((s) => !s)}
-          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1b5fe0]"
         >
           {showForm ? <X className="size-4" /> : <Plus className="size-4" />}
           {showForm ? "Cancelar" : "Novo agendamento"}
@@ -80,7 +80,7 @@ export function AgendaManager({ seed }: { seed: AgendaItem[] }) {
             type="button"
             onClick={add}
             disabled={!podeSalvar}
-            className="mt-3 flex items-center gap-1.5 rounded-lg bg-[var(--ad-brand)] px-4 py-2 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
+            className="mt-3 flex items-center gap-1.5 rounded-lg bg-[var(--ad-brand)] px-4 py-2 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
           >
             <Check className="size-4" />
             Agendar

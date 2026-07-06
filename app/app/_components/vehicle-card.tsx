@@ -46,7 +46,7 @@ export function VehicleCard({
         aria-hidden
       />
       <div className="relative flex items-start gap-3">
-        <span className="grid size-11 place-items-center overflow-hidden rounded-full bg-white text-sm font-extrabold text-[#0a0e17] shadow-md ring-1 ring-white/40">
+        <span className="grid size-11 place-items-center overflow-hidden rounded-full bg-white text-sm font-extrabold text-[#0a0a0c] shadow-md ring-1 ring-white/40">
           {logo ? (
             <Image src={logo} alt={veiculo.marca} width={28} height={28} className="size-7 object-contain" />
           ) : (

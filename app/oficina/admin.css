@@ -5,14 +5,19 @@
    ════════════════════════════════════════════════════════════════════ */
 
 .admin-root {
-  --ad-bg: #0a0e17;
-  --ad-surface: #121826;
-  --ad-surface-2: #19212f;
-  --ad-line: #232c3d;
-  --ad-ink: #f4f7fb;
-  --ad-muted: #8b95a7;
-  --ad-brand: #2563eb;
-  --ad-brand-2: #3b82f6;
+  /* Mesma paleta "Oficina Noturna" do site e do app do cliente — uma marca,
+     três telas. (Antes: "fintech navy" frio, desalinhado do resto.) */
+  --ad-bg: #0a0a0c;
+  --ad-surface: #121217;
+  --ad-surface-2: #17171d;
+  --ad-surface-3: #1e1e25;
+  --ad-line: #26262e;
+  --ad-line-2: #34343e;
+  --ad-ink: #ece8df;
+  --ad-ink-2: #b4afa4;
+  --ad-muted: #807b72;
+  --ad-brand: #2f7bff;
+  --ad-brand-2: #4f90ff;
 
   color: var(--ad-ink);
   background-color: var(--ad-bg);
@@ -33,8 +38,17 @@ body:has(.admin-root) {
 }
 
 .adm-display {
-  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1;
+  /* Dígitos tabulares — KPIs e valores financeiros alinham em coluna. */
+  font-variant-numeric: tabular-nums;
+}
+.adm-mono {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .adm-card {

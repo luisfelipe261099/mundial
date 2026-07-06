@@ -78,7 +78,7 @@ export default async function VeiculoDetalhe({
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/app/agendar"
-          className="flex items-center justify-center gap-2 rounded-xl bg-[var(--app-brand)] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+          className="flex items-center justify-center gap-2 rounded-xl bg-[var(--app-brand)] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1b5fe0]"
         >
           <CalendarPlus className="size-4" />
           Agendar

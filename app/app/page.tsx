@@ -30,10 +30,11 @@ export default async function HomePage() {
   return (
     <div className="space-y-7 px-5 pb-8 pt-2">
       <header>
-        <h1 className="app-display text-2xl font-extrabold t-ink">
-          Olá, {cliente?.primeiroNome ?? "cliente"}! 👋
+        <p className="app-mono text-[0.6rem] t-brand">{business.name}</p>
+        <h1 className="app-display mt-1.5 text-[1.9rem] leading-none t-ink">
+          Olá, {cliente?.primeiroNome ?? "cliente"}
         </h1>
-        <p className="mt-0.5 text-sm t-muted">Bem-vindo à {business.name}</p>
+        <p className="mt-1.5 text-sm t-muted">Sua garagem, sob controle.</p>
       </header>
 
       {emAndamento && (

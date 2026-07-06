@@ -7,14 +7,21 @@
    ════════════════════════════════════════════════════════════════════ */
 
 .app-root {
-  --app-bg: #0a0e17;
-  --app-surface: #121826;
-  --app-surface-2: #19212f;
-  --app-line: #232c3d;
-  --app-ink: #f4f7fb;
-  --app-muted: #8b95a7;
-  --app-brand: #2563eb;
-  --app-brand-2: #3b82f6;
+  /* Paleta "Oficina Noturna" (fiel ao site v2) — tinta quente quase-preta,
+     papel quente e UM acento azul-elétrico (o azul do scanner da oficina).
+     Antes era "fintech navy" frio; agora é a mesma marca da landing. */
+  --app-bg: #0a0a0c;
+  --app-surface: #121217;
+  --app-surface-2: #17171d;
+  --app-surface-3: #1e1e25;
+  --app-line: #26262e;
+  --app-line-2: #34343e;
+  --app-ink: #ece8df;
+  --app-ink-2: #b4afa4;
+  --app-muted: #807b72;
+  --app-brand: #2f7bff;
+  --app-brand-2: #4f90ff;
+  --app-signal-soft: rgba(47, 123, 255, 0.16);
 
   color: var(--app-ink);
   background-color: var(--app-bg);
@@ -29,7 +36,7 @@ html:has(.app-root) {
   color-scheme: dark;
 }
 body:has(.app-root) {
-  background-color: #05070c;
+  background-color: #050506;
 }
 
 .app-root ::selection {
@@ -43,9 +50,22 @@ body:has(.app-root) {
 }
 
 /* ── Tipografia ─────────────────────────────────────────────────────── */
+/* Display-pôster (Bricolage), igual ao site — dá peso editorial/técnico
+   que Outfit (arredondado, "amigável") não entregava. */
 .app-display {
-  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
   letter-spacing: -0.02em;
+  line-height: 1;
+  /* Dígitos de largura fixa — preços/quilometragem alinham em coluna, sem
+     "dançar". É o detalhe que separa produto real de protótipo. */
+  font-variant-numeric: tabular-nums;
+}
+/* Rótulo técnico (nº de peça, seção, eyebrow) — Space Mono tracked. */
+.app-mono {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 /* ── Superfícies ────────────────────────────────────────────────────── */
@@ -64,28 +84,29 @@ body:has(.app-root) {
 .t-muted { color: var(--app-muted); }
 .t-brand { color: var(--app-brand-2); }
 
-/* ── Chips de ícone por categoria (verde/azul/roxo/âmbar etc.) ───────── */
+/* ── Chips de ícone por categoria ───────────────────────────────────────
+   Antes: 12 cores saturadas (arco-íris "app de brinquedo"). Agora: um único
+   ladrilho de grafite com ícone no acento-sinal. A categoria é lida pelo
+   ÍCONE (Droplet, Disc, Zap…), não por uma cor infantil. Disciplina de marca
+   premium — as classes .chip-{categoria} continuam existindo (sem efeito),
+   então nenhum componente precisou mudar. */
 .chip {
   display: grid;
   place-items: center;
   width: 2.75rem;
   height: 2.75rem;
-  border-radius: 9999px; /* círculo sólido, como na referência */
+  border-radius: 0.85rem; /* quadrado suave, tipo instrumento — não bolha */
   flex: none;
-  color: #fff; /* ícone branco */
+  color: var(--app-brand-2);
+  background: var(--app-surface-3);
+  border: 1px solid var(--app-line-2);
 }
-.chip-oleo      { background: #16a34a; }
-.chip-freio     { background: #2563eb; }
-.chip-filtro    { background: #7c3aed; }
-.chip-revisao   { background: #0284c7; }
-.chip-suspensao { background: #d97706; }
-.chip-eletrica  { background: #db2777; }
-.chip-pneus     { background: #475569; }
-.chip-bateria   { background: #16a34a; }
-.chip-geral     { background: #2563eb; }
-.chip-promo     { background: #ea580c; }
-.chip-ipva      { background: #0284c7; }
-.chip-licenciamento { background: #d97706; }
+/* Acento reservado para a promoção (única exceção semântica). */
+.chip-promo {
+  color: #fff;
+  background: linear-gradient(135deg, var(--app-brand) 0%, #1b5fe0 100%);
+  border-color: transparent;
+}
 
 /* ── Badges de status ───────────────────────────────────────────────── */
 .badge {

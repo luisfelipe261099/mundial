@@ -11,7 +11,7 @@ export default async function VeiculosAdminPage() {
         <p className="text-sm adm-muted">{veiculos.length} veículos cadastrados</p>
         <Link
           href="/oficina/veiculos/novo"
-          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1b5fe0]"
         >
           <Plus className="size-4" />
           Novo veículo

@@ -101,7 +101,7 @@ export function EntradaForm({
         <div className="mt-5 flex justify-center gap-3">
           <Link
             href={`/oficina/ordens/${criada}`}
-            className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+            className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1b5fe0]"
           >
             Abrir OS e orçar
             <ArrowRight className="size-4" />
@@ -262,7 +262,7 @@ export function EntradaForm({
         type="button"
         disabled={!podeCriar || pending}
         onClick={criar}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
       >
         <Check className="size-5" />
         {pending ? "Registrando…" : "Registrar entrada e abrir OS"}

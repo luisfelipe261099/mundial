@@ -81,7 +81,7 @@ export function SolicitarForm({ veiculos }: { veiculos: VeiculoOpt[] }) {
         type="button"
         disabled={!veiculoId || !descricao.trim() || pending}
         onClick={enviar}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--app-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--app-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
       >
         {pending ? "Enviando…" : "Solicitar orçamento"}
       </button>

@@ -105,7 +105,7 @@ export default async function VeiculoAdminDetalhe({
         </div>
         <button
           type="submit"
-          className="rounded-lg bg-[var(--ad-brand)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+          className="rounded-lg bg-[var(--ad-brand)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1b5fe0]"
         >
           Salvar data-base
         </button>

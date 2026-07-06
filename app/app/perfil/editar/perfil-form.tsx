@@ -37,7 +37,7 @@ export function PerfilForm({ inicial }: { inicial: Record<string, string> }) {
         type="button"
         disabled={pending || !(v.nome ?? "").trim()}
         onClick={() => startTransition(() => atualizarPerfil(v))}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--app-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--app-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
       >
         <Check className="size-5" />
         {pending ? "Salvando…" : "Salvar alterações"}

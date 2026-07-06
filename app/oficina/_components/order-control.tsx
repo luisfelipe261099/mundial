@@ -115,7 +115,7 @@ export function OrderControl({
           )}
 
           {os.status === "Aberta" && (
-            <button type="button" disabled={pending || os.itens.length === 0} onClick={() => run(() => enviarParaAprovacao(os.id))} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+            <button type="button" disabled={pending || os.itens.length === 0} onClick={() => run(() => enviarParaAprovacao(os.id))} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40">
               Enviar orçamento p/ aprovação
               <ArrowRight className="size-4" />
             </button>
@@ -129,7 +129,7 @@ export function OrderControl({
                   {os.budgetStatus === "aprovado" ? "aprovou ✓" : os.budgetStatus === "rejeitado" ? "rejeitou ✗" : "aguardando resposta…"}
                 </span>
               </span>
-              <button type="button" disabled={pending} onClick={() => run(() => mudarStatus(os.id, "Em execução"))} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8]">
+              <button type="button" disabled={pending} onClick={() => run(() => mudarStatus(os.id, "Em execução"))} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1b5fe0]">
                 Iniciar execução
                 <ArrowRight className="size-4" />
               </button>
@@ -144,7 +144,7 @@ export function OrderControl({
           )}
 
           {os.status === "Finalizada" && (
-            <button type="button" onClick={() => setShowEntrega((v) => !v)} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8]">
+            <button type="button" onClick={() => setShowEntrega((v) => !v)} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1b5fe0]">
               <Truck className="size-4" />
               Registrar entrega
             </button>
@@ -291,7 +291,7 @@ export function OrderControl({
             <input value={draft.descricao} onChange={(e) => setDraft((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Descrição" className={inputCls} />
             <input type="number" min={1} value={draft.qtd} onChange={(e) => setDraft((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Qtd" />
             <input type="number" min={0} value={draft.valor || ""} onChange={(e) => setDraft((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$" className={inputCls} aria-label="Valor" />
-            <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+            <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40">
               <Plus className="size-4" />
               <span className="sm:hidden">Adicionar</span>
             </button>

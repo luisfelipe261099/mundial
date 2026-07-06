@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Outfit, Work_Sans, JetBrains_Mono } from "next/font/google";
+import {
+  Outfit,
+  Work_Sans,
+  JetBrains_Mono,
+  Bricolage_Grotesque,
+  Space_Mono,
+} from "next/font/google";
 import "./globals.css";
 import { business, fullAddress, mapsLink, siteUrl } from "./_data/business";
 
@@ -19,6 +25,21 @@ const jetBrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono-tech",
   weight: ["400", "500"],
+});
+
+// Fontes de marca "Oficina Noturna" — mesmas do site (v2), agora disponíveis
+// para o app do cliente e o painel da oficina, para coesão de plataforma.
+// Bricolage = display-pôster; Space Mono = rótulos técnicos.
+const bricolage = Bricolage_Grotesque({
+  subsets: ["latin"],
+  variable: "--font-bricolage",
+  weight: ["600", "700", "800"],
+});
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  variable: "--font-spacemono",
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -108,7 +129,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${outfit.variable} ${workSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
+      className={`${outfit.variable} ${workSans.variable} ${jetBrainsMono.variable} ${bricolage.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <script
