@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireStaff } from "@/lib/auth";
 
 function hoje() {
   return new Date().toLocaleDateString("pt-BR");
@@ -66,7 +66,7 @@ export async function adicionarItemOS(
   osId: string,
   item: { tipo: string; descricao: string; qtd: number; valor: number; productId?: string }
 ) {
-  await requireAdmin();
+  await requireStaff();
   await prisma.serviceOrderItem.create({
     data: {
       serviceOrderId: osId,
@@ -82,7 +82,7 @@ export async function adicionarItemOS(
 }
 
 export async function removerItemOS(itemId: string, osId: string) {
-  await requireAdmin();
+  await requireStaff();
   await prisma.serviceOrderItem.delete({ where: { id: itemId } });
   await recomputeTotal(osId);
   revalidatePath(`/oficina/ordens/${osId}`);
@@ -90,7 +90,7 @@ export async function removerItemOS(itemId: string, osId: string) {
 
 // Avançar/voltar status. Ao FINALIZAR, baixa o estoque das peças vinculadas (1x).
 export async function mudarStatus(osId: string, novoStatus: string) {
-  await requireAdmin();
+  await requireStaff();
   const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: true } });
   if (!os) return;
 
@@ -187,4 +187,30 @@ export async function entregarOS(osId: string, exitKm: number, paid: boolean) {
   revalidatePath("/oficina/ordens");
   revalidatePath("/oficina/financeiro");
   revalidatePath("/oficina");
+}
+
+// Atribuir mecânico à OS (só admin).
+export async function atribuirMecanico(osId: string, mechanicId: string) {
+  await requireAdmin();
+  const mec = mechanicId ? await prisma.user.findUnique({ where: { id: mechanicId } }) : null;
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: { mechanicId: mechanicId || null, mechanic: mec?.name ?? null },
+  });
+  revalidatePath(`/oficina/ordens/${osId}`);
+  revalidatePath("/mecanico");
+}
+
+// Vistoria técnica do mecânico (equipe).
+export async function salvarTechChecklist(
+  osId: string,
+  checklist: { item: string; status: string }[]
+) {
+  await requireStaff();
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: { techChecklist: checklist as Prisma.InputJsonValue },
+  });
+  revalidatePath(`/mecanico/${osId}`);
+  revalidatePath(`/oficina/ordens/${osId}`);
 }

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getOrdemControle, getEstoque } from "@/lib/admin-data";
+import { getOrdemControle, getEstoque, getMecanicos } from "@/lib/admin-data";
 import { OrderControl } from "../../_components/order-control";
 
 export default async function OrdemDetalhe({
@@ -8,8 +8,12 @@ export default async function OrdemDetalhe({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [os, estoque] = await Promise.all([getOrdemControle(id), getEstoque()]);
+  const [os, estoque, mecanicos] = await Promise.all([
+    getOrdemControle(id),
+    getEstoque(),
+    getMecanicos(),
+  ]);
   if (!os) notFound();
 
-  return <OrderControl os={os} estoque={estoque} />;
+  return <OrderControl os={os} estoque={estoque} mecanicos={mecanicos} />;
 }

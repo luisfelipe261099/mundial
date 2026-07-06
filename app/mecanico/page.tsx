@@ -1,17 +1,24 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { osBadgeClass } from "../oficina/_data/mock";
-import { getOrdens } from "@/lib/admin-data";
+import { getOrdens, getOrdensMecanico } from "@/lib/admin-data";
+import { requireSession } from "@/lib/auth";
 
 export default async function MecanicoHome() {
-  const todas = await getOrdens();
+  const session = await requireSession();
+  const todas =
+    session.kind === "mecanico" ? await getOrdensMecanico(session.id) : await getOrdens();
   const ativas = todas.filter((o) => o.status !== "Entregue");
 
   return (
     <div className="space-y-4 px-5 pb-8 pt-3">
-      <p className="text-sm mec-muted">{ativas.length} ordens atribuídas a você</p>
+      <p className="text-sm mec-muted">
+        {ativas.length} {ativas.length === 1 ? "ordem atribuída" : "ordens atribuídas"} a você
+      </p>
       {ativas.length === 0 && (
-        <div className="mec-card p-5 text-sm mec-muted">Nenhuma ordem em aberto.</div>
+        <div className="mec-card p-5 text-sm mec-muted">
+          Nenhuma ordem atribuída a você no momento.
+        </div>
       )}
       <div className="space-y-3">
         {ativas.map((o) => (

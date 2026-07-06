@@ -80,3 +80,11 @@ export async function requireAdmin(): Promise<Session> {
   if (session.kind !== "admin") redirect(homeFor(session.kind));
   return session;
 }
+
+// admin OU mecânico (equipe da oficina)
+export async function requireStaff(): Promise<Session> {
+  const session = await getSession();
+  if (!session) redirect("/login");
+  if (session.kind !== "admin" && session.kind !== "mecanico") redirect(homeFor(session.kind));
+  return session;
+}

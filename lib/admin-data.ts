@@ -207,6 +207,8 @@ export async function getOrdemControle(id: string) {
     paid: o.paid,
     deliveredAt: o.deliveredAt,
     inspection,
+    mechanicId: o.mechanicId,
+    techChecklist: (o.techChecklist ?? null) as { item: string; status: string }[] | null,
     itens: o.items.map((i) => ({
       id: i.id,
       tipo: i.type,
@@ -220,6 +222,23 @@ export async function getOrdemControle(id: string) {
 }
 
 export type OsControle = NonNullable<Awaited<ReturnType<typeof getOrdemControle>>>;
+
+export async function getMecanicos() {
+  return prisma.user.findMany({
+    where: { role: "mecanico" },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+}
+
+export async function getOrdensMecanico(mechanicId: string): Promise<OrdemServicoAdmin[]> {
+  const rows = await prisma.serviceOrder.findMany({
+    where: { mechanicId },
+    include: { items: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map(mapOrdem);
+}
 
 export async function getAgendaHoje(): Promise<Agendamento[]> {
   const rows = await prisma.appointment.findMany({ where: { date: "Hoje" }, include: { client: true }, orderBy: { time: "asc" } });

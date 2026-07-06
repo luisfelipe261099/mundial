@@ -2,34 +2,67 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Check, Camera, ChevronRight } from "lucide-react";
+import { Check, Camera, ChevronRight, Plus, Trash2, ClipboardList } from "lucide-react";
+import { brl, osBadgeClass, type StatusOS, type Produto } from "../../oficina/_data/mock";
+import type { OsControle } from "@/lib/admin-data";
 import {
-  osBadgeClass,
-  type OrdemServicoAdmin,
-  type StatusOS,
-} from "../../oficina/_data/mock";
-import { avancarStatus, salvarObservacoes } from "../actions";
+  mudarStatus,
+  adicionarItemOS,
+  removerItemOS,
+  salvarTechChecklist,
+} from "../../oficina/os-actions";
+import { salvarObservacoes } from "../actions";
 
-const FLUXO: StatusOS[] = [
-  "Aberta",
-  "Aguardando aprovação",
-  "Em execução",
-  "Finalizada",
-  "Entregue",
+const FLUXO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execução", "Finalizada", "Entregue"];
+const CHECKLIST_TEC = [
+  "Motor",
+  "Freios",
+  "Suspensão",
+  "Pneus",
+  "Óleo / fluidos",
+  "Elétrica",
+  "Ar-condicionado",
+  "Escapamento",
+];
+const STATUS3 = [
+  { key: "ok", label: "OK", on: "bg-emerald-600 text-white" },
+  { key: "atencao", label: "Atenção", on: "bg-amber-500 text-white" },
+  { key: "avaria", label: "Avaria", on: "bg-rose-600 text-white" },
 ];
 
-export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
-  const [status, setStatus] = useState<StatusOS>(os.status);
-  const [fotos, setFotos] = useState<string[]>([
-    "/images/real-diagnostic.jpg",
-    "/images/real-garage.jpg",
-  ]);
-  const [obs, setObs] = useState(os.observacoes);
-  const [salvo, setSalvo] = useState(false);
-  const [, startTransition] = useTransition();
+const inputCls =
+  "w-full rounded-lg border border-[var(--mec-line)] bg-[var(--mec-surface)] px-3 py-2 text-sm mec-ink outline-none focus:border-[var(--mec-brand)]";
 
-  const idx = FLUXO.indexOf(status);
-  const proximo = idx < FLUXO.length - 1 ? FLUXO[idx + 1] : null;
+export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produto[] }) {
+  const [pending, startTransition] = useTransition();
+  const run = (fn: () => Promise<unknown>) => startTransition(() => void fn());
+
+  const idx = FLUXO.indexOf(os.status as StatusOS);
+  const proximo = idx >= 0 && idx < FLUXO.length - 1 ? FLUXO[idx + 1] : null;
+
+  // vistoria técnica
+  const [check, setCheck] = useState<Record<string, string>>(() => {
+    const saved = new Map((os.techChecklist ?? []).map((c) => [c.item, c.status]));
+    return Object.fromEntries(CHECKLIST_TEC.map((i) => [i, saved.get(i) ?? "ok"]));
+  });
+  const [checkSalvo, setCheckSalvo] = useState(false);
+
+  // itens
+  const [draft, setDraft] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
+
+  // fotos (mock local até o storage)
+  const [fotos, setFotos] = useState<string[]>(["/images/real-diagnostic.jpg", "/images/real-garage.jpg"]);
+
+  // observações
+  const [obs, setObs] = useState(os.observacoes);
+  const [obsSalvo, setObsSalvo] = useState(false);
+
+  function addItem() {
+    if (!draft.descricao.trim() || draft.valor <= 0) return;
+    const payload = { ...draft, productId: draft.productId || undefined };
+    setDraft({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
+    run(() => adicionarItemOS(os.id, payload));
+  }
 
   return (
     <div className="space-y-5 px-5 pb-8 pt-3">
@@ -37,7 +70,7 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
       <div className="mec-card p-4">
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs mec-muted">{os.id}</span>
-          <span className={osBadgeClass[status]}>{status}</span>
+          <span className={osBadgeClass[os.status as StatusOS]}>{os.status}</span>
         </div>
         <p className="mec-display mt-1.5 text-lg font-bold mec-ink">{os.veiculo}</p>
         <p className="text-xs mec-muted">
@@ -53,7 +86,7 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
 
       {/* status */}
       <section>
-        <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Status do serviço</h2>
+        <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Status</h2>
         <div className="mec-card p-4">
           <div className="flex flex-wrap gap-2">
             {FLUXO.map((s, i) => (
@@ -70,10 +103,8 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
           {proximo ? (
             <button
               type="button"
-              onClick={() => {
-                setStatus(proximo);
-                startTransition(() => avancarStatus(os.id, proximo));
-              }}
+              disabled={pending}
+              onClick={() => run(() => mudarStatus(os.id, proximo))}
               className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--mec-brand)] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
             >
               Avançar para “{proximo}”
@@ -88,18 +119,115 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
         </div>
       </section>
 
+      {/* vistoria técnica */}
+      <section>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="mec-display flex items-center gap-2 text-[1.05rem] font-bold mec-ink">
+            <ClipboardList className="size-5 mec-brand" />
+            Vistoria técnica
+          </h2>
+        </div>
+        <div className="mec-card divide-y divide-[var(--mec-line)] px-4">
+          {CHECKLIST_TEC.map((item) => (
+            <div key={item} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
+              <span className="text-sm mec-ink">{item}</span>
+              <div className="flex gap-1 rounded-lg border border-[var(--mec-line)] p-0.5">
+                {STATUS3.map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => {
+                      setCheck((c) => ({ ...c, [item]: s.key }));
+                      setCheckSalvo(false);
+                    }}
+                    className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      check[item] === s.key ? s.on : "mec-muted"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setCheckSalvo(true);
+            run(() => salvarTechChecklist(os.id, CHECKLIST_TEC.map((i) => ({ item: i, status: check[i] }))));
+          }}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--mec-line)] py-3 text-sm font-semibold mec-ink transition-colors hover:bg-[var(--mec-surface-2)]"
+        >
+          {checkSalvo ? (
+            <>
+              <Check className="size-4 text-emerald-400" />
+              Vistoria salva
+            </>
+          ) : (
+            "Salvar vistoria técnica"
+          )}
+        </button>
+      </section>
+
+      {/* peças e serviços */}
+      <section>
+        <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Peças e serviços</h2>
+        <div className="mec-card divide-y divide-[var(--mec-line)] px-4">
+          {os.itens.length === 0 && <p className="py-3 text-sm mec-muted">Nenhum item ainda.</p>}
+          {os.itens.map((it) => (
+            <div key={it.id} className="flex items-center gap-2 py-2.5">
+              <span className="rounded-md bg-[var(--mec-surface-2)] px-2 py-0.5 text-xs mec-muted">{it.tipo}</span>
+              <span className="min-w-0 flex-1 truncate text-sm mec-ink">{it.descricao}</span>
+              <span className="text-xs mec-muted">×{it.qtd}</span>
+              <span className="text-sm font-semibold mec-ink">{brl(it.valor * it.qtd)}</span>
+              <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
+                <Trash2 className="size-4 text-rose-400" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-2 space-y-2 rounded-xl border border-[var(--mec-line)] p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <select value={draft.tipo} onChange={(e) => setDraft((d) => ({ ...d, tipo: e.target.value, productId: e.target.value === "Serviço" ? "" : d.productId }))} className={inputCls}>
+              <option value="Peça">Peça</option>
+              <option value="Serviço">Serviço</option>
+            </select>
+            <input type="number" min={0} value={draft.valor || ""} onChange={(e) => setDraft((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="Valor R$" className={inputCls} />
+          </div>
+          <input value={draft.descricao} onChange={(e) => setDraft((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Descrição" className={inputCls} />
+          {draft.tipo === "Peça" && estoque.length > 0 && (
+            <select
+              value={draft.productId}
+              onChange={(e) => {
+                const p = estoque.find((x) => x.id === e.target.value);
+                setDraft((d) => ({ ...d, productId: e.target.value, descricao: p ? p.produto : d.descricao }));
+              }}
+              className={inputCls}
+            >
+              <option value="">Vincular ao estoque (opcional)…</option>
+              {estoque.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.produto} ({p.qtd} un.)
+                </option>
+              ))}
+            </select>
+          )}
+          <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--mec-brand)] py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+            <Plus className="size-4" />
+            Adicionar item
+          </button>
+        </div>
+      </section>
+
       {/* fotos */}
       <section>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="mec-display text-[1.05rem] font-bold mec-ink">Fotos</h2>
           <button
             type="button"
-            onClick={() =>
-              setFotos((f) => [
-                ...f,
-                f.length % 2 ? "/images/real-diagnostic.jpg" : "/images/real-garage.jpg",
-              ])
-            }
+            onClick={() => setFotos((f) => [...f, f.length % 2 ? "/images/real-diagnostic.jpg" : "/images/real-garage.jpg"])}
             className="flex items-center gap-1.5 text-sm font-semibold mec-brand"
           >
             <Camera className="size-4" />
@@ -122,21 +250,21 @@ export function MechanicOrder({ os }: { os: OrdemServicoAdmin }) {
           value={obs}
           onChange={(e) => {
             setObs(e.target.value);
-            setSalvo(false);
+            setObsSalvo(false);
           }}
           rows={4}
-          className="w-full resize-none rounded-xl border border-[var(--mec-line)] bg-[var(--mec-surface)] p-3 text-sm mec-ink outline-none placeholder:mec-muted focus:border-[var(--mec-brand)]"
-          placeholder="Anote o que foi feito, peças trocadas, recomendações…"
+          className="w-full resize-none rounded-xl border border-[var(--mec-line)] bg-[var(--mec-surface)] p-3 text-sm mec-ink outline-none focus:border-[var(--mec-brand)]"
+          placeholder="O que foi feito, peças trocadas, recomendações…"
         />
         <button
           type="button"
           onClick={() => {
-            setSalvo(true);
-            startTransition(() => salvarObservacoes(os.id, obs));
+            setObsSalvo(true);
+            run(() => salvarObservacoes(os.id, obs));
           }}
           className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--mec-line)] py-3 text-sm font-semibold mec-ink transition-colors hover:bg-[var(--mec-surface-2)]"
         >
-          {salvo ? (
+          {obsSalvo ? (
             <>
               <Check className="size-4 text-emerald-400" />
               Observações salvas

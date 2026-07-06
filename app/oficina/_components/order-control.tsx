@@ -22,6 +22,7 @@ import {
   removerItemOS,
   enviarParaAprovacao,
   entregarOS,
+  atribuirMecanico,
 } from "../os-actions";
 
 const FLUXO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execução", "Finalizada", "Entregue"];
@@ -35,7 +36,15 @@ const VISTORIA_LABEL: Record<string, string> = { ok: "OK", atencao: "Atenção",
 const inputCls =
   "w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2.5 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]";
 
-export function OrderControl({ os, estoque }: { os: OsControle; estoque: Produto[] }) {
+export function OrderControl({
+  os,
+  estoque,
+  mecanicos,
+}: {
+  os: OsControle;
+  estoque: Produto[];
+  mecanicos: { id: string; name: string }[];
+}) {
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
   const [showEntrega, setShowEntrega] = useState(false);
@@ -147,6 +156,22 @@ export function OrderControl({ os, estoque }: { os: OsControle; estoque: Produto
               {os.paid ? " · pago" : " · pagamento pendente"}
             </p>
           )}
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-sm adm-muted">Mecânico:</span>
+            <select
+              value={os.mechanicId ?? ""}
+              onChange={(e) => run(() => atribuirMecanico(os.id, e.target.value))}
+              className="rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
+            >
+              <option value="">Não atribuído</option>
+              {mecanicos.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Form de entrega */}
