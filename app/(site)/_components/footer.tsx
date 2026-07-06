@@ -4,7 +4,7 @@ import {
   fullAddress,
   whatsappUrl,
 } from "../../_data/business";
-import { InstagramIcon } from "../../_components/icons";
+import { InstagramIcon } from "./ui";
 
 const nav = [
   { href: "#servicos", label: "Serviços" },

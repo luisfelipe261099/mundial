@@ -1,5 +1,4 @@
 import { ArrowUpRight, MessageCircle, Phone } from "lucide-react";
-import Link from "next/link";
 import { business, whatsappUrl } from "../../_data/business";
 
 /* Primitivos da Opção B. Botões SHARP (cantos retos), caps + mono — o
@@ -33,22 +32,26 @@ export function WhatsAppCta({
 
 export function AgendarCta({
   label = "Agendar horário",
+  message = "Olá! Quero agendar um horário para o meu carro na Auto Mecânica Mundial.",
   className = "",
   onClick,
 }: {
   label?: string;
+  message?: string;
   className?: string;
   onClick?: () => void;
 }) {
   return (
-    <Link
-      href="/agendar"
+    <a
+      href={whatsappUrl(message)}
+      target="_blank"
+      rel="noopener noreferrer"
       onClick={onClick}
       className={`group inline-flex items-center justify-center gap-2 rounded-[3px] border border-[var(--line-2)] bg-transparent px-7 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[var(--paper)] transition-all duration-200 hover:border-[var(--paper)] hover:bg-[var(--paper)] hover:text-[var(--ink)] ${className}`}
     >
       {label}
       <ArrowUpRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-    </Link>
+    </a>
   );
 }
 
@@ -61,6 +64,28 @@ export function PhoneCta({ className = "" }: { className?: string }) {
       <Phone size={16} className="text-[var(--signal)]" />
       {business.phoneDisplay}
     </a>
+  );
+}
+
+/** Ícone do Instagram em SVG (o lucide-react removeu os ícones de marca). */
+export function InstagramIcon({ size = 18, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+    </svg>
   );
 }
 
