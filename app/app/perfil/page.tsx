@@ -15,6 +15,7 @@ import {
 import { requireClientId } from "@/lib/auth";
 import { getCliente } from "@/lib/client-data";
 import { logout } from "../../login/actions";
+import { PushToggle } from "./push-toggle";
 
 const AJUSTES = [
   { icon: Bell, label: "Notificações" },
@@ -55,6 +56,8 @@ export default async function PerfilPage() {
         </div>
         <Download className="size-5 shrink-0 t-muted" />
       </div>
+
+      <PushToggle />
 
       <section>
         <div className="mb-3 flex items-center justify-between">

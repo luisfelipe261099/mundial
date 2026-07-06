@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { enviarPush } from "@/lib/push";
 
-// Ponto único de notificação. Cria a Notification in-app.
-// (Fase 3 acopla o Web Push aqui, então todo aviso vira push automaticamente.)
+// Ponto único de notificação: cria a Notification in-app e dispara o Web Push.
+// Todo aviso do sistema passa por aqui, então basta ligar as chaves VAPID.
 export async function notificar(
   clientId: string | null | undefined,
   type: string,
@@ -13,6 +14,5 @@ export async function notificar(
   await prisma.notification.create({
     data: { clientId, type, title, text, when: "Agora" },
   });
-  // Fase 3: await enviarPush(clientId, { title, body: text, url });
-  void url;
+  await enviarPush(clientId, { title, body: text, url });
 }
