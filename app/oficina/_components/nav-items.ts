@@ -9,6 +9,7 @@ import {
   Wallet,
   BarChart3,
   Settings,
+  KeyRound,
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -26,5 +27,6 @@ export const adminNav: AdminNavItem[] = [
   { href: "/oficina/estoque", label: "Estoque", icon: Package },
   { href: "/oficina/financeiro", label: "Financeiro", icon: Wallet },
   { href: "/oficina/relatorios", label: "Relatórios", icon: BarChart3 },
+  { href: "/oficina/acessos", label: "Acessos", icon: KeyRound },
   { href: "/oficina/configuracoes", label: "Configurações", icon: Settings },
 ];

@@ -402,3 +402,19 @@ export async function getClientesVeiculosParaOS() {
     veiculos: veiculos.map((v) => ({ id: v.id, proprietario: v.client?.name ?? "—", modelo: `${v.brand} ${v.model}`, placa: v.plate })),
   };
 }
+
+// ── Acessos da equipe (model User) ──────────────────────────────────────
+export async function getUsers() {
+  const users = await prisma.user.findMany({
+    orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+  });
+  return users.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    hasPassword: !!u.password,
+    since: u.createdAt.toLocaleDateString("pt-BR"),
+  }));
+}
+export type UserRow = Awaited<ReturnType<typeof getUsers>>[number];
