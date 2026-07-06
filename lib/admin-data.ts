@@ -256,6 +256,66 @@ export async function getEstoque(): Promise<Produto[]> {
   return rows.map((p) => ({ id: p.id, produto: p.name, marca: p.brand ?? "—", codigo: p.code, qtd: p.qty, minimo: p.min }));
 }
 
+export type Movimentacao = {
+  id: string;
+  produto: string;
+  delta: number;
+  motivo: string;
+  osId: string | null;
+  autor: string | null;
+  quando: string;
+};
+
+// Trilha de auditoria do estoque (entradas/saídas), mais recentes primeiro.
+export async function getMovimentacoes(): Promise<Movimentacao[]> {
+  const rows = await prisma.stockMovement.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 60,
+    include: { product: true },
+  });
+  return rows.map((m) => ({
+    id: m.id,
+    produto: m.product?.name ?? "—",
+    delta: m.delta,
+    motivo: m.reason,
+    osId: m.serviceOrderId,
+    autor: m.actor,
+    quando: m.createdAt.toLocaleString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  }));
+}
+
+export type AgendaItem = {
+  id: string;
+  data: string;
+  hora: string;
+  cliente: string;
+  veiculo: string;
+  servico: string;
+  status: string;
+};
+
+export async function getAgendaAdmin(): Promise<AgendaItem[]> {
+  const rows = await prisma.appointment.findMany({
+    include: { client: true },
+    orderBy: [{ date: "asc" }, { time: "asc" }],
+  });
+  return rows.map((a) => ({
+    id: a.id,
+    data: a.date,
+    hora: a.time,
+    cliente: a.clientName ?? a.client?.name ?? "—",
+    veiculo: a.vehicleName,
+    servico: a.service,
+    status: a.status,
+  }));
+}
+
 export async function getFinanceiroResumo() {
   const [receitas, despesas] = await Promise.all([
     prisma.transaction.groupBy({ by: ["category"], where: { type: "receita" }, _sum: { value: true } }),

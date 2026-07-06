@@ -136,6 +136,7 @@ model Appointment {
   id          String  @id @default(cuid())
   clientId    String?
   client      Client? @relation(fields: [clientId], references: [id])
+  clientName  String? // nome livre (agendamento de quem ainda não é cadastrado)
   vehicleName String
   service     String
   date        String
@@ -146,14 +147,30 @@ model Appointment {
 }
 
 model Product {
-  id    String  @id @default(cuid())
-  name  String
-  brand String?
-  code  String  @unique
-  qty   Int     @default(0)
-  min   Int     @default(0)
+  id        String          @id @default(cuid())
+  name      String
+  brand     String?
+  code      String          @unique
+  qty       Int             @default(0)
+  min       Int             @default(0)
+  movements StockMovement[]
 
   @@map("products")
+}
+
+// Trilha de auditoria: toda entrada/saída de estoque vira um movimento.
+model StockMovement {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  delta          Int // + entrada / - saída
+  reason         String // "Entrada manual" | "Saída manual" | "Baixa OS" | "Estoque inicial"
+  serviceOrderId String? // quando a saída vem de uma OS finalizada
+  actor          String? // quem movimentou (nome da sessão)
+  createdAt      DateTime @default(now())
+
+  @@index([productId])
+  @@map("stock_movements")
 }
 
 model Notification {

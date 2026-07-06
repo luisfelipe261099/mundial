@@ -51,10 +51,22 @@ export async function criarOS(input: {
 }
 
 export async function movimentarEstoque(id: string, delta: number) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const p = await prisma.product.findUnique({ where: { id } });
   if (!p) return;
-  await prisma.product.update({ where: { id }, data: { qty: Math.max(0, p.qty + delta) } });
+  const novaQtd = Math.max(0, p.qty + delta);
+  const efetivo = novaQtd - p.qty; // delta real (respeita o piso 0)
+  await prisma.product.update({ where: { id }, data: { qty: novaQtd } });
+  if (efetivo !== 0) {
+    await prisma.stockMovement.create({
+      data: {
+        productId: id,
+        delta: efetivo,
+        reason: efetivo > 0 ? "Entrada manual" : "Saída manual",
+        actor: admin.name,
+      },
+    });
+  }
   revalidatePath("/oficina/estoque");
   revalidatePath("/oficina");
 }
@@ -66,11 +78,39 @@ export async function criarProduto(input: {
   qtd: number;
   minimo: number;
 }) {
-  await requireAdmin();
-  await prisma.product.create({
+  const admin = await requireAdmin();
+  const created = await prisma.product.create({
     data: { name: input.produto, brand: input.marca, code: input.codigo, qty: input.qtd, min: input.minimo },
   });
+  if (input.qtd > 0) {
+    await prisma.stockMovement.create({
+      data: { productId: created.id, delta: input.qtd, reason: "Estoque inicial", actor: admin.name },
+    });
+  }
   revalidatePath("/oficina/estoque");
+  revalidatePath("/oficina");
+}
+
+export async function criarAgendamento(input: {
+  cliente: string;
+  veiculo: string;
+  servico: string;
+  data: string;
+  hora: string;
+  status: string;
+}) {
+  await requireAdmin();
+  await prisma.appointment.create({
+    data: {
+      clientName: input.cliente.trim() || null,
+      vehicleName: input.veiculo.trim() || "—",
+      service: input.servico.trim() || "—",
+      date: input.data || "Hoje",
+      time: input.hora || "—",
+      status: input.status || "Confirmado",
+    },
+  });
+  revalidatePath("/oficina/agenda");
   revalidatePath("/oficina");
 }
 

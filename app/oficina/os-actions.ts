@@ -100,17 +100,19 @@ export async function removerItemOS(itemId: string, osId: string) {
 
 // Avançar/voltar status. Ao FINALIZAR, baixa o estoque das peças vinculadas (1x).
 export async function mudarStatus(osId: string, novoStatus: string) {
-  await requireStaff();
+  const staff = await requireStaff();
   const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: true } });
   if (!os) return;
 
   if (novoStatus === "Finalizada" && !os.stockApplied) {
     for (const it of os.items) {
-      if (it.productId) {
-        await prisma.product
-          .update({ where: { id: it.productId }, data: { qty: { decrement: it.qty } } })
-          .catch(() => {});
-      }
+      if (!it.productId) continue;
+      try {
+        await prisma.product.update({ where: { id: it.productId }, data: { qty: { decrement: it.qty } } });
+        await prisma.stockMovement.create({
+          data: { productId: it.productId, delta: -it.qty, reason: "Baixa OS", serviceOrderId: osId, actor: staff.name },
+        });
+      } catch {}
     }
     await prisma.serviceOrder.update({ where: { id: osId }, data: { status: novoStatus, stockApplied: true } });
     await notificar(os.clientId, "geral", "Seu carro está pronto", "O serviço foi concluído. Aguarde o contato para retirada.");
