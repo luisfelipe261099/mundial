@@ -16,6 +16,9 @@ ambiente setar** e **onde no código já está o ponto de encaixe**.
 | `DATABASE_URL` | Postgres (Retool/Neon) | [prisma.config.ts](../prisma.config.ts), [lib/prisma.ts](../lib/prisma.ts) |
 | `SESSION_SECRET` | Assina o cookie de sessão (HMAC) | [lib/auth.ts](../lib/auth.ts) |
 | `BLOB_READ_WRITE_TOKEN` | Upload de fotos (Vercel Blob) | [app/api/upload/route.ts](../app/api/upload/route.ts) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push (chave pública, vai pro cliente) | [lib/push.ts](../lib/push.ts), [push-toggle.tsx](../app/app/perfil/push-toggle.tsx) |
+| `VAPID_PRIVATE_KEY` | Web Push (chave privada, servidor) | [lib/push.ts](../lib/push.ts) |
+| `CRON_SECRET` | Protege o cron de lembretes | [app/api/cron/reminders/route.ts](../app/api/cron/reminders/route.ts) |
 
 `SESSION_SECRET`: gere um valor forte (`openssl rand -base64 32`) e **use o mesmo**
 em todos os ambientes, senão as sessões existentes caem no próximo deploy.
@@ -106,9 +109,31 @@ localização do site já usa esses helpers pro Maps.
 
 ---
 
+## 5. Lembretes de manutenção + Push (Cuidado proativo)  ✅ código pronto
+
+O motor de lembretes (troca de óleo, revisão, IPVA por placa) roda num **cron
+diário** e cria as notificações; o **Web Push** entrega no celular. Tudo já está
+implementado — falta só ligar as chaves.
+
+1. **Chaves VAPID** (Web Push): já geradas e no seu `.env` local. Para produção,
+   copie os mesmos valores pra Vercel:
+   - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`.
+   - (Gerar novas, se quiser: `npx web-push generate-vapid-keys`.)
+2. **`CRON_SECRET`**: um segredo forte; a Vercel manda no header do cron e a rota
+   valida. O agendamento está em [vercel.json](../vercel.json) (diário, 12h UTC ≈ 9h BRT).
+3. **iOS:** push só funciona com o app **instalado na tela inicial** (iOS 16.4+).
+   No Android funciona direto. O cliente ativa em Perfil → "Avisos no celular".
+
+Sem as chaves VAPID, o app não quebra — o envio de push vira no-op e as
+notificações continuam aparecendo dentro do app.
+
+---
+
 ## Checklist de deploy
 
 - [ ] `DATABASE_URL` (produção) na Vercel
 - [ ] `SESSION_SECRET` forte e igual em todos os ambientes
 - [ ] `BLOB_READ_WRITE_TOKEN` (após criar o Blob store) — habilita as fotos
+- [ ] `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` — habilita o push
+- [ ] `CRON_SECRET` — protege o cron de lembretes
 - [ ] (opcional) `MP_ACCESS_TOKEN`, `WHATSAPP_*`/`TWILIO_*`, `NEXT_PUBLIC_MAPS_API_KEY`
