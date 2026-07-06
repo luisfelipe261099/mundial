@@ -6,6 +6,7 @@ import type {
   Produto,
   Agendamento,
 } from "@/app/oficina/_data/mock";
+import { computeMaintenance, maintList } from "@/lib/maintenance";
 
 // Trend de 6 meses é ilustrativo (o banco não guarda histórico mensal).
 export const faturamentoMensal = [
@@ -135,7 +136,15 @@ export async function getVeiculoDetalhe(id: string) {
   const v = await prisma.vehicle.findUnique({ where: { id }, include: { client: true } });
   if (!v) return null;
   const ordens = await prisma.serviceOrder.findMany({ where: { vehicleId: id }, include: { items: true }, orderBy: { createdAt: "desc" } });
-  return { veiculo: mapVeiculo(v), ordens: ordens.map(mapOrdem) };
+  const s = await prisma.settings.findUnique({ where: { id: "default" } });
+  const manutencoes = maintList(
+    computeMaintenance(
+      { plate: v.plate, lastOilChangeAt: v.lastOilChangeAt, lastRevisaoAt: v.lastRevisaoAt },
+      { notifOleo: s?.notifOleo ?? true, notifRevisao: s?.notifRevisao ?? true, notifIpva: s?.notifIpva ?? true },
+      new Date()
+    )
+  );
+  return { veiculo: mapVeiculo(v), ordens: ordens.map(mapOrdem), manutencoes };
 }
 
 export async function getOrdens(): Promise<OrdemServicoAdmin[]> {

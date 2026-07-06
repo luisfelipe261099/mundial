@@ -28,6 +28,8 @@ model Client {
   appointments  Appointment[]
   documents     Document[]
   notifications Notification[]
+  reminders     Reminder[]
+  pushSubscriptions PushSubscription[]
 
   @@map("clients")
 }
@@ -50,6 +52,9 @@ model Vehicle {
   nextRevisionKm   Int?
   revisionOverdue  Boolean        @default(false)
   maintenances     Json?
+  lastOilChangeAt  DateTime? // base do lembrete de troca de óleo (por tempo)
+  lastRevisaoAt    DateTime? // base do lembrete de revisão (por tempo)
+  reminders        Reminder[]
   serviceOrders    ServiceOrder[]
 
   @@map("vehicles")
@@ -187,6 +192,35 @@ model Settings {
   updatedAt    DateTime @updatedAt
 
   @@map("settings")
+}
+
+// Lembrete de manutenção gerado pelo motor (dedup por ciclo via @@unique).
+model Reminder {
+  id        String   @id @default(cuid())
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    Client?  @relation(fields: [clientId], references: [id])
+  type      String // "oleo" | "revisao" | "ipva"
+  dueDate   DateTime
+  status    String   @default("pendente") // pendente | avisado | concluido | adiado
+  createdAt DateTime @default(now())
+
+  @@unique([vehicleId, type, dueDate])
+  @@map("reminders")
+}
+
+// Inscrição de Web Push (PWA) de um cliente.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@map("push_subscriptions")
 }
 
 model Notification {

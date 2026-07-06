@@ -10,6 +10,7 @@ import type {
   Manutencao,
   Categoria,
 } from "@/app/app/_data/mock";
+import { computeMaintenance, maintList } from "@/lib/maintenance";
 
 // ── Mapeadores: linha do Prisma → tipo que os componentes já consomem ──────
 
@@ -105,9 +106,28 @@ export async function getVeiculos(clientId: string): Promise<Veiculo[]> {
   return rows.map((v, i) => mapVehicle(v, i));
 }
 
+// Toggles de lembrete (Settings), com defaults ligados.
+async function togglesManutencao() {
+  const s = await prisma.settings.findUnique({ where: { id: "default" } });
+  return {
+    notifOleo: s?.notifOleo ?? true,
+    notifRevisao: s?.notifRevisao ?? true,
+    notifIpva: s?.notifIpva ?? true,
+  };
+}
+
 export async function getVeiculo(id: string, clientId: string): Promise<Veiculo | null> {
   const v = await prisma.vehicle.findFirst({ where: { id, clientId } });
-  return v ? mapVehicle(v) : null;
+  if (!v) return null;
+  const veiculo = mapVehicle(v);
+  veiculo.proximasManutencoes = maintList(
+    computeMaintenance(
+      { plate: v.plate, lastOilChangeAt: v.lastOilChangeAt, lastRevisaoAt: v.lastRevisaoAt },
+      await togglesManutencao(),
+      new Date()
+    )
+  );
+  return veiculo;
 }
 
 export async function getOrdens(clientId: string): Promise<OrdemServico[]> {

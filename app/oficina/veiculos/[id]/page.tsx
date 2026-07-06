@@ -12,7 +12,7 @@ export default async function VeiculoAdminDetalhe({
   const { id } = await params;
   const data = await getVeiculoDetalhe(id);
   if (!data) notFound();
-  const { veiculo, ordens } = data;
+  const { veiculo, ordens, manutencoes } = data;
 
   const ficha = [
     { label: "Proprietário", value: veiculo.proprietario },
@@ -49,6 +49,32 @@ export default async function VeiculoAdminDetalhe({
           )}
         </div>
       </div>
+
+      {manutencoes.length > 0 && (
+        <div className="adm-card overflow-hidden">
+          <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
+            <h3 className="adm-display font-bold adm-ink">Próximas manutenções</h3>
+          </div>
+          <div className="divide-y divide-[var(--ad-line)]">
+            {manutencoes.map((m) => (
+              <div key={m.item} className="flex items-center gap-3 px-5 py-3.5">
+                <span
+                  className={`size-2.5 shrink-0 rounded-full ${
+                    m.status === "vencida" ? "bg-rose-500" : m.status === "proxima" ? "bg-amber-500" : "bg-emerald-500"
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold adm-ink">{m.item}</p>
+                  <p className="text-xs adm-muted">{m.quando}</p>
+                </div>
+                <span className={m.status === "vencida" ? "osb osb-aguardando" : "osb osb-finalizada"}>
+                  {m.status === "vencida" ? "Vencida" : m.status === "proxima" ? "Próxima" : "Em dia"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
