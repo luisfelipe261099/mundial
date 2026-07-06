@@ -176,6 +176,51 @@ export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
   };
 }
 
+// OS completa para o "centro de controle" (vistoria + itens com id + status do orçamento).
+export async function getOrdemControle(id: string) {
+  const o = await prisma.serviceOrder.findUnique({ where: { id }, include: { items: true } });
+  if (!o) return null;
+  const budget = await prisma.budget.findFirst({
+    where: { serviceOrderId: id },
+    select: { status: true },
+  });
+  const inspection = (o.inspection ?? null) as {
+    checklist?: { item: string; status: string }[];
+    avarias?: string;
+    objetos?: string;
+  } | null;
+  return {
+    id: o.id,
+    cliente: o.clientName,
+    veiculo: o.vehicleName,
+    placa: o.plate ?? "—",
+    data: o.date,
+    km: o.km,
+    exitKm: o.exitKm,
+    fuelLevel: o.fuelLevel,
+    defeito: o.defect ?? "—",
+    status: o.status,
+    mecanico: o.mechanic ?? "—",
+    total: o.total,
+    observacoes: o.observations ?? "",
+    authorized: o.authorized,
+    paid: o.paid,
+    deliveredAt: o.deliveredAt,
+    inspection,
+    itens: o.items.map((i) => ({
+      id: i.id,
+      tipo: i.type,
+      descricao: i.description,
+      qtd: i.qty,
+      valor: i.value,
+      productId: i.productId,
+    })),
+    budgetStatus: budget?.status ?? null,
+  };
+}
+
+export type OsControle = NonNullable<Awaited<ReturnType<typeof getOrdemControle>>>;
+
 export async function getAgendaHoje(): Promise<Agendamento[]> {
   const rows = await prisma.appointment.findMany({ where: { date: "Hoje" }, include: { client: true }, orderBy: { time: "asc" } });
   return rows.map((a) => ({

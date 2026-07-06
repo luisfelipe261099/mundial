@@ -75,6 +75,14 @@ model ServiceOrder {
   warranty     String?
   responsible  String?
   photos       Json?
+  fuelLevel      String? // combustível na entrada
+  exitKm         Int? // km na saída/entrega
+  inspection     Json? // vistoria de entrada: { checklist: [{item,status}], avarias, objetos }
+  authorized     Boolean            @default(false) // autorização do cliente na entrada
+  paid           Boolean            @default(false)
+  deliveredAt    String?
+  stockApplied   Boolean            @default(false) // baixa de estoque já aplicada?
+  financeApplied Boolean            @default(false) // receita já lançada?
   items        ServiceOrderItem[]
   createdAt    DateTime           @default(now())
 
@@ -89,6 +97,7 @@ model ServiceOrderItem {
   description    String
   qty            Int          @default(1)
   value          Int          @default(0)
+  productId      String? // vínculo com o estoque (para baixar ao finalizar)
 
   @@map("service_order_items")
 }
@@ -102,8 +111,9 @@ model Budget {
   status      String // pendente | aprovado | rejeitado
   subtotal    Int          @default(0)
   discount    Int          @default(0)
-  total       Int          @default(0)
-  items       BudgetItem[]
+  total          Int          @default(0)
+  serviceOrderId String? // orçamento gerado a partir de uma OS
+  items          BudgetItem[]
 
   @@map("budgets")
 }
@@ -170,12 +180,13 @@ model Document {
 
 model Transaction {
   id          String   @id @default(cuid())
-  type        String // receita | despesa
-  description String
-  category    String?
-  value       Int      @default(0)
-  date        String?
-  createdAt   DateTime @default(now())
+  type           String // receita | despesa
+  description    String
+  category       String?
+  value          Int      @default(0)
+  date           String?
+  serviceOrderId String? // receita originada de uma OS finalizada
+  createdAt      DateTime @default(now())
 
   @@map("transactions")
 }

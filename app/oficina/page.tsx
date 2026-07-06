@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Users, Car, ClipboardList, Wallet, AlertTriangle, ChevronRight } from "lucide-react";
+import { Users, Car, ClipboardList, Wallet, AlertTriangle, ChevronRight, ClipboardCheck } from "lucide-react";
 import { brl, osBadgeClass } from "./_data/mock";
 import { getKpis, getOrdens, getEstoque, faturamentoMensal } from "@/lib/admin-data";
 import { KpiCard, BarChart, Panel } from "./_components/ui";
@@ -11,6 +11,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="adm-display text-xl font-bold adm-ink">Visão geral</h1>
+        <Link
+          href="/oficina/entrada"
+          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+        >
+          <ClipboardCheck className="size-4" />
+          Dar entrada de veículo
+        </Link>
+      </div>
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard label="Clientes" value={kpis.clientes.toString()} icon={Users} />
         <KpiCard label="Veículos" value={kpis.veiculos.toString()} icon={Car} />
