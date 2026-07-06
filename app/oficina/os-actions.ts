@@ -9,6 +9,16 @@ function hoje() {
   return new Date().toLocaleDateString("pt-BR");
 }
 
+// Notificação por evento para o cliente (aparece no app dele).
+async function notificar(clientId: string | null, type: string, title: string, text: string) {
+  if (!clientId) return;
+  await prisma.notification.create({
+    data: { clientId, type, title, text, when: "agora", read: false },
+  });
+  revalidatePath("/app");
+  revalidatePath("/app/notificacoes");
+}
+
 async function recomputeTotal(osId: string) {
   const items = await prisma.serviceOrderItem.findMany({ where: { serviceOrderId: osId } });
   const total = items.reduce((s, i) => s + i.value * i.qty, 0);
@@ -103,6 +113,7 @@ export async function mudarStatus(osId: string, novoStatus: string) {
       }
     }
     await prisma.serviceOrder.update({ where: { id: osId }, data: { status: novoStatus, stockApplied: true } });
+    await notificar(os.clientId, "geral", "Seu carro está pronto", "O serviço foi concluído. Aguarde o contato para retirada.");
   } else {
     await prisma.serviceOrder.update({ where: { id: osId }, data: { status: novoStatus } });
   }
@@ -151,6 +162,7 @@ export async function enviarParaAprovacao(osId: string) {
   }
 
   await prisma.serviceOrder.update({ where: { id: osId }, data: { status: "Aguardando aprovação", total } });
+  await notificar(os.clientId, "revisao", "Orçamento pronto", `Seu orçamento da ${osId} está pronto. Toque para aprovar ou rejeitar.`);
   revalidatePath(`/oficina/ordens/${osId}`);
   revalidatePath("/oficina/ordens");
 }
@@ -183,6 +195,7 @@ export async function entregarOS(osId: string, exitKm: number, paid: boolean) {
     });
   }
 
+  await notificar(os.clientId, "geral", "Veículo entregue", "Obrigado pela confiança! Seu veículo foi entregue.");
   revalidatePath(`/oficina/ordens/${osId}`);
   revalidatePath("/oficina/ordens");
   revalidatePath("/oficina/financeiro");

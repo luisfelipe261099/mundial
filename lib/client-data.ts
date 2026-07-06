@@ -179,9 +179,41 @@ export async function getNaoLidas(clientId: string): Promise<number> {
   return prisma.notification.count({ where: { clientId, read: false } });
 }
 
+// Documentos derivados dos dados REAIS do cliente (OS, orçamentos, comprovantes).
 export async function getDocumentos(clientId: string): Promise<Documento[]> {
-  const rows = await prisma.document.findMany({ where: { clientId }, orderBy: { id: "asc" } });
-  return rows.map((d) => ({ id: d.id, nome: d.name, tipo: d.type as Documento["tipo"], data: d.date ?? "" }));
+  const [ordens, budgets] = await Promise.all([
+    prisma.serviceOrder.findMany({
+      where: { clientId, status: { in: ["Finalizada", "Entregue"] } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.budget.findMany({ where: { clientId }, orderBy: { date: "desc" } }),
+  ]);
+  const docs: Documento[] = [];
+  for (const o of ordens) {
+    docs.push({ id: `os-${o.id}`, nome: `${o.id} — ${o.vehicleName}`, tipo: "Ordem de serviço", data: o.date });
+    if (o.paid) {
+      docs.push({ id: `cp-${o.id}`, nome: `Comprovante — ${o.id}`, tipo: "Comprovante", data: o.deliveredAt ?? o.date });
+    }
+  }
+  for (const b of budgets) {
+    docs.push({ id: `orc-${b.id}`, nome: `Orçamento ${b.id} — ${b.vehicleName}`, tipo: "Orçamento", data: b.date });
+  }
+  return docs;
+}
+
+// OS ativas do cliente (para "acompanhar o carro"), com o status real.
+export async function getOrdensAtivas(clientId: string) {
+  const rows = await prisma.serviceOrder.findMany({
+    where: { clientId, status: { not: "Entregue" } },
+    orderBy: { createdAt: "desc" },
+  });
+  return rows.map((o) => ({
+    id: o.id,
+    veiculo: o.vehicleName,
+    status: o.status,
+    data: o.date,
+    total: o.total,
+  }));
 }
 
 export async function getAgendamentos(clientId: string): Promise<Agendamento[]> {

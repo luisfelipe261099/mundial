@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Home, Car, Wrench, User, Calendar, FileText, Bell, FolderOpen } from "lucide-react";
+import { Home, Car, Wrench, User, Calendar, FileText, Bell, FolderOpen, Activity, Send } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -18,10 +18,12 @@ export const bottomNav: NavItem[] = [
 // Drawer: o menu completo do cliente (os 7 itens do spec).
 export const drawerNav: NavItem[] = [
   { href: "/app", label: "Início", icon: Home },
+  { href: "/app/acompanhar", label: "Acompanhar", icon: Activity },
   { href: "/app/veiculos", label: "Meus Veículos", icon: Car },
   { href: "/app/agendar", label: "Agendamentos", icon: Calendar },
-  { href: "/app/historico", label: "Histórico", icon: Wrench },
+  { href: "/app/solicitar", label: "Solicitar orçamento", icon: Send },
   { href: "/app/orcamentos", label: "Orçamentos", icon: FileText },
+  { href: "/app/historico", label: "Histórico", icon: Wrench },
   { href: "/app/documentos", label: "Documentos", icon: FolderOpen },
   { href: "/app/notificacoes", label: "Notificações", icon: Bell },
   { href: "/app/perfil", label: "Perfil", icon: User },

@@ -16,6 +16,8 @@ function titleFor(path: string): string {
   if (path.startsWith("/app/historico/")) return "Ordem de serviço";
   if (path === "/app/orcamentos") return "Orçamentos";
   if (path.startsWith("/app/orcamentos/")) return "Orçamento";
+  if (path.startsWith("/app/acompanhar")) return "Acompanhar";
+  if (path.startsWith("/app/solicitar")) return "Solicitar orçamento";
   if (path.startsWith("/app/documentos")) return "Documentos";
   if (path.startsWith("/app/notificacoes")) return "Notificações";
   if (path.startsWith("/app/perfil")) return "Perfil";
