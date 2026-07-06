@@ -144,7 +144,11 @@ export async function getVeiculoDetalhe(id: string) {
       new Date()
     )
   );
-  return { veiculo: mapVeiculo(v), ordens: ordens.map(mapOrdem), manutencoes };
+  const base = {
+    oleo: v.lastOilChangeAt ? v.lastOilChangeAt.toISOString().slice(0, 10) : "",
+    revisao: v.lastRevisaoAt ? v.lastRevisaoAt.toISOString().slice(0, 10) : "",
+  };
+  return { veiculo: mapVeiculo(v), ordens: ordens.map(mapOrdem), manutencoes, base };
 }
 
 export async function getOrdens(): Promise<OrdemServicoAdmin[]> {

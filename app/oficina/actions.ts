@@ -185,3 +185,21 @@ export async function criarVeiculo(values: Record<string, string>) {
   });
   revalidatePath("/oficina/veiculos");
 }
+
+// Define/atualiza a data-base de manutenção do veículo (destrava os lembretes).
+// Campo vazio não limpa a base existente.
+export async function definirBaseManutencao(formData: FormData) {
+  await requireAdmin();
+  const vehicleId = String(formData.get("vehicleId") ?? "");
+  const oleo = String(formData.get("oleo") ?? "");
+  const revisao = String(formData.get("revisao") ?? "");
+  if (!vehicleId) return;
+  await prisma.vehicle.update({
+    where: { id: vehicleId },
+    data: {
+      ...(oleo ? { lastOilChangeAt: new Date(oleo) } : {}),
+      ...(revisao ? { lastRevisaoAt: new Date(revisao) } : {}),
+    },
+  });
+  revalidatePath(`/oficina/veiculos/${vehicleId}`);
+}

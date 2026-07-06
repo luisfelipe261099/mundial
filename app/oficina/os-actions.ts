@@ -116,6 +116,22 @@ export async function mudarStatus(osId: string, novoStatus: string) {
     }
     await prisma.serviceOrder.update({ where: { id: osId }, data: { status: novoStatus, stockApplied: true } });
     await notificar(os.clientId, "geral", "Seu carro está pronto", "O serviço foi concluído. Aguarde o contato para retirada.");
+
+    // Base de manutenção: se a OS incluiu óleo/revisão, reinicia o contador do veículo.
+    if (os.vehicleId) {
+      const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const temOleo = os.items.some((it) => norm(it.description).includes("oleo"));
+      const temRevisao = os.items.some((it) => norm(it.description).includes("revisao"));
+      if (temOleo || temRevisao) {
+        await prisma.vehicle.update({
+          where: { id: os.vehicleId },
+          data: {
+            ...(temOleo ? { lastOilChangeAt: new Date() } : {}),
+            ...(temRevisao ? { lastRevisaoAt: new Date() } : {}),
+          },
+        });
+      }
+    }
   } else {
     await prisma.serviceOrder.update({ where: { id: osId }, data: { status: novoStatus } });
   }

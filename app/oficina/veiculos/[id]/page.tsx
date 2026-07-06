@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { brl, osBadgeClass } from "../../_data/mock";
 import { getVeiculoDetalhe } from "@/lib/admin-data";
+import { definirBaseManutencao } from "../../actions";
 
 export default async function VeiculoAdminDetalhe({
   params,
@@ -12,7 +13,7 @@ export default async function VeiculoAdminDetalhe({
   const { id } = await params;
   const data = await getVeiculoDetalhe(id);
   if (!data) notFound();
-  const { veiculo, ordens, manutencoes } = data;
+  const { veiculo, ordens, manutencoes, base } = data;
 
   const ficha = [
     { label: "Proprietário", value: veiculo.proprietario },
@@ -75,6 +76,40 @@ export default async function VeiculoAdminDetalhe({
           </div>
         </div>
       )}
+
+      <form action={definirBaseManutencao} className="adm-card space-y-3 p-5">
+        <input type="hidden" name="vehicleId" value={id} />
+        <div>
+          <h3 className="adm-display font-bold adm-ink">Data-base de manutenção</h3>
+          <p className="text-xs adm-muted">Informe a última troca de óleo/revisão pra ligar os lembretes automáticos.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-xs adm-muted">Última troca de óleo</span>
+            <input
+              type="date"
+              name="oleo"
+              defaultValue={base.oleo}
+              className="mt-1 w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs adm-muted">Última revisão</span>
+            <input
+              type="date"
+              name="revisao"
+              defaultValue={base.revisao}
+              className="mt-1 w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
+            />
+          </label>
+        </div>
+        <button
+          type="submit"
+          className="rounded-lg bg-[var(--ad-brand)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+        >
+          Salvar data-base
+        </button>
+      </form>
 
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
