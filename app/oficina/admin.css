@@ -15,7 +15,7 @@
   --ad-line-2: #34343e;
   --ad-ink: #ece8df;
   --ad-ink-2: #b4afa4;
-  --ad-muted: #807b72;
+  --ad-muted: #8b867c; /* 5.16:1 na superfície escura — passa WCAG AA */
   --ad-brand: #2f7bff;
   --ad-brand-2: #4f90ff;
 

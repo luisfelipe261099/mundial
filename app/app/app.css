@@ -18,7 +18,7 @@
   --app-line-2: #34343e;
   --app-ink: #ece8df;
   --app-ink-2: #b4afa4;
-  --app-muted: #807b72;
+  --app-muted: #8b867c; /* 5.16:1 na superfície escura — passa WCAG AA */
   --app-brand: #2f7bff;
   --app-brand-2: #4f90ff;
   --app-signal-soft: rgba(47, 123, 255, 0.16);
