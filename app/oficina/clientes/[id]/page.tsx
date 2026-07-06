@@ -62,7 +62,7 @@ export default async function ClienteDetalhe({
           return (
             <div key={k.label} className="adm-card p-4">
               <Icon className="size-5 adm-brand" />
-              <p className="adm-display mt-2 text-xl font-bold adm-ink">{k.value}</p>
+              <p className="adm-display mt-2 truncate text-[clamp(1rem,4.5vw,1.25rem)] adm-ink">{k.value}</p>
               <p className="text-xs adm-muted">{k.label}</p>
             </div>
           );

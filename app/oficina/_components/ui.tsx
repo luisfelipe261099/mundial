@@ -20,7 +20,7 @@ export function KpiCard({
         </span>
         {hint && <span className="adm-mono text-[0.58rem] adm-muted">{hint}</span>}
       </div>
-      <p className="adm-display mt-3.5 text-[1.75rem] adm-ink">{value}</p>
+      <p className="adm-display mt-3.5 truncate text-[clamp(1.3rem,5.5vw,1.75rem)] adm-ink">{value}</p>
       <p className="adm-mono mt-2 text-[0.6rem] adm-muted">{label}</p>
     </div>
   );
