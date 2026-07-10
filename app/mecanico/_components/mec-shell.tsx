@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, HelpCircle, LogOut } from "lucide-react";
 import { business } from "../../_data/business";
 import { logout } from "../../login/actions";
 
@@ -39,6 +39,13 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
           </p>
           {!isDetail && <p className="text-[0.65rem] font-medium mec-muted">Área do mecânico</p>}
         </div>
+        <Link
+          href="/tutorial?papel=mecanico"
+          aria-label="Como usar"
+          className="grid size-10 place-items-center rounded-full mec-ink transition-colors hover:bg-[var(--mec-surface-2)]"
+        >
+          <HelpCircle className="size-5" />
+        </Link>
         <form action={logout}>
           <button
             type="submit"

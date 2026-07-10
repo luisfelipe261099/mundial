@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, Search } from "lucide-react";
+import Link from "next/link";
+import { HelpCircle, Menu, Search } from "lucide-react";
 import { SidebarNav } from "./sidebar-nav";
 import { adminNav } from "./nav-items";
 
@@ -61,6 +62,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <Search className="size-4" />
             Buscar…
           </div>
+          <Link
+            href="/tutorial?papel=admin"
+            aria-label="Como usar"
+            className="grid size-9 shrink-0 place-items-center rounded-lg adm-ink hover:bg-[var(--ad-surface-2)]"
+          >
+            <HelpCircle className="size-5" />
+          </Link>
           <span className="adm-display grid size-9 shrink-0 place-items-center rounded-full bg-[var(--ad-brand)] text-sm font-bold text-white">
             MM
           </span>

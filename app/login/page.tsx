@@ -48,6 +48,13 @@ export default async function LoginPage() {
             Criar conta
           </Link>
         </p>
+
+        <p className="mt-2 text-center text-sm text-slate-400">
+          Primeira vez?{" "}
+          <Link href="/tutorial" className="font-semibold text-blue-400">
+            Veja o tutorial
+          </Link>
+        </p>
       </div>
     </main>
   );

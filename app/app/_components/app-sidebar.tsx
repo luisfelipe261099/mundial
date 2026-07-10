@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, LogOut } from "lucide-react";
+import { MessageCircle, HelpCircle, LogOut } from "lucide-react";
 import { drawerNav } from "./nav-items";
 import { business, whatsappUrl } from "../../_data/business";
 import { logout } from "../../login/actions";
@@ -64,6 +64,13 @@ export function AppSidebar({ unread }: { unread: number }) {
           <MessageCircle className="size-5 text-emerald-400" />
           Falar no WhatsApp
         </a>
+        <Link
+          href="/tutorial?papel=cliente"
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium t-ink transition-colors hover:bg-[var(--app-surface-2)]"
+        >
+          <HelpCircle className="size-5 t-brand" />
+          Como usar
+        </Link>
         <form action={logout}>
           <button
             type="submit"
