@@ -18,8 +18,8 @@ export async function cadastrarCliente(
   const placa = String(formData.get("placa") ?? "").trim().toUpperCase();
   const modelo = String(formData.get("modelo") ?? "").trim();
 
-  if (!nome || !email || senha.length < 4) {
-    return { error: "Preencha nome, e-mail e uma senha (mín. 4 caracteres)." };
+  if (!nome || !email || senha.length < 6) {
+    return { error: "Preencha nome, e-mail e uma senha (mín. 6 caracteres)." };
   }
   const existing = await prisma.client.findFirst({
     where: { email: { equals: email, mode: "insensitive" } },
