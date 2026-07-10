@@ -3,7 +3,18 @@ import { redirect } from "next/navigation";
 import crypto from "node:crypto";
 
 const COOKIE = "mundial_session";
-const SECRET = process.env.SESSION_SECRET ?? "dev-secret-troque-isto";
+
+// Lazy: só falha quando alguém realmente assina/decodifica uma sessão (em
+// runtime), nunca no import do módulo — evita quebrar o build da Vercel se a
+// env não estiver disponível na fase de build.
+function getSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET não definida — obrigatória em produção (configure na Vercel).");
+  }
+  return "dev-secret-troque-isto";
+}
 
 export type SessionKind = "admin" | "mecanico" | "cliente";
 
@@ -14,7 +25,7 @@ export interface Session {
 }
 
 function sign(data: string): string {
-  return crypto.createHmac("sha256", SECRET).update(data).digest("base64url");
+  return crypto.createHmac("sha256", getSecret()).update(data).digest("base64url");
 }
 
 export function encodeSession(session: Session): string {
