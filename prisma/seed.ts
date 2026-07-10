@@ -22,6 +22,19 @@ import {
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+// Trava de segurança: este script apaga TODAS as tabelas antes de reinserir
+// dados fictícios de demo. Só existe uma DATABASE_URL (mesmo banco de
+// dev/produção) — sem essa trava, rodar `npm run db:seed` depois do
+// lançamento apagaria clientes, OS e financeiro reais.
+if (process.env.SEED_CONFIRM !== "yes-apagar-tudo") {
+  console.error(
+    "Recusado: prisma/seed.ts apaga todos os dados antes de repovoar.\n" +
+      "Se tem certeza que quer rodar isso neste banco, rode com:\n" +
+      "  SEED_CONFIRM=yes-apagar-tudo npm run db:seed"
+  );
+  process.exit(1);
+}
+
 function split(full: string) {
   const [brand, ...rest] = full.split(" ");
   return { brand, model: rest.join(" ") || full };
