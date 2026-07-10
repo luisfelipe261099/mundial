@@ -101,8 +101,8 @@ export function CountUp({
   useEffect(() => {
     if (!inView) return;
     if (reduce) {
-      setVal(to);
-      return;
+      const raf = requestAnimationFrame(() => setVal(to));
+      return () => cancelAnimationFrame(raf);
     }
     let raf = 0;
     const start = performance.now();

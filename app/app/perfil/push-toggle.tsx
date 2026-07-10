@@ -22,8 +22,14 @@ export function PushToggle() {
 
   useEffect(() => {
     const suportado = "serviceWorker" in navigator && "PushManager" in window && !!VAPID;
-    if (!suportado) return setEstado("indisponivel");
-    if (Notification.permission === "denied") return setEstado("negado");
+    if (!suportado) {
+      const raf = requestAnimationFrame(() => setEstado("indisponivel"));
+      return () => cancelAnimationFrame(raf);
+    }
+    if (Notification.permission === "denied") {
+      const raf = requestAnimationFrame(() => setEstado("negado"));
+      return () => cancelAnimationFrame(raf);
+    }
     navigator.serviceWorker
       .getRegistration()
       .then(async (reg) => {

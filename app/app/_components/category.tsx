@@ -45,6 +45,7 @@ export function CatChip({
   const Icon = categoriaIcon(categoria);
   return (
     <span className={`chip chip-${categoria} ${className}`}>
+      {/* eslint-disable-next-line react-hooks/static-components -- Icon vem do mapa estático ICONS; mesma referência a cada render, não é criado aqui. */}
       <Icon className="size-5" strokeWidth={2} aria-hidden />
     </span>
   );
