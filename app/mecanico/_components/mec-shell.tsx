@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, HelpCircle, LogOut } from "lucide-react";
 import { business } from "../../_data/business";
 import { logout } from "../../login/actions";
+import { WelcomeTour } from "@/app/_components/welcome-tour";
+import { mecTourSteps } from "./mec-tour-steps";
 
 // Responsivo: mobile ocupa a tela; desktop centraliza o conteúdo (sem frame
 // de celular). Top bar fixa, conteúdo rola por dentro.
@@ -15,6 +17,8 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh flex-col bg-[var(--mec-bg)]">
+      <WelcomeTour storageKey="tutorial-tour-visto-mecanico" papel="mecanico" steps={mecTourSteps} />
+
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--mec-line)] px-4">
         {isDetail ? (
           <Link

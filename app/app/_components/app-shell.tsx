@@ -5,6 +5,8 @@ import TopBar from "./top-bar";
 import BottomNav from "./bottom-nav";
 import Drawer from "./drawer";
 import { AppSidebar } from "./app-sidebar";
+import { WelcomeTour } from "@/app/_components/welcome-tour";
+import { appTourSteps } from "./app-tour-steps";
 
 // Casca responsiva: no desktop (lg+) usa menu lateral + área de conteúdo larga;
 // no mobile, top bar + conteúdo + bottom-nav (e o drawer pelo menu ☰). Sem
@@ -20,6 +22,8 @@ export default function AppShell({
 
   return (
     <div className="h-dvh bg-[var(--app-bg)] lg:flex">
+      <WelcomeTour storageKey="tutorial-tour-visto-cliente" papel="cliente" steps={appTourSteps} />
+
       <AppSidebar unread={unread} />
 
       <div className="relative flex h-dvh flex-1 flex-col">

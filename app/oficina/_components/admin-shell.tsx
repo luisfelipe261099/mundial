@@ -6,6 +6,8 @@ import Link from "next/link";
 import { HelpCircle, Menu, Search } from "lucide-react";
 import { SidebarNav } from "./sidebar-nav";
 import { adminNav } from "./nav-items";
+import { WelcomeTour } from "@/app/_components/welcome-tour";
+import { adminTourSteps } from "./admin-tour-steps";
 
 function titleFor(path: string): string {
   if (path.startsWith("/oficina/ordens/")) return "Ordem de Serviço";
@@ -22,6 +24,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-dvh">
+      <WelcomeTour storageKey="tutorial-tour-visto-admin" papel="admin" steps={adminTourSteps} />
+
       {/* sidebar desktop */}
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-[var(--ad-line)] bg-[var(--ad-surface)] lg:block">
         <SidebarNav />
