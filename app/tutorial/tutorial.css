@@ -1,0 +1,76 @@
+/* ════════════════════════════════════════════════════════════════════
+   TUTORIAL GUIADO — página pública (/tutorial). Mesma marca "Oficina
+   Noturna" do resto da plataforma, escopada em .tut-root para não vazar.
+   ════════════════════════════════════════════════════════════════════ */
+
+.tut-root {
+  --tut-bg: #0a0a0c;
+  --tut-surface: #121217;
+  --tut-surface-2: #17171d;
+  --tut-surface-3: #1e1e25;
+  --tut-line: #26262e;
+  --tut-line-2: #34343e;
+  --tut-ink: #ece8df;
+  --tut-ink-2: #b4afa4;
+  --tut-muted: #8b867c;
+  --tut-brand: #2f7bff;
+  --tut-brand-2: #4f90ff;
+  --tut-signal-soft: rgba(47, 123, 255, 0.16);
+
+  min-height: 100dvh;
+  color: var(--tut-ink);
+  background-color: var(--tut-bg);
+  font-family: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html:has(.tut-root) {
+  color-scheme: dark;
+}
+body:has(.tut-root) {
+  background-color: #050506;
+}
+.tut-root :focus-visible {
+  outline: 2px solid var(--tut-brand-2);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.tut-display {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+.tut-mono {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.tut-card {
+  background-color: var(--tut-surface);
+  border: 1px solid var(--tut-line);
+  border-radius: 1rem;
+}
+
+/* leve subida ao trocar de passo */
+@keyframes tut-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.tut-rise {
+  animation: tut-rise 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tut-rise {
+    animation: none;
+  }
+}
