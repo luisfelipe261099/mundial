@@ -68,6 +68,7 @@ export default async function OsDetalhe({
                     fill
                     sizes="(max-width: 400px) 50vw, 200px"
                     className="object-cover"
+                    unoptimized
                   />
                   <span className="absolute left-2 top-2 rounded-full bg-black/65 px-2 py-0.5 text-xs font-semibold text-white">
                     {f.etapa}
