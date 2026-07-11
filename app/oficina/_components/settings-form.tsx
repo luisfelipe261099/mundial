@@ -42,6 +42,7 @@ export function SettingsForm({ inicial }: { inicial: Inicial }) {
 
   return (
     <form
+      data-tour="adm-settings"
       onSubmit={(e) => {
         e.preventDefault();
         salvar();

@@ -57,7 +57,7 @@ export function PushToggle() {
 
   const ligado = estado === "ligado";
   return (
-    <div className="app-card flex items-center gap-3 p-4">
+    <div data-tour="app-push" className="app-card flex items-center gap-3 p-4">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--app-brand)]/15">
         {ligado ? <BellRing className="size-5 t-brand" /> : <Bell className="size-5 t-brand" />}
       </span>

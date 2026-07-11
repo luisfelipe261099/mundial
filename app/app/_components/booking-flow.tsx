@@ -92,7 +92,7 @@ export function BookingFlow({
       : "border-[var(--app-line)] hover:border-[var(--app-brand)]/40";
 
   return (
-    <div className="app-card space-y-4 p-4">
+    <div data-tour="app-booking" className="app-card space-y-4 p-4">
       {/* progresso */}
       <div>
         <div className="flex items-center justify-between">

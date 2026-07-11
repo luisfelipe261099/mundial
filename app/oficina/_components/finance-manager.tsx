@@ -77,7 +77,7 @@ export function FinanceManager({ seed }: { seed: Lancamento[] }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div data-tour="adm-finance" className="space-y-6">
       {/* período */}
       <div className="flex items-center gap-2">
         {PERIODOS.map((p) => (

@@ -105,7 +105,7 @@ export function NewOrderForm({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div data-tour="adm-neworder" className="mx-auto max-w-3xl space-y-6">
       <Link href="/oficina/ordens" className="text-sm font-semibold adm-muted hover:adm-brand">
         ← Ordens de Serviço
       </Link>

@@ -46,7 +46,7 @@ export function AgendaManager({ seed }: { seed: AgendaItem[] }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div data-tour="adm-agenda" className="space-y-5">
       <div className="flex items-center justify-between">
         <p className="text-sm adm-muted">{itens.length} agendamento(s)</p>
         <button

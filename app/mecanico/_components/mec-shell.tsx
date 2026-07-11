@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { business } from "../../_data/business";
 import { logout } from "../../login/actions";
+import GuidedTour from "../../_components/tour/guided-tour";
 
 // Responsivo: mobile ocupa a tela; desktop centraliza o conteúdo (sem frame
 // de celular). Top bar fixa, conteúdo rola por dentro.
@@ -53,6 +54,8 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
       <main className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-2xl">{children}</div>
       </main>
+
+      <GuidedTour theme="mecanico" />
     </div>
   );
 }

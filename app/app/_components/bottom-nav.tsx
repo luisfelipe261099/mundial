@@ -23,7 +23,7 @@ export default function BottomNav() {
   const path = usePathname() ?? "/app";
 
   return (
-    <nav className="shrink-0 border-t border-[var(--app-line)] bg-[var(--app-surface)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+    <nav data-tour="app-bottomnav" className="shrink-0 border-t border-[var(--app-line)] bg-[var(--app-surface)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
       <ul className="flex items-stretch justify-around px-2 pt-1.5">
         {bottomNav.map((item) => {
           const active = isActive(item, path);

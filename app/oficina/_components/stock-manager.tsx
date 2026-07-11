@@ -31,7 +31,7 @@ export function StockManager({ seed }: { seed: Produto[] }) {
   }
 
   return (
-    <div className="space-y-5">
+    <div data-tour="adm-stock" className="space-y-5">
       <div className="flex items-center justify-between">
         <p className="text-sm adm-muted">{itens.length} produtos no estoque</p>
         <button

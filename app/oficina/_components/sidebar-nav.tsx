@@ -29,7 +29,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav data-tour="adm-nav" className="flex-1 space-y-1 overflow-y-auto p-3">
         {adminNav.map((item) => {
           const active =
             item.href === "/oficina" ? path === "/oficina" : path.startsWith(item.href);
