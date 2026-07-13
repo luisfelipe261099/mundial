@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { X, MessageCircle, LogOut } from "lucide-react";
+import { X, MessageCircle, GraduationCap, LogOut } from "lucide-react";
 import { drawerNav } from "./nav-items";
 import { business, whatsappUrl } from "../../_data/business";
 import { logout } from "../../login/actions";
@@ -89,6 +89,17 @@ export default function Drawer({
         </ul>
 
         <div className="space-y-1 border-t border-[var(--app-line)] p-3">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              window.dispatchEvent(new Event("mundial:tour:open"));
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[0.95rem] font-medium t-brand transition-colors hover:bg-[var(--app-surface-2)]"
+          >
+            <GraduationCap className="size-5" />
+            Tutorial desta tela
+          </button>
           <a
             href={whatsappUrl("Olá! Falo pelo app e gostaria de atendimento.")}
             target="_blank"

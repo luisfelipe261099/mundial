@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { ArrowLeft, GraduationCap, LogOut } from "lucide-react";
 import { business } from "../../_data/business";
 import { logout } from "../../login/actions";
 import GuidedTour from "../../_components/tour/guided-tour";
@@ -40,6 +40,14 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
           </p>
           {!isDetail && <p className="text-[0.65rem] font-medium mec-muted">Área do mecânico</p>}
         </div>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event("mundial:tour:open"))}
+          aria-label="Tutorial desta tela"
+          className="grid size-10 place-items-center rounded-full mec-brand transition-colors hover:bg-[var(--mec-surface-2)]"
+        >
+          <GraduationCap className="size-5" />
+        </button>
         <form action={logout}>
           <button
             type="submit"

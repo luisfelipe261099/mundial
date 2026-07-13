@@ -89,6 +89,17 @@ function TourRunner({ tour, prefix: p }: { tour: Tour; prefix: string }) {
     markDone();
   }, [markDone]);
 
+  // Abertura sob demanda pelo menu ("Tutorial"), via evento global.
+  useEffect(() => {
+    const onOpen = () => {
+      setStep(0);
+      setMeasure(null);
+      setRunning(true);
+    };
+    window.addEventListener("mundial:tour:open", onOpen);
+    return () => window.removeEventListener("mundial:tour:open", onOpen);
+  }, []);
+
   // Auto-start uma vez por página (na primeira visita). setState só no timeout.
   useEffect(() => {
     let done = false;
