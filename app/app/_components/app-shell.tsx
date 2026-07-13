@@ -5,6 +5,7 @@ import TopBar from "./top-bar";
 import BottomNav from "./bottom-nav";
 import Drawer from "./drawer";
 import { AppSidebar } from "./app-sidebar";
+import GuidedTour from "../../_components/tour/guided-tour";
 
 // Casca responsiva: no desktop (lg+) usa menu lateral + área de conteúdo larga;
 // no mobile, top bar + conteúdo + bottom-nav (e o drawer pelo menu ☰). Sem
@@ -32,6 +33,8 @@ export default function AppShell({
         <BottomNav />
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       </div>
+
+      <GuidedTour theme="app" />
     </div>
   );
 }

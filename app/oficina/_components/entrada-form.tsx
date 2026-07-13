@@ -118,7 +118,7 @@ export function EntradaForm({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div data-tour="adm-entrada" className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="adm-display flex items-center gap-2 text-2xl font-bold adm-ink">
           <ClipboardCheck className="size-6 adm-brand" />

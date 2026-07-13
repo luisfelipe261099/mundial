@@ -22,7 +22,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div data-tour="adm-kpis" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard label="Clientes" value={kpis.clientes.toString()} icon={Users} />
         <KpiCard label="Veículos" value={kpis.veiculos.toString()} icon={Car} />
         <KpiCard label="OS abertas" value={kpis.osAbertas.toString()} icon={ClipboardList} hint="agora" />
@@ -30,7 +30,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div data-tour="adm-chart" className="lg:col-span-2">
           <Panel title="Faturamento — últimos 6 meses" bodyClass="p-5">
             <BarChart data={faturamentoMensal} />
           </Panel>

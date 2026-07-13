@@ -120,7 +120,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
       </div>
 
       {/* status */}
-      <section>
+      <section data-tour="mec-status">
         <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Status</h2>
         <div className="mec-card p-4">
           <div className="flex flex-wrap gap-2">
@@ -155,7 +155,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
       </section>
 
       {/* vistoria técnica */}
-      <section>
+      <section data-tour="mec-vistoria">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="mec-display flex items-center gap-2 text-[1.05rem] font-bold mec-ink">
             <ClipboardList className="size-5 mec-brand" />
@@ -206,7 +206,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
       </section>
 
       {/* peças e serviços */}
-      <section>
+      <section data-tour="mec-itens">
         <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Peças e serviços</h2>
         <div className="mec-card divide-y divide-[var(--mec-line)] px-4">
           {os.itens.length === 0 && <p className="py-3 text-sm mec-muted">Nenhum item ainda.</p>}
@@ -257,7 +257,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
       </section>
 
       {/* fotos */}
-      <section>
+      <section data-tour="mec-fotos">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="mec-display text-[1.05rem] font-bold mec-ink">Fotos</h2>
           <button
@@ -304,7 +304,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
       </section>
 
       {/* observações */}
-      <section>
+      <section data-tour="mec-obs">
         <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Observações</h2>
         <textarea
           value={obs}

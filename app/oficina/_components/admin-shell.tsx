@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, Search } from "lucide-react";
 import { SidebarNav } from "./sidebar-nav";
 import { adminNav } from "./nav-items";
+import GuidedTour from "../../_components/tour/guided-tour";
 
 function titleFor(path: string): string {
   if (path.startsWith("/oficina/ordens/")) return "Ordem de Serviço";
@@ -52,6 +53,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             type="button"
             onClick={() => setOpen(true)}
             aria-label="Abrir menu"
+            data-tour="adm-menu"
             className="grid size-9 place-items-center rounded-lg adm-ink hover:bg-[var(--ad-surface-2)] lg:hidden"
           >
             <Menu className="size-6" />
@@ -68,6 +70,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
         <main className="mx-auto max-w-[1200px] p-5 lg:p-8">{children}</main>
       </div>
+
+      <GuidedTour theme="oficina" />
     </div>
   );
 }

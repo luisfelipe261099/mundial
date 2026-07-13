@@ -10,7 +10,7 @@ const ACTIONS = [
 
 export function QuickActions() {
   return (
-    <div className="grid grid-cols-4 gap-2.5">
+    <div data-tour="app-quick" className="grid grid-cols-4 gap-2.5">
       {ACTIONS.map((a) => {
         const Icon = a.icon;
         return (

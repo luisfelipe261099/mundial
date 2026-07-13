@@ -51,7 +51,7 @@ export function SolicitarForm({ veiculos }: { veiculos: VeiculoOpt[] }) {
   }
 
   return (
-    <div className="space-y-5 px-5 pb-8 pt-3">
+    <div data-tour="app-solicitar" className="space-y-5 px-5 pb-8 pt-3">
       <p className="text-sm t-muted">Conte o que seu carro precisa e a oficina prepara um orçamento.</p>
 
       <div>

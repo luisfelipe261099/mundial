@@ -76,7 +76,7 @@ export function CadastroForm({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div data-tour="adm-form" className="mx-auto max-w-2xl space-y-6">
       <Link href={voltarHref} className="text-sm font-semibold adm-muted hover:adm-brand">
         ← {voltarLabel}
       </Link>

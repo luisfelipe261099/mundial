@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ExternalLink, LogOut } from "lucide-react";
+import { ExternalLink, GraduationCap, LogOut } from "lucide-react";
 import { adminNav } from "./nav-items";
 import { business } from "../../_data/business";
 import { logout } from "../../login/actions";
@@ -29,7 +29,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav data-tour="adm-nav" className="flex-1 space-y-1 overflow-y-auto p-3">
         {adminNav.map((item) => {
           const active =
             item.href === "/oficina" ? path === "/oficina" : path.startsWith(item.href);
@@ -54,6 +54,17 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="space-y-1 border-t border-[var(--ad-line)] p-3">
+        <button
+          type="button"
+          onClick={() => {
+            onNavigate?.();
+            window.dispatchEvent(new Event("mundial:tour:open"));
+          }}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium adm-brand transition-colors hover:bg-[var(--ad-surface-2)]"
+        >
+          <GraduationCap className="size-[1.15rem]" />
+          Tutorial desta tela
+        </button>
         <Link
           href="/"
           className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium adm-muted transition-colors hover:bg-[var(--ad-surface-2)]"
