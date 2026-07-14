@@ -87,7 +87,7 @@ export function OrderControl({
       </div>
 
       {/* Stepper */}
-      <div className="adm-card p-5">
+      <div data-tour="os-stepper" className="adm-card p-5">
         <div className="flex items-center">
           {FLUXO.map((s, i) => {
             const done = i <= idx;
@@ -259,7 +259,7 @@ export function OrderControl({
       )}
 
       {/* Itens / orçamento */}
-      <div className="adm-card overflow-hidden">
+      <div data-tour="os-itens" className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
           <h3 className="adm-display font-bold adm-ink">Peças e serviços (orçamento)</h3>
         </div>
@@ -348,7 +348,7 @@ export function OrderControl({
       )}
 
       {/* Footer */}
-      <div className="flex flex-wrap gap-3">
+      <div data-tour="os-footer" className="flex flex-wrap gap-3">
         <a href={`https://wa.me/?text=${encodeURIComponent(`Olá! Sobre a OS ${os.id} do seu ${os.veiculo}.`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink hover:bg-[var(--ad-surface-2)]">
           <MessageCircle className="size-4 text-emerald-400" />
           Avisar no WhatsApp

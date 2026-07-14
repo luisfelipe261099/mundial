@@ -240,11 +240,12 @@ function TourRunner({ tour, prefix: p }: { tour: Tour; prefix: string }) {
 
       {/* Card do passo */}
       <div
-        className="absolute rounded-2xl border p-4 shadow-2xl transition-all duration-200"
+        className="no-scrollbar absolute overflow-y-auto rounded-2xl border p-4 shadow-2xl transition-all duration-200"
         style={{
           top: cardTop,
           left: cardLeft,
           width: cardW,
+          maxHeight: "min(78vh, 560px)",
           background: surface,
           borderColor: line,
           color: ink,
