@@ -218,7 +218,7 @@ export function BookingFlow({
               );
             }
           }}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[var(--app-brand)] py-3 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
+          className="app-btn-primary flex-1 py-3 text-sm"
         >
           {ultimo ? "Confirmar agendamento" : "Continuar"}
           {!ultimo && <ChevronRight className="size-4" />}

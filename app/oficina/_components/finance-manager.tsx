@@ -159,7 +159,7 @@ export function FinanceManager({ seed }: { seed: Lancamento[] }) {
             type="button"
             onClick={add}
             disabled={!descricao.trim() || valor <= 0}
-            className="flex items-center justify-center gap-1.5 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
+            className="adm-btn-primary px-4 py-2.5 text-sm"
           >
             <Plus className="size-4" />
             Lançar

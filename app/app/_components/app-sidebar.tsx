@@ -13,15 +13,18 @@ export function AppSidebar({ unread }: { unread: number }) {
   const path = usePathname() ?? "/app";
 
   return (
-    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-[var(--app-line)] bg-[var(--app-surface)] lg:flex">
+    <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-[var(--app-line)] bg-[var(--app-surface)]/80 backdrop-blur-xl lg:flex">
       <div className="flex h-16 items-center gap-2.5 px-5">
-        <Image
-          src="/images/logo.png"
-          alt={business.name}
-          width={36}
-          height={36}
-          className="size-9 rounded-full ring-1 ring-[var(--app-line)]"
-        />
+        <span className="relative isolate">
+          <Image
+            src="/images/logo.png"
+            alt={business.name}
+            width={36}
+            height={36}
+            className="size-9 rounded-full ring-1 ring-[var(--app-line-strong)]"
+          />
+          <span className="absolute -inset-1 -z-10 rounded-full bg-[var(--app-brand)]/25 blur-md" />
+        </span>
         <span className="app-display text-lg font-extrabold uppercase tracking-tight t-ink">
           {business.shortName}
           <span className="t-brand">.</span>
@@ -38,11 +41,22 @@ export function AppSidebar({ unread }: { unread: number }) {
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                active ? "bg-[var(--app-brand)]/15 t-brand" : "t-ink hover:bg-[var(--app-surface-2)]"
+              className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                active
+                  ? "bg-gradient-to-r from-[var(--app-brand)]/25 to-[var(--app-brand)]/5 t-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-[var(--app-brand)]/25"
+                  : "t-muted hover:bg-[var(--app-surface-2)] hover:text-[var(--app-ink)]"
               }`}
             >
-              <Icon className="size-5" />
+              <span
+                className={`absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--app-brand-2)] transition-opacity ${
+                  active ? "opacity-100" : "opacity-0"
+                }`}
+              />
+              <Icon
+                className={`size-5 transition-colors ${
+                  active ? "text-[var(--app-brand-2)]" : "group-hover:text-[var(--app-brand-2)]"
+                }`}
+              />
               <span className="flex-1">{item.label}</span>
               {badge && (
                 <span className="grid min-h-5 min-w-5 place-items-center rounded-full bg-[var(--app-brand)] px-1 text-[0.65rem] font-bold text-white">

@@ -20,7 +20,7 @@ export default async function OrdensPage() {
           </Link>
           <Link
             href="/oficina/entrada"
-            className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+            className="adm-btn-primary px-4 py-2.5 text-sm"
           >
             <ClipboardCheck className="size-4" />
             Dar entrada

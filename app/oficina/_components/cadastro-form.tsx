@@ -60,7 +60,7 @@ export function CadastroForm({
             ))}
         </div>
         <div className="mt-5 flex justify-center gap-3">
-          <Link href={voltarHref} className="rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8]">
+          <Link href={voltarHref} className="adm-btn-primary px-4 py-2.5 text-sm">
             {voltarLabel}
           </Link>
           <button
@@ -119,7 +119,7 @@ export function CadastroForm({
             setCriado(true);
           })
         }
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1d4ed8] disabled:opacity-40"
+        className="adm-btn-primary w-full py-3.5 text-sm"
       >
         <Check className="size-5" />
         {pending ? "Salvando…" : criarLabel}

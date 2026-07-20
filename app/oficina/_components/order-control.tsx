@@ -94,12 +94,12 @@ export function OrderControl({
             return (
               <div key={s} className="flex flex-1 items-center last:flex-none">
                 <div className="flex flex-col items-center gap-2">
-                  <span className={`grid size-8 place-items-center rounded-full text-xs font-bold ${done ? "bg-[var(--ad-brand)] text-white" : "bg-[var(--ad-surface-2)] adm-muted"}`}>
+                  <span className={`grid size-8 place-items-center rounded-full text-xs font-bold ${done ? "bg-[image:var(--ad-grad)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_6px_14px_-6px_rgba(37,99,235,0.6)]" : "bg-[var(--ad-surface-2)] adm-muted ring-1 ring-[var(--ad-line)]"}`}>
                     {done ? <Check className="size-4" /> : i + 1}
                   </span>
                   <span className={`hidden w-20 text-center text-[0.65rem] font-medium leading-tight sm:block ${done ? "adm-ink" : "adm-muted"}`}>{s}</span>
                 </div>
-                {i < FLUXO.length - 1 && <div className={`mx-1 h-0.5 flex-1 ${i < idx ? "bg-[var(--ad-brand)]" : "bg-[var(--ad-surface-2)]"}`} />}
+                {i < FLUXO.length - 1 && <div className={`mx-1 h-0.5 flex-1 rounded-full ${i < idx ? "bg-gradient-to-r from-[var(--ad-brand)] to-[var(--ad-brand-2)]" : "bg-[var(--ad-surface-2)]"}`} />}
               </div>
             );
           })}
@@ -115,7 +115,7 @@ export function OrderControl({
           )}
 
           {os.status === "Aberta" && (
-            <button type="button" disabled={pending || os.itens.length === 0} onClick={() => run(() => enviarParaAprovacao(os.id))} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+            <button type="button" disabled={pending || os.itens.length === 0} onClick={() => run(() => enviarParaAprovacao(os.id))} className="adm-btn-primary px-4 py-2.5 text-sm">
               Enviar orçamento p/ aprovação
               <ArrowRight className="size-4" />
             </button>
@@ -129,7 +129,7 @@ export function OrderControl({
                   {os.budgetStatus === "aprovado" ? "aprovou ✓" : os.budgetStatus === "rejeitado" ? "rejeitou ✗" : "aguardando resposta…"}
                 </span>
               </span>
-              <button type="button" disabled={pending} onClick={() => run(() => mudarStatus(os.id, "Em execução"))} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8]">
+              <button type="button" disabled={pending} onClick={() => run(() => mudarStatus(os.id, "Em execução"))} className="adm-btn-primary px-4 py-2.5 text-sm">
                 Iniciar execução
                 <ArrowRight className="size-4" />
               </button>
@@ -144,7 +144,7 @@ export function OrderControl({
           )}
 
           {os.status === "Finalizada" && (
-            <button type="button" onClick={() => setShowEntrega((v) => !v)} className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#1d4ed8]">
+            <button type="button" onClick={() => setShowEntrega((v) => !v)} className="adm-btn-primary px-4 py-2.5 text-sm">
               <Truck className="size-4" />
               Registrar entrega
             </button>
@@ -291,7 +291,7 @@ export function OrderControl({
             <input value={draft.descricao} onChange={(e) => setDraft((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Descrição" className={inputCls} />
             <input type="number" min={1} value={draft.qtd} onChange={(e) => setDraft((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Qtd" />
             <input type="number" min={0} value={draft.valor || ""} onChange={(e) => setDraft((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$" className={inputCls} aria-label="Valor" />
-            <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+            <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="adm-btn-primary px-3 py-2.5 text-sm">
               <Plus className="size-4" />
               <span className="sm:hidden">Adicionar</span>
             </button>

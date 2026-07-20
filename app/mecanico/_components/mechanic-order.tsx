@@ -32,8 +32,7 @@ const STATUS3 = [
   { key: "avaria", label: "Avaria", on: "bg-rose-600 text-white" },
 ];
 
-const inputCls =
-  "w-full rounded-lg border border-[var(--mec-line)] bg-[var(--mec-surface)] px-3 py-2 text-sm mec-ink outline-none focus:border-[var(--mec-brand)]";
+const inputCls = "mec-input";
 
 export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produto[] }) {
   const [pending, startTransition] = useTransition();
@@ -102,21 +101,24 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
   return (
     <div className="space-y-5 px-5 pb-8 pt-3">
       {/* cabeçalho */}
-      <div className="mec-card p-4">
+      <div className="mec-card relative overflow-hidden p-4">
+        <span className="pointer-events-none absolute -right-10 -top-12 size-32 rounded-full bg-[var(--mec-brand)]/14 blur-2xl" />
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs mec-muted">{os.id}</span>
           <span className={osBadgeClass[os.status as StatusOS]}>{os.status}</span>
         </div>
-        <p className="mec-display mt-1.5 text-lg font-bold mec-ink">{os.veiculo}</p>
-        <p className="text-xs mec-muted">
-          {os.cliente} · <span className="font-mono">{os.placa}</span> · {os.km.toLocaleString("pt-BR")} km
-        </p>
+        <p className="mec-display mt-2 text-xl font-bold mec-ink">{os.veiculo}</p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs mec-muted">
+          <span>{os.cliente}</span>
+          <span className="mec-plate">{os.placa}</span>
+          <span className="tnum">{os.km.toLocaleString("pt-BR")} km</span>
+        </div>
       </div>
 
       {/* defeito */}
       <div className="mec-card p-4">
-        <p className="text-xs uppercase tracking-wide mec-muted">Defeito relatado</p>
-        <p className="mt-1.5 text-sm mec-ink">{os.defeito}</p>
+        <p className="mec-eyebrow">Defeito relatado</p>
+        <p className="mt-1.5 text-sm leading-relaxed mec-ink">{os.defeito}</p>
       </div>
 
       {/* status */}
@@ -127,8 +129,12 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
             {FLUXO.map((s, i) => (
               <span
                 key={s}
-                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                  i <= idx ? "bg-[var(--mec-brand)] text-white" : "bg-[var(--mec-surface-2)] mec-muted"
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+                  i < idx
+                    ? "bg-[var(--mec-brand)]/20 text-[#93c5fd] shadow-[inset_0_0_0_1px_rgba(147,197,253,0.25)]"
+                    : i === idx
+                      ? "bg-[image:var(--mec-grad)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_6px_14px_-6px_rgba(37,99,235,0.6)]"
+                      : "bg-[var(--mec-surface-2)] mec-muted"
                 }`}
               >
                 {s}
@@ -140,7 +146,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
               type="button"
               disabled={pending}
               onClick={() => run(() => mudarStatus(os.id, proximo))}
-              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[var(--mec-brand)] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+              className="mec-btn-primary mt-4 w-full py-3 text-sm"
             >
               Avançar para “{proximo}”
               <ChevronRight className="size-4" />
@@ -166,7 +172,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
           {CHECKLIST_TEC.map((item) => (
             <div key={item} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
               <span className="text-sm mec-ink">{item}</span>
-              <div className="flex gap-1 rounded-lg border border-[var(--mec-line)] p-0.5">
+              <div className="flex gap-1 rounded-lg border border-[var(--mec-line-strong)] bg-[rgba(7,10,19,0.45)] p-0.5">
                 {STATUS3.map((s) => (
                   <button
                     key={s.key}
@@ -192,7 +198,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
             setCheckSalvo(true);
             run(() => salvarTechChecklist(os.id, CHECKLIST_TEC.map((i) => ({ item: i, status: check[i] }))));
           }}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--mec-line)] py-3 text-sm font-semibold mec-ink transition-colors hover:bg-[var(--mec-surface-2)]"
+          className="mec-btn-ghost mt-2 w-full py-3 text-sm"
         >
           {checkSalvo ? (
             <>
@@ -223,7 +229,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
           ))}
         </div>
 
-        <div className="mt-2 space-y-2 rounded-xl border border-[var(--mec-line)] p-3">
+        <div className="mec-card-2 mt-2 space-y-2 p-3">
           <div className="grid grid-cols-2 gap-2">
             <select value={draft.tipo} onChange={(e) => setDraft((d) => ({ ...d, tipo: e.target.value, productId: e.target.value === "Serviço" ? "" : d.productId }))} className={inputCls}>
               <option value="Peça">Peça</option>
@@ -249,7 +255,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
               ))}
             </select>
           )}
-          <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--mec-brand)] py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+          <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="mec-btn-primary w-full py-2.5 text-sm">
             <Plus className="size-4" />
             Adicionar item
           </button>
@@ -313,7 +319,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
             setObsSalvo(false);
           }}
           rows={4}
-          className="w-full resize-none rounded-xl border border-[var(--mec-line)] bg-[var(--mec-surface)] p-3 text-sm mec-ink outline-none focus:border-[var(--mec-brand)]"
+          className="mec-input resize-none rounded-xl p-3"
           placeholder="O que foi feito, peças trocadas, recomendações…"
         />
         <button
@@ -322,7 +328,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
             setObsSalvo(true);
             run(() => salvarObservacoes(os.id, obs));
           }}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--mec-line)] py-3 text-sm font-semibold mec-ink transition-colors hover:bg-[var(--mec-surface-2)]"
+          className="mec-btn-ghost mt-2 w-full py-3 text-sm"
         >
           {obsSalvo ? (
             <>

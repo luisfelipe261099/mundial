@@ -16,7 +16,7 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh flex-col bg-[var(--mec-bg)]">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--mec-line)] px-4">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--mec-line)] bg-[var(--mec-bg)]/75 px-4 backdrop-blur-xl">
         {isDetail ? (
           <Link
             href="/mecanico"
@@ -26,19 +26,22 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
             <ArrowLeft className="size-6" />
           </Link>
         ) : (
-          <Image
-            src="/images/logo.png"
-            alt={business.name}
-            width={34}
-            height={34}
-            className="size-8 rounded-full ring-1 ring-[var(--mec-line)]"
-          />
+          <span className="relative isolate">
+            <Image
+              src="/images/logo.png"
+              alt={business.name}
+              width={34}
+              height={34}
+              className="size-8 rounded-full ring-1 ring-[var(--mec-line-strong)]"
+            />
+            <span className="absolute -inset-1 -z-10 rounded-full bg-[var(--mec-brand)]/25 blur-md" />
+          </span>
         )}
         <div className="min-w-0 flex-1 leading-tight">
           <p className="mec-display truncate text-sm font-bold mec-ink">
             {isDetail ? "Ordem de Serviço" : business.shortName}
           </p>
-          {!isDetail && <p className="text-[0.65rem] font-medium mec-muted">Área do mecânico</p>}
+          {!isDetail && <p className="mec-eyebrow text-[0.6rem]">Área do mecânico</p>}
         </div>
         <button
           type="button"

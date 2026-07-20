@@ -12,10 +12,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="adm-display text-xl font-bold adm-ink">Visão geral</h1>
+        <div>
+          <p className="adm-eyebrow">Painel da oficina</p>
+          <h1 className="adm-display mt-0.5 text-2xl font-bold adm-ink">Visão geral</h1>
+        </div>
         <Link
           href="/oficina/entrada"
-          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+          className="adm-btn-primary px-4 py-2.5 text-sm"
         >
           <ClipboardCheck className="size-4" />
           Dar entrada de veículo

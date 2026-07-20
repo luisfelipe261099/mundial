@@ -103,7 +103,7 @@ export function SettingsForm({ inicial }: { inicial: Inicial }) {
         <button
           type="submit"
           disabled={pending}
-          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-5 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-50"
+          className="adm-btn-primary px-5 py-2.5 text-sm"
         >
           <Save className="size-4" />
           {pending ? "Salvando…" : "Salvar alterações"}

@@ -1,20 +1,26 @@
 /* ════════════════════════════════════════════════════════════════════
-   APP DO CLIENTE — tema "fintech navy" (fiel à imagem de referência).
+   APP DO CLIENTE — tema "fintech navy" premium.
    Escopado em .app-root para NÃO vazar pro site de marketing (que é claro).
    Mesmo padrão de isolamento do /v2: html:has(.app-root) força o escuro.
    Tokens via CSS vars + valores arbitrários do Tailwind (sem @theme global).
    Fontes (--font-outfit / --font-work-sans) já vêm do root layout.
+
+   Linguagem compartilhada com admin/mecânico: fundo profundo com brilhos
+   ambientais, cards em gradiente sutil com highlight interno, badges com
+   dot de status e CTAs em gradiente com glow.
    ════════════════════════════════════════════════════════════════════ */
 
 .app-root {
-  --app-bg: #0a0e17;
-  --app-surface: #121826;
-  --app-surface-2: #19212f;
-  --app-line: #232c3d;
-  --app-ink: #f4f7fb;
-  --app-muted: #8b95a7;
+  --app-bg: #070a13;
+  --app-surface: #121a29;
+  --app-surface-2: #1a2334;
+  --app-line: rgba(148, 163, 184, 0.14);
+  --app-line-strong: rgba(148, 163, 184, 0.24);
+  --app-ink: #f5f8fc;
+  --app-muted: #93a0b5;
   --app-brand: #2563eb;
   --app-brand-2: #3b82f6;
+  --app-grad: linear-gradient(135deg, #4f8df9 0%, #2563eb 55%, #1d4ed8 100%);
 
   color: var(--app-ink);
   background-color: var(--app-bg);
@@ -30,6 +36,22 @@ html:has(.app-root) {
 }
 body:has(.app-root) {
   background-color: #05070c;
+}
+
+/* Brilhos ambientais fixos — profundidade sem pesar a leitura. */
+.app-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(42rem 26rem at 88% -12%, rgba(37, 99, 235, 0.12), transparent 60%),
+    radial-gradient(32rem 22rem at -10% 102%, rgba(79, 70, 229, 0.08), transparent 55%);
+}
+.app-root > * {
+  position: relative;
+  z-index: 1;
 }
 
 .app-root ::selection {
@@ -48,21 +70,100 @@ body:has(.app-root) {
   letter-spacing: -0.02em;
 }
 
+.app-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Superfícies ────────────────────────────────────────────────────── */
 .app-card {
-  background-color: var(--app-surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.028), transparent 42%),
+    var(--app-surface);
   border: 1px solid var(--app-line);
   border-radius: 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 14px 34px -18px rgba(2, 6, 18, 0.65);
 }
 .app-card-2 {
   background-color: var(--app-surface-2);
   border: 1px solid var(--app-line);
   border-radius: 1rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.app-lift {
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.app-lift:hover {
+  border-color: var(--app-line-strong);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 40px -18px rgba(2, 6, 18, 0.75);
+}
+.app-lift:active {
+  transform: scale(0.99);
 }
 
 .t-ink { color: var(--app-ink); }
 .t-muted { color: var(--app-muted); }
 .t-brand { color: var(--app-brand-2); }
+
+/* ── Botões ─────────────────────────────────────────────────────────── */
+.app-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.875rem;
+  background: var(--app-grad);
+  color: #fff;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 10px 24px -10px rgba(37, 99, 235, 0.55);
+  transition: filter 150ms ease, transform 150ms ease;
+}
+.app-btn-primary:hover:enabled,
+a.app-btn-primary:hover {
+  filter: brightness(1.08);
+}
+.app-btn-primary:active:enabled,
+a.app-btn-primary:active {
+  transform: scale(0.985);
+}
+.app-btn-primary:disabled {
+  opacity: 0.5;
+}
+
+.app-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.875rem;
+  border: 1px solid var(--app-line-strong);
+  background: rgba(148, 163, 184, 0.05);
+  color: var(--app-ink);
+  font-weight: 600;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+.app-btn-ghost:hover {
+  background: var(--app-surface-2);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+.app-btn-ghost:active {
+  transform: scale(0.985);
+}
 
 /* ── Chips de ícone por categoria (verde/azul/roxo/âmbar etc.) ───────── */
 .chip {
@@ -73,51 +174,64 @@ body:has(.app-root) {
   border-radius: 9999px; /* círculo sólido, como na referência */
   flex: none;
   color: #fff; /* ícone branco */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 6px 14px -6px rgba(2, 6, 18, 0.6);
 }
-.chip-oleo      { background: #16a34a; }
-.chip-freio     { background: #2563eb; }
-.chip-filtro    { background: #7c3aed; }
-.chip-revisao   { background: #0284c7; }
-.chip-suspensao { background: #d97706; }
-.chip-eletrica  { background: #db2777; }
-.chip-pneus     { background: #475569; }
-.chip-bateria   { background: #16a34a; }
-.chip-geral     { background: #2563eb; }
-.chip-promo     { background: #ea580c; }
-.chip-ipva      { background: #0284c7; }
-.chip-licenciamento { background: #d97706; }
+.chip-oleo      { background: linear-gradient(160deg, #22c55e, #15803d); }
+.chip-freio     { background: linear-gradient(160deg, #3b82f6, #1d4ed8); }
+.chip-filtro    { background: linear-gradient(160deg, #8b5cf6, #6d28d9); }
+.chip-revisao   { background: linear-gradient(160deg, #0ea5e9, #0369a1); }
+.chip-suspensao { background: linear-gradient(160deg, #f59e0b, #b45309); }
+.chip-eletrica  { background: linear-gradient(160deg, #ec4899, #be185d); }
+.chip-pneus     { background: linear-gradient(160deg, #64748b, #334155); }
+.chip-bateria   { background: linear-gradient(160deg, #22c55e, #15803d); }
+.chip-geral     { background: linear-gradient(160deg, #3b82f6, #1d4ed8); }
+.chip-promo     { background: linear-gradient(160deg, #f97316, #c2410c); }
+.chip-ipva      { background: linear-gradient(160deg, #0ea5e9, #0369a1); }
+.chip-licenciamento { background: linear-gradient(160deg, #f59e0b, #b45309); }
 
 /* ── Badges de status ───────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.2rem 0.6rem;
+  gap: 0.4rem;
+  padding: 0.22rem 0.65rem;
   border-radius: 9999px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
 }
-.badge-agendado    { color: #93c5fd; background: rgba(37, 99, 235, 0.16); }
-.badge-confirmado  { color: #5eead4; background: rgba(13, 148, 136, 0.16); }
-.badge-andamento   { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
-.badge-finalizado  { color: #86efac; background: rgba(22, 163, 74, 0.16); }
-.badge-pendente    { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
-.badge-aprovado    { color: #86efac; background: rgba(22, 163, 74, 0.16); }
-.badge-rejeitado   { color: #fca5a5; background: rgba(220, 38, 38, 0.16); }
-.badge-ok          { color: #86efac; background: rgba(22, 163, 74, 0.14); }
-.badge-proxima     { color: #fcd34d; background: rgba(217, 119, 6, 0.16); }
-.badge-vencida     { color: #fca5a5; background: rgba(220, 38, 38, 0.16); }
+.badge::before {
+  content: "";
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 9999px;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+}
+.badge-agendado    { color: #93c5fd; background: rgba(37, 99, 235, 0.14); box-shadow: inset 0 0 0 1px rgba(147, 197, 253, 0.32); }
+.badge-confirmado  { color: #5eead4; background: rgba(13, 148, 136, 0.14); box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.32); }
+.badge-andamento   { color: #fcd34d; background: rgba(217, 119, 6, 0.14); box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.32); }
+.badge-finalizado  { color: #86efac; background: rgba(22, 163, 74, 0.14); box-shadow: inset 0 0 0 1px rgba(134, 239, 172, 0.32); }
+.badge-pendente    { color: #fcd34d; background: rgba(217, 119, 6, 0.14); box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.32); }
+.badge-aprovado    { color: #86efac; background: rgba(22, 163, 74, 0.14); box-shadow: inset 0 0 0 1px rgba(134, 239, 172, 0.32); }
+.badge-rejeitado   { color: #fca5a5; background: rgba(220, 38, 38, 0.14); box-shadow: inset 0 0 0 1px rgba(252, 165, 165, 0.32); }
+.badge-ok          { color: #86efac; background: rgba(22, 163, 74, 0.12); box-shadow: inset 0 0 0 1px rgba(134, 239, 172, 0.32); }
+.badge-proxima     { color: #fcd34d; background: rgba(217, 119, 6, 0.14); box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.32); }
+.badge-vencida     { color: #fca5a5; background: rgba(220, 38, 38, 0.14); box-shadow: inset 0 0 0 1px rgba(252, 165, 165, 0.32); }
 
 /* ── Gradientes do card de veículo (sem asset de recorte do carro) ───── */
 .grad-blue {
   background:
     radial-gradient(120% 120% at 85% -10%, rgba(59, 130, 246, 0.55), transparent 55%),
+    radial-gradient(80% 90% at 10% 110%, rgba(79, 70, 229, 0.35), transparent 60%),
     linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 45%, #0b1220 100%);
 }
 .grad-steel {
   background:
     radial-gradient(120% 120% at 85% -10%, rgba(148, 163, 184, 0.4), transparent 55%),
+    radial-gradient(80% 90% at 10% 110%, rgba(100, 116, 139, 0.25), transparent 60%),
     linear-gradient(135deg, #334155 0%, #1e293b 50%, #0b1220 100%);
 }
 

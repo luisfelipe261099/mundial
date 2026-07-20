@@ -12,7 +12,7 @@ export default async function ClientesPage() {
         <p className="text-sm adm-muted">{clientes.length} clientes cadastrados</p>
         <Link
           href="/oficina/clientes/novo"
-          className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1d4ed8]"
+          className="adm-btn-primary px-4 py-2.5 text-sm"
         >
           <Plus className="size-4" />
           Novo cliente

@@ -28,7 +28,7 @@ export default function Drawer({
         tabIndex={open ? 0 : -1}
         aria-label="Fechar menu"
         onClick={onClose}
-        className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -74,13 +74,18 @@ export default function Drawer({
                   href={item.href}
                   onClick={onClose}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium transition-colors ${
+                  className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.95rem] font-medium transition-colors ${
                     active
-                      ? "bg-[var(--app-brand)]/15 t-brand"
+                      ? "bg-gradient-to-r from-[var(--app-brand)]/25 to-[var(--app-brand)]/5 t-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-[var(--app-brand)]/25"
                       : "t-ink hover:bg-[var(--app-surface-2)]"
                   }`}
                 >
-                  <Icon className="size-5" />
+                  <span
+                    className={`absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--app-brand-2)] transition-opacity ${
+                      active ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                  <Icon className={`size-5 ${active ? "text-[var(--app-brand-2)]" : ""}`} />
                   {item.label}
                 </Link>
               </li>
