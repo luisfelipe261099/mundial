@@ -16,6 +16,9 @@
   --tut-brand: #2f7bff;
   --tut-brand-2: #4f90ff;
   --tut-signal-soft: rgba(47, 123, 255, 0.16);
+  --tut-amber: #f5a623;
+  --tut-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --tut-shadow-lg: 0 22px 52px -26px rgba(0, 0, 0, 0.9);
 
   min-height: 100dvh;
   color: var(--tut-ink);
@@ -48,12 +51,65 @@ body:has(.tut-root) {
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
+.tut-eyebrow {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tut-muted);
+}
+.tut-display-xl {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+.tut-brand-c { color: var(--tut-brand-2); }
+.tut-accent { color: var(--tut-amber); }
 
 .tut-card {
   background-color: var(--tut-surface);
   border: 1px solid var(--tut-line);
   border-radius: 1rem;
+  box-shadow: var(--tut-shadow);
 }
+
+/* Banda-herói editorial — mesmo brilho + grid de instrumento do resto. */
+.tut-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--tut-line);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(120% 130% at 90% -10%, rgba(47, 123, 255, 0.2), transparent 55%),
+    radial-gradient(90% 120% at 0% 120%, rgba(245, 166, 35, 0.06), transparent 60%),
+    var(--tut-surface);
+  box-shadow: var(--tut-shadow-lg);
+}
+.tut-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--tut-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--tut-line) 1px, transparent 1px);
+  background-size: 42px 42px;
+  -webkit-mask-image: radial-gradient(120% 100% at 85% 0%, #000, transparent 70%);
+  mask-image: radial-gradient(120% 100% at 85% 0%, #000, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.tut-hero > * { position: relative; }
+
+/* Stepper de progresso — pontos clicáveis. */
+.tut-dot {
+  height: 0.4rem;
+  border-radius: 9999px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tut-dot-active { width: 1.5rem; background: var(--tut-brand); }
+.tut-dot-done   { width: 0.4rem; background: var(--tut-brand-2); }
+.tut-dot-todo   { width: 0.4rem; background: var(--tut-line-2); }
 
 /* leve subida ao trocar de passo */
 @keyframes tut-rise {
