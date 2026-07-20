@@ -10,6 +10,7 @@ import {
 import { requireClientId } from "@/lib/auth";
 import { getDocumentos } from "@/lib/client-data";
 import type { TipoDocumento } from "../_data/mock";
+import { AppHeader } from "../_components/app-header";
 
 const ICON: Record<TipoDocumento, LucideIcon> = {
   "Nota fiscal": Receipt,
@@ -33,7 +34,12 @@ export default async function DocumentosPage() {
 
   return (
     <div className="space-y-6 px-5 pb-8 pt-3">
-      <p className="text-sm t-muted">Todos os seus documentos em PDF, em um só lugar.</p>
+      <AppHeader
+        eyebrow="Arquivos"
+        title="Documentos"
+        description="Todos os seus documentos em PDF, em um só lugar."
+        stats={[{ label: documentos.length === 1 ? "documento" : "documentos", value: documentos.length.toString() }]}
+      />
 
       {documentos.length === 0 && (
         <div className="app-card p-5 text-sm t-muted">Nenhum documento disponível ainda.</div>

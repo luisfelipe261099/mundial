@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { getCatalogoServicos } from "@/lib/client-data";
 import { CatChip } from "../_components/category";
+import { AppHeader } from "../_components/app-header";
 
 const ATALHOS = [
   { label: "Agendar serviço", desc: "Escolha data e horário", href: "/app/agendar", icon: CalendarPlus },
@@ -21,6 +22,11 @@ export default async function ServicosPage() {
 
   return (
     <div className="space-y-6 px-5 pb-8 pt-3">
+      <AppHeader
+        eyebrow="Escolha um serviço"
+        title="Serviços"
+        stats={[{ label: "no catálogo", value: catalogo.length.toString() }]}
+      />
       <section>
         <div className="grid grid-cols-2 gap-3">
           {ATALHOS.map((a) => {

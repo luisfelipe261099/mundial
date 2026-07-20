@@ -4,6 +4,7 @@ import { requireClientId } from "@/lib/auth";
 import { getOrcamentos } from "@/lib/client-data";
 import { orcamentoBadge } from "../_components/category";
 import { brl } from "../_data/mock";
+import { AppHeader } from "../_components/app-header";
 
 export default async function OrcamentosPage() {
   const clientId = await requireClientId();
@@ -11,7 +12,11 @@ export default async function OrcamentosPage() {
 
   return (
     <div className="space-y-4 px-5 pb-8 pt-3">
-      <p className="text-sm t-muted">{orcamentos.length} orçamentos</p>
+      <AppHeader
+        eyebrow="Propostas"
+        title="Orçamentos"
+        stats={[{ label: orcamentos.length === 1 ? "orçamento" : "orçamentos", value: orcamentos.length.toString() }]}
+      />
       {orcamentos.length === 0 && (
         <div className="app-card p-5 text-sm t-muted">Nenhum orçamento no momento.</div>
       )}

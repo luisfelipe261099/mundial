@@ -22,6 +22,11 @@
   --app-brand: #2f7bff;
   --app-brand-2: #4f90ff;
   --app-signal-soft: rgba(47, 123, 255, 0.16);
+  --app-amber: #f5a623;
+  --app-up: #58d68d;
+  --app-down: #fb7185;
+  --app-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --app-shadow-lg: 0 22px 52px -26px rgba(0, 0, 0, 0.9);
 
   color: var(--app-ink);
   background-color: var(--app-bg);
@@ -67,12 +72,29 @@ body:has(.app-root) {
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
+/* Sobrescrito editorial (mono, tamanho/cor definidos). */
+.app-eyebrow {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+}
+/* Número-herói (Bricolage extra-bold, super justo). */
+.app-display-xl {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── Superfícies ────────────────────────────────────────────────────── */
 .app-card {
   background-color: var(--app-surface);
   border: 1px solid var(--app-line);
   border-radius: 1.25rem;
+  box-shadow: var(--app-shadow);
 }
 .app-card-2 {
   background-color: var(--app-surface-2);
@@ -83,6 +105,49 @@ body:has(.app-root) {
 .t-ink { color: var(--app-ink); }
 .t-muted { color: var(--app-muted); }
 .t-brand { color: var(--app-brand-2); }
+.t-accent { color: var(--app-amber); }
+
+/* Banda-herói editorial — brilho de sódio + grid fino de instrumento. */
+.app-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(120% 130% at 90% -10%, rgba(47, 123, 255, 0.2), transparent 55%),
+    radial-gradient(90% 120% at 0% 120%, rgba(245, 166, 35, 0.06), transparent 60%),
+    var(--app-surface);
+  box-shadow: var(--app-shadow-lg);
+}
+.app-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--app-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--app-line) 1px, transparent 1px);
+  background-size: 42px 42px;
+  -webkit-mask-image: radial-gradient(120% 100% at 85% 0%, #000, transparent 70%);
+  mask-image: radial-gradient(120% 100% at 85% 0%, #000, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.app-hero > * { position: relative; }
+
+/* Pílula de variação — só com dado real. */
+.app-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.app-delta-up   { color: var(--app-up);   background: rgba(88, 214, 141, 0.13); }
+.app-delta-down { color: var(--app-down); background: rgba(251, 113, 133, 0.13); }
 
 /* ── Chips de ícone por categoria ───────────────────────────────────────
    Antes: 12 cores saturadas (arco-íris "app de brinquedo"). Agora: um único

@@ -1,6 +1,7 @@
 import { requireClientId } from "@/lib/auth";
 import { getVeiculos } from "@/lib/client-data";
 import { VehicleCard } from "../_components/vehicle-card";
+import { AppHeader } from "../_components/app-header";
 
 export default async function VeiculosPage() {
   const clientId = await requireClientId();
@@ -8,7 +9,11 @@ export default async function VeiculosPage() {
 
   return (
     <div className="space-y-4 px-5 pb-8 pt-3">
-      <p className="text-sm t-muted">{veiculos.length} veículos cadastrados</p>
+      <AppHeader
+        eyebrow="Garagem"
+        title="Meus veículos"
+        stats={[{ label: veiculos.length === 1 ? "veículo" : "veículos", value: veiculos.length.toString() }]}
+      />
       {veiculos.length ? (
         <div className="space-y-4">
           {veiculos.map((v) => (

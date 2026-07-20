@@ -3,6 +3,7 @@ import { requireClientId } from "@/lib/auth";
 import { getAgendamentos, getVeiculos, getCatalogoServicos } from "@/lib/client-data";
 import { agendamentoBadge } from "../_components/category";
 import { BookingFlow } from "../_components/booking-flow";
+import { AppHeader } from "../_components/app-header";
 
 const HORARIOS = ["08:00", "09:00", "10:30", "13:30", "15:00", "16:30"];
 
@@ -16,6 +17,11 @@ export default async function AgendarPage() {
 
   return (
     <div className="space-y-6 px-5 pb-8 pt-3">
+      <AppHeader
+        eyebrow="Agendamento"
+        title="Agendar"
+        stats={[{ label: agendamentos.length === 1 ? "agendado" : "agendados", value: agendamentos.length.toString() }]}
+      />
       <section>
         <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">Meus agendamentos</h2>
         {agendamentos.length ? (

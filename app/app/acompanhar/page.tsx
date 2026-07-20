@@ -1,5 +1,6 @@
 import { requireClientId } from "@/lib/auth";
 import { getOrdensAtivas } from "@/lib/client-data";
+import { AppHeader } from "../_components/app-header";
 
 const FLUXO = ["Aberta", "Aguardando aprovação", "Em execução", "Finalizada", "Entregue"];
 const LABEL: Record<string, string> = {
@@ -16,7 +17,12 @@ export default async function AcompanharPage() {
 
   return (
     <div className="space-y-4 px-5 pb-8 pt-3">
-      <p className="text-sm t-muted">Acompanhe em que etapa está o seu carro.</p>
+      <AppHeader
+        eyebrow="Status"
+        title="Acompanhar"
+        description="Acompanhe em que etapa está o seu carro."
+        stats={[{ label: "na oficina", value: ordens.length.toString() }]}
+      />
 
       {ordens.length === 0 && (
         <div className="app-card p-6 text-center text-sm t-muted">

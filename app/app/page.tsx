@@ -29,29 +29,44 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-7 px-5 pb-8 pt-2">
-      <header>
-        <p className="app-mono text-[0.6rem] t-brand">{business.name}</p>
-        <h1 className="app-display mt-1.5 text-[1.9rem] leading-none t-ink">
-          Olá, {cliente?.primeiroNome ?? "cliente"}
+      {/* ── Banda-herói ────────────────────────────────────────────────── */}
+      <section className="app-hero p-6">
+        <p className="app-eyebrow t-brand">{business.name}</p>
+        <h1 className="app-display-xl mt-2 text-[2.35rem] t-ink">
+          Olá, {cliente?.primeiroNome ?? "cliente"}.
         </h1>
         <p className="mt-1.5 text-sm t-muted">Sua garagem, sob controle.</p>
-      </header>
 
-      {emAndamento && (
-        <Link href="/app/acompanhar" className="app-card flex items-center gap-4 p-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--app-brand)]/15">
-            <Activity className="size-6 t-brand" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs t-muted">Seu carro na oficina</p>
-            <p className="app-display truncate font-bold t-ink">{emAndamento.veiculo}</p>
-            <p className="text-xs font-semibold t-brand">
-              {ACOMP_LABEL[emAndamento.status] ?? emAndamento.status}
-            </p>
+        <div className="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+          <div className="flex items-baseline gap-1.5">
+            <span className="app-display text-lg font-bold t-ink">{veiculos.length}</span>
+            <span className="app-eyebrow">{veiculos.length === 1 ? "veículo" : "veículos"}</span>
           </div>
-          <ChevronRight className="size-5 shrink-0 t-muted" />
-        </Link>
-      )}
+          <div className="flex items-baseline gap-1.5">
+            <span className="app-display text-lg font-bold t-ink">{reparos.length}</span>
+            <span className="app-eyebrow">no histórico</span>
+          </div>
+        </div>
+
+        {emAndamento && (
+          <Link
+            href="/app/acompanhar"
+            className="mt-5 flex items-center gap-3.5 rounded-2xl border border-[var(--app-line-2)] bg-[var(--app-surface-2)] p-3.5"
+          >
+            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--app-brand)]/15">
+              <Activity className="size-5 t-brand" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="app-eyebrow">Seu carro na oficina</p>
+              <p className="app-display mt-0.5 truncate font-bold t-ink">{emAndamento.veiculo}</p>
+              <p className="text-xs font-semibold t-brand">
+                {ACOMP_LABEL[emAndamento.status] ?? emAndamento.status}
+              </p>
+            </div>
+            <ChevronRight className="size-5 shrink-0 t-muted" />
+          </Link>
+        )}
+      </section>
 
       <section>
         <SectionHeading title="Meus veículos" actionLabel="Ver todos" actionHref="/app/veiculos" />
