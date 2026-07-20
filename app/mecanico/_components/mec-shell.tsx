@@ -19,7 +19,7 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-dvh flex-col bg-[var(--mec-bg)]">
       <WelcomeTour storageKey="tutorial-tour-visto-mecanico" papel="mecanico" steps={mecTourSteps} />
 
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--mec-line)] px-4">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--mec-line)] bg-[var(--mec-surface)]/60 px-4 backdrop-blur">
         {isDetail ? (
           <Link
             href="/mecanico"
@@ -41,7 +41,7 @@ export default function MecShell({ children }: { children: React.ReactNode }) {
           <p className="mec-display truncate text-sm font-bold mec-ink">
             {isDetail ? "Ordem de Serviço" : business.shortName}
           </p>
-          {!isDetail && <p className="text-[0.65rem] font-medium mec-muted">Área do mecânico</p>}
+          <p className="mec-eyebrow leading-none">{isDetail ? "Painel do mecânico" : "Área do mecânico"}</p>
         </div>
         <Link
           href="/tutorial?papel=mecanico"

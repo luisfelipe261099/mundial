@@ -7,11 +7,18 @@
   --mec-bg: #0a0e17;
   --mec-surface: #121826;
   --mec-surface-2: #19212f;
+  --mec-surface-3: #222c3e;
   --mec-line: #232c3d;
+  --mec-line-2: #33405a;
   --mec-ink: #f4f7fb;
   --mec-muted: #8b95a7;
   --mec-brand: #2563eb;
   --mec-brand-2: #3b82f6;
+  --mec-amber: #f5a623;
+  --mec-up: #58d68d;
+  --mec-down: #fb7185;
+  --mec-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --mec-shadow-lg: 0 20px 48px -24px rgba(0, 0, 0, 0.9);
 
   color: var(--mec-ink);
   background-color: var(--mec-bg);
@@ -35,10 +42,25 @@ body:has(.mec-root) {
   font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.02em;
 }
+.mec-display-xl {
+  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+}
+.mec-eyebrow {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mec-muted);
+}
 .mec-card {
   background-color: var(--mec-surface);
   border: 1px solid var(--mec-line);
   border-radius: 1rem;
+  box-shadow: var(--mec-shadow);
 }
 .mec-card-2 {
   background-color: var(--mec-surface-2);
@@ -48,6 +70,48 @@ body:has(.mec-root) {
 .mec-ink { color: var(--mec-ink); }
 .mec-muted { color: var(--mec-muted); }
 .mec-brand { color: var(--mec-brand-2); }
+.mec-accent { color: var(--mec-amber); }
+
+/* Banda-herói compacta (mobile) — brilho + grid fino de "instrumento". */
+.mec-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--mec-line);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(120% 130% at 92% -10%, rgba(37, 99, 235, 0.22), transparent 55%),
+    radial-gradient(90% 120% at 0% 120%, rgba(245, 166, 35, 0.06), transparent 60%),
+    var(--mec-surface);
+  box-shadow: var(--mec-shadow-lg);
+}
+.mec-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--mec-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mec-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(120% 100% at 85% 0%, #000, transparent 70%);
+  mask-image: radial-gradient(120% 100% at 85% 0%, #000, transparent 70%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.mec-hero > * { position: relative; }
+
+/* Filete de status na lateral de um card. */
+.mec-stripe {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 3px;
+  border-radius: 0 9999px 9999px 0;
+}
+.mec-stripe-aberta     { background: #60a5fa; }
+.mec-stripe-aguardando { background: #f5a623; }
+.mec-stripe-execucao   { background: #2dd4bf; }
+.mec-stripe-finalizada { background: #58d68d; }
+.mec-stripe-entregue   { background: #64748b; }
 
 /* Badges de status de OS (espelham os do admin). */
 .osb {
