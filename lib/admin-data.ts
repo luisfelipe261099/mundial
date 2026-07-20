@@ -82,14 +82,17 @@ const ABERTAS = ["Aberta", "Aguardando aprovação", "Em execução"];
 const CONCLUIDAS = ["Finalizada", "Entregue"];
 
 export async function getKpis() {
-  const [clientes, veiculos, osAbertas, osConcluidasMes, receita, faturamentoAnoAgg] = await Promise.all([
-    prisma.client.count(),
-    prisma.vehicle.count(),
-    prisma.serviceOrder.count({ where: { status: { in: ABERTAS } } }),
-    prisma.serviceOrder.count({ where: { status: { in: CONCLUIDAS } } }),
-    prisma.transaction.aggregate({ where: { type: "receita" }, _sum: { value: true } }),
-    prisma.serviceOrder.aggregate({ _sum: { total: true }, _count: true }),
-  ]);
+  const [clientes, veiculos, osAbertas, osConcluidasMes, osAguardando, revisoesVencidas, receita, faturamentoAnoAgg] =
+    await Promise.all([
+      prisma.client.count(),
+      prisma.vehicle.count(),
+      prisma.serviceOrder.count({ where: { status: { in: ABERTAS } } }),
+      prisma.serviceOrder.count({ where: { status: { in: CONCLUIDAS } } }),
+      prisma.serviceOrder.count({ where: { status: "Aguardando aprovação" } }),
+      prisma.vehicle.count({ where: { revisionOverdue: true } }),
+      prisma.transaction.aggregate({ where: { type: "receita" }, _sum: { value: true } }),
+      prisma.serviceOrder.aggregate({ _sum: { total: true }, _count: true }),
+    ]);
   const faturamentoAno = faturamentoAnoAgg._sum.total ?? 0;
   const osTotal = faturamentoAnoAgg._count || 1;
   return {
@@ -97,6 +100,9 @@ export async function getKpis() {
     veiculos,
     osAbertas,
     osConcluidasMes,
+    osAguardando,
+    revisoesVencidas,
+    osTotal: faturamentoAnoAgg._count,
     faturamentoMes: receita._sum.value ?? 0,
     faturamentoAno,
     ticketMedio: Math.round(faturamentoAno / osTotal),

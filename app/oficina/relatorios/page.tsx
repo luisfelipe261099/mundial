@@ -1,7 +1,7 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import { brl } from "../_data/mock";
 import { getRelatorios } from "@/lib/admin-data";
-import { Panel } from "../_components/ui";
+import { Panel, PageHeader } from "../_components/ui";
 
 export default async function RelatoriosPage() {
   const relatorios = await getRelatorios();
@@ -9,7 +9,17 @@ export default async function RelatoriosPage() {
 
   return (
     <div className="space-y-6">
-      <Panel title="Serviços mais vendidos" bodyClass="divide-y divide-[var(--ad-line)]">
+      <PageHeader
+        eyebrow="Análise"
+        title="Relatórios"
+        description="Serviços que mais faturam, clientes mais ativos e revisões que precisam de atenção."
+      />
+      <Panel
+        title="Serviços mais vendidos"
+        eyebrow="Ranking por receita"
+        icon={BarChart3}
+        bodyClass="divide-y divide-[var(--ad-line)]"
+      >
         {relatorios.servicosMaisVendidos.length === 0 && (
           <p className="px-5 py-4 text-sm adm-muted">Sem dados ainda.</p>
         )}

@@ -18,6 +18,15 @@
   --ad-muted: #8b867c; /* 5.16:1 na superfície escura — passa WCAG AA */
   --ad-brand: #2f7bff;
   --ad-brand-2: #4f90ff;
+  /* Acento quente "Oficina Noturna" — sódio/âmbar de galpão à noite.
+     Usado com parcimônia (números-herói, filete de destaque). */
+  --ad-amber: #f5a623;
+  /* Deltas — cor semântica honesta pra variação (só onde há dado real). */
+  --ad-up: #58d68d;   /* 6.4:1 na superfície — sobe */
+  --ad-down: #fb7185; /* desce */
+  /* Elevação — escala única de sombra (cards, sheets, hero). */
+  --ad-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ad-shadow-lg: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
 
   color: var(--ad-ink);
   background-color: var(--ad-bg);
@@ -55,6 +64,7 @@ body:has(.admin-root) {
   background-color: var(--ad-surface);
   border: 1px solid var(--ad-line);
   border-radius: 1rem;
+  box-shadow: var(--ad-shadow);
 }
 .adm-card-2 {
   background-color: var(--ad-surface-2);
@@ -65,6 +75,74 @@ body:has(.admin-root) {
 .adm-ink { color: var(--ad-ink); }
 .adm-muted { color: var(--ad-muted); }
 .adm-brand { color: var(--ad-brand-2); }
+.adm-accent { color: var(--ad-amber); }
+
+/* ── Editorial: eyebrow, número-herói, banda hero ───────────────────── */
+.adm-eyebrow {
+  font-family: var(--font-spacemono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ad-muted);
+}
+.adm-display-xl {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Banda-herói: superfície + brilho de sódio no canto + filete superior.
+   O grid fino dá textura de "instrumento" sem virar decoração vazia. */
+.adm-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ad-line);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(120% 140% at 88% -20%, rgba(47, 123, 255, 0.18), transparent 55%),
+    radial-gradient(90% 120% at 8% 120%, rgba(245, 166, 35, 0.06), transparent 60%),
+    var(--ad-surface);
+  box-shadow: var(--ad-shadow-lg);
+}
+.adm-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--ad-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ad-line) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(120% 100% at 80% 0%, #000, transparent 72%);
+  mask-image: radial-gradient(120% 100% at 80% 0%, #000, transparent 72%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.adm-hero > * { position: relative; }
+
+/* Filete de acento no topo de um card (destaque editorial). */
+.adm-topline {
+  border-top: 2px solid var(--ad-brand);
+}
+
+.adm-elev { box-shadow: var(--ad-shadow-lg); }
+
+/* ── Deltas — pílula de variação (verde/rosa), só com dado real ──────── */
+.adm-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.adm-delta-up   { color: var(--ad-up);   background: rgba(88, 214, 141, 0.13); }
+.adm-delta-down { color: var(--ad-down); background: rgba(251, 113, 133, 0.13); }
+.adm-delta-flat { color: var(--ad-muted); background: var(--ad-surface-2); }
 
 .adm-row + .adm-row { border-top: 1px solid var(--ad-line); }
 .adm-hover:hover { background-color: var(--ad-surface-2); }

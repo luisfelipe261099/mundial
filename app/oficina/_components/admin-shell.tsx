@@ -17,7 +17,23 @@ function titleFor(path: string): string {
   return match?.label ?? "Painel";
 }
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "MM";
+  return parts
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export default function AdminShell({
+  children,
+  userName = "Administrador",
+}: {
+  children: React.ReactNode;
+  userName?: string;
+}) {
   const [open, setOpen] = useState(false);
   const path = usePathname() ?? "/oficina";
   const title = titleFor(path);
@@ -52,7 +68,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       {/* conteúdo */}
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[var(--ad-line)] bg-[var(--ad-bg)]/90 px-4 backdrop-blur lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-[var(--ad-line)] bg-[var(--ad-bg)]/85 px-4 backdrop-blur-md lg:px-8">
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -61,21 +77,41 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           >
             <Menu className="size-6" />
           </button>
-          <h1 className="adm-display flex-1 truncate text-lg font-bold adm-ink">{title}</h1>
-          <div className="hidden w-56 items-center gap-2 rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-muted sm:flex">
-            <Search className="size-4" />
-            Buscar…
+
+          <div className="min-w-0 flex-1">
+            <p className="adm-eyebrow leading-none">Oficina</p>
+            <h1 className="adm-display mt-1 truncate text-lg font-bold leading-none adm-ink">
+              {title}
+            </h1>
           </div>
+
+          {/* busca (protótipo — afordância visual) */}
+          <div className="hidden items-center gap-2 rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-muted lg:flex lg:w-72">
+            <Search className="size-4 shrink-0" />
+            <span className="flex-1 truncate">Buscar cliente, placa, OS…</span>
+            <kbd className="adm-mono rounded border border-[var(--ad-line-2)] px-1.5 py-0.5 text-[0.6rem] tracking-normal adm-muted">
+              ⌘K
+            </kbd>
+          </div>
+
           <Link
             href="/tutorial?papel=admin"
-            aria-label="Como usar"
+            aria-label="Como usar o painel"
             className="grid size-9 shrink-0 place-items-center rounded-lg adm-ink hover:bg-[var(--ad-surface-2)]"
           >
             <HelpCircle className="size-5" />
           </Link>
-          <span className="adm-display grid size-9 shrink-0 place-items-center rounded-full bg-[var(--ad-brand)] text-sm font-bold text-white">
-            MM
-          </span>
+
+          {/* bloco do usuário */}
+          <div className="flex shrink-0 items-center gap-2.5 sm:border-l sm:border-[var(--ad-line)] sm:pl-3.5">
+            <div className="hidden text-right leading-tight lg:block">
+              <p className="truncate text-sm font-semibold adm-ink">{userName}</p>
+              <p className="adm-eyebrow leading-none">Administrador</p>
+            </div>
+            <span className="adm-display grid size-9 shrink-0 place-items-center rounded-full bg-[var(--ad-brand)] text-sm font-bold text-white ring-2 ring-[var(--ad-brand)]/25">
+              {initials(userName)}
+            </span>
+          </div>
         </header>
 
         <main className="mx-auto max-w-[1200px] p-5 lg:p-8">{children}</main>

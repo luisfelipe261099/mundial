@@ -1,6 +1,6 @@
 import { getSettings, getEquipe } from "@/lib/admin-data";
 import { business, fullAddress } from "../../_data/business";
-import { Panel } from "../_components/ui";
+import { Panel, PageHeader } from "../_components/ui";
 import { SettingsForm } from "../_components/settings-form";
 
 export default async function ConfiguracoesPage() {
@@ -18,10 +18,16 @@ export default async function ConfiguracoesPage() {
   };
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-2">
-      <SettingsForm inicial={inicial} />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Preferências"
+        title="Configurações"
+        description="Dados da oficina, notificações automáticas, horário de funcionamento e equipe."
+      />
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <SettingsForm inicial={inicial} />
 
-      <div className="space-y-6">
+        <div className="space-y-6">
         <Panel title="Horário de funcionamento" bodyClass="divide-y divide-[var(--ad-line)]">
           {business.hours.map((h) => (
             <div key={h.days} className="flex items-center justify-between px-5 py-3.5 text-sm">
@@ -47,6 +53,7 @@ export default async function ConfiguracoesPage() {
             </div>
           ))}
         </Panel>
+      </div>
       </div>
     </div>
   );

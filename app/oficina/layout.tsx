@@ -17,7 +17,7 @@ export default async function OficinaLayout({ children }: { children: React.Reac
 
   return (
     <div className="admin-root">
-      <AdminShell>{children}</AdminShell>
+      <AdminShell userName={session.name}>{children}</AdminShell>
     </div>
   );
 }
