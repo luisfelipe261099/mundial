@@ -204,6 +204,8 @@ export interface Produto {
   codigo: string;
   qtd: number;
   minimo: number;
+  preco?: number | null;
+  movs?: number; // nº de movimentações (para o confirm de exclusão)
 }
 
 export const estoque: Produto[] = [

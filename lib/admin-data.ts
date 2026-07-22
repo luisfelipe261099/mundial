@@ -272,8 +272,20 @@ export async function getAgendaHoje(): Promise<Agendamento[]> {
 }
 
 export async function getEstoque(): Promise<Produto[]> {
-  const rows = await prisma.product.findMany({ orderBy: { name: "asc" } });
-  return rows.map((p) => ({ id: p.id, produto: p.name, marca: p.brand ?? "—", codigo: p.code, qtd: p.qty, minimo: p.min }));
+  const rows = await prisma.product.findMany({
+    include: { _count: { select: { movements: true } } },
+    orderBy: { name: "asc" },
+  });
+  return rows.map((p) => ({
+    id: p.id,
+    produto: p.name,
+    marca: p.brand ?? "—",
+    codigo: p.code,
+    qtd: p.qty,
+    minimo: p.min,
+    preco: p.price,
+    movs: p._count.movements,
+  }));
 }
 
 export type Movimentacao = {

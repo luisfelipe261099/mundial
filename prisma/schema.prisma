@@ -166,6 +166,7 @@ model Product {
   code      String          @unique
   qty       Int             @default(0)
   min       Int             @default(0)
+  price     Int? // preço de custo em reais inteiros (convenção do sistema)
   movements StockMovement[]
 
   @@map("products")
