@@ -1,4 +1,5 @@
 import { getEstoque, getMovimentacoes } from "@/lib/admin-data";
+import { brl } from "../_data/mock";
 import { StockManager } from "../_components/stock-manager";
 import { StockHistory } from "../_components/stock-history";
 import { PageHeader } from "../_components/ui";
@@ -6,6 +7,7 @@ import { PageHeader } from "../_components/ui";
 export default async function EstoquePage() {
   const [estoque, movs] = await Promise.all([getEstoque(), getMovimentacoes()]);
   const baixo = estoque.filter((p) => p.qtd < p.minimo).length;
+  const valorEstoque = estoque.reduce((s, p) => s + (p.preco ?? 0) * p.qtd, 0);
 
   return (
     <div className="space-y-6">
@@ -16,6 +18,7 @@ export default async function EstoquePage() {
         stats={[
           { label: "itens", value: estoque.length.toString() },
           { label: "abaixo do mínimo", value: baixo.toString(), accent: baixo > 0 },
+          { label: "valor em estoque", value: brl(valorEstoque) },
         ]}
       />
       <StockManager seed={estoque} />
