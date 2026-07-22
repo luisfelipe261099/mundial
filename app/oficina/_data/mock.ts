@@ -42,6 +42,7 @@ export interface Cliente {
   veiculos: number;
   gastoTotal: number;
   desde: string;
+  placas?: string[];
 }
 
 export const clientes: Cliente[] = [

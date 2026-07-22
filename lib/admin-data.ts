@@ -63,7 +63,7 @@ function mapOrdem(o: {
   };
 }
 
-function mapCliente(c: ClientRow, veiculos: number, gastoTotal: number): Cliente {
+function mapCliente(c: ClientRow, veiculos: number, gastoTotal: number, placas: string[] = []): Cliente {
   return {
     id: c.id,
     nome: c.name,
@@ -75,6 +75,7 @@ function mapCliente(c: ClientRow, veiculos: number, gastoTotal: number): Cliente
     veiculos,
     gastoTotal,
     desde: c.since ?? "—",
+    placas,
   };
 }
 
@@ -111,11 +112,16 @@ export async function getKpis() {
 
 export async function getClientes(): Promise<Cliente[]> {
   const [clients, gastos] = await Promise.all([
-    prisma.client.findMany({ include: { _count: { select: { vehicles: true } } }, orderBy: { name: "asc" } }),
+    prisma.client.findMany({
+      include: { vehicles: { select: { plate: true } } },
+      orderBy: { name: "asc" },
+    }),
     prisma.serviceOrder.groupBy({ by: ["clientId"], _sum: { total: true } }),
   ]);
   const gastoMap = new Map(gastos.map((g) => [g.clientId, g._sum.total ?? 0]));
-  return clients.map((c) => mapCliente(c, c._count.vehicles, gastoMap.get(c.id) ?? 0));
+  return clients.map((c) =>
+    mapCliente(c, c.vehicles.length, gastoMap.get(c.id) ?? 0, c.vehicles.map((v) => v.plate))
+  );
 }
 
 export async function getClienteDetalhe(id: string) {
