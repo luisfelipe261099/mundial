@@ -30,6 +30,7 @@ function mapVeiculo(v: { id: string; brand: string; model: string; year: number;
     km: v.km,
     proximaRevisao: v.nextRevisionDate ?? "—",
     revisaoVencida: v.revisionOverdue,
+    marca: v.brand,
   };
 }
 
