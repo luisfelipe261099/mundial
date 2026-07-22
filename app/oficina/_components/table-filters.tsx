@@ -22,7 +22,8 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`${fieldCls} w-full pl-9 ${value ? "pr-8" : ""}`}
+        aria-label={placeholder}
+        className={`${fieldCls} w-full pl-9 ${value ? "pr-8" : ""} [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:hidden`}
       />
       {value && (
         <button
@@ -51,6 +52,7 @@ export function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
         active
           ? "border-[var(--ad-brand)] bg-[var(--ad-brand)] text-white"
