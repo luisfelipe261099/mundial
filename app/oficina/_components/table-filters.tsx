@@ -116,7 +116,7 @@ export function EmptyRow({ colSpan, busca }: { colSpan: number; busca: string })
       <td colSpan={colSpan} className="px-5 py-10 text-center adm-muted">
         Nenhum resultado{busca ? (
           <>
-            {" "}para "<span className="adm-ink">{busca}</span>"
+            {" "}para “<span className="adm-ink">{busca}</span>”
           </>
         ) : null}
         .
