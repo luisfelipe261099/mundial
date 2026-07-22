@@ -50,7 +50,7 @@ export async function criarOS(input: {
   return { id };
 }
 
-export async function movimentarEstoque(id: string, delta: number) {
+export async function movimentarEstoque(id: string, delta: number, motivo?: string) {
   const admin = await requireAdmin();
   const p = await prisma.product.findUnique({ where: { id } });
   if (!p) return;
@@ -62,7 +62,7 @@ export async function movimentarEstoque(id: string, delta: number) {
       data: {
         productId: id,
         delta: efetivo,
-        reason: efetivo > 0 ? "Entrada manual" : "Saída manual",
+        reason: motivo?.trim() || (efetivo > 0 ? "Entrada manual" : "Saída manual"),
         actor: admin.name,
       },
     });
@@ -77,16 +77,55 @@ export async function criarProduto(input: {
   codigo: string;
   qtd: number;
   minimo: number;
+  preco?: number | null;
 }) {
   const admin = await requireAdmin();
   const created = await prisma.product.create({
-    data: { name: input.produto, brand: input.marca, code: input.codigo, qty: input.qtd, min: input.minimo },
+    data: {
+      name: input.produto,
+      brand: input.marca || null,
+      code: input.codigo,
+      qty: input.qtd,
+      min: input.minimo,
+      price: input.preco ?? null,
+    },
   });
   if (input.qtd > 0) {
     await prisma.stockMovement.create({
       data: { productId: created.id, delta: input.qtd, reason: "Estoque inicial", actor: admin.name },
     });
   }
+  revalidatePath("/oficina/estoque");
+  revalidatePath("/oficina");
+}
+
+// Edita cadastro do produto. Quantidade fica de fora de propósito:
+// ela só muda via movimentação, para a trilha de auditoria valer.
+export async function editarProduto(
+  id: string,
+  input: { produto: string; marca: string; codigo: string; minimo: number; preco: number | null }
+) {
+  await requireAdmin();
+  await prisma.product.update({
+    where: { id },
+    data: {
+      name: input.produto,
+      brand: input.marca || null,
+      code: input.codigo,
+      min: input.minimo,
+      price: input.preco,
+    },
+  });
+  revalidatePath("/oficina/estoque");
+  revalidatePath("/oficina");
+}
+
+// Exclui produto E sua trilha de movimentações (schema é Restrict).
+// A UI confirma antes, avisando quantas movimentações vão junto.
+export async function excluirProduto(id: string) {
+  await requireAdmin();
+  await prisma.stockMovement.deleteMany({ where: { productId: id } });
+  await prisma.product.delete({ where: { id } });
   revalidatePath("/oficina/estoque");
   revalidatePath("/oficina");
 }
