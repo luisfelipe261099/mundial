@@ -3,12 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import {
-  brl,
-  osBadgeClass,
-  type OrdemServicoAdmin,
-  type StatusOS,
-} from "../_data/mock";
+import { brl, osBadgeClass, type OrdemServicoAdmin, type StatusOS } from "../_data/mock";
+import { matches } from "./filter-utils";
+import { SearchInput, FilterSelect, ResultBar, EmptyRow } from "./table-filters";
 
 const FILTROS: ("Todas" | StatusOS)[] = [
   "Todas",
@@ -19,13 +16,31 @@ const FILTROS: ("Todas" | StatusOS)[] = [
   "Entregue",
 ];
 
+const TODOS = "Todos os mecânicos";
+
 export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
   const [filtro, setFiltro] = useState<"Todas" | StatusOS>("Todas");
-  const lista = filtro === "Todas" ? ordens : ordens.filter((o) => o.status === filtro);
+  const [busca, setBusca] = useState("");
+  const [mecanico, setMecanico] = useState(TODOS);
+
+  const mecanicos = [TODOS, ...Array.from(new Set(ordens.map((o) => o.mecanico).filter((m) => m !== "—"))).sort()];
+
+  const lista = ordens.filter((o) => {
+    if (filtro !== "Todas" && o.status !== filtro) return false;
+    if (mecanico !== TODOS && o.mecanico !== mecanico) return false;
+    return matches([o.id, o.cliente, o.placa, o.veiculo], busca);
+  });
+  const filtroAtivo = busca !== "" || mecanico !== TODOS || filtro !== "Todas";
+
+  function limpar() {
+    setBusca("");
+    setMecanico(TODOS);
+    setFiltro("Todas");
+  }
 
   return (
     <div>
-      <div className="no-scrollbar mb-5 flex gap-2 overflow-x-auto">
+      <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto">
         {FILTROS.map((x) => (
           <button
             key={x}
@@ -40,6 +55,12 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
             {x}
           </button>
         ))}
+      </div>
+
+      <div className="mb-5 flex flex-wrap items-center gap-2">
+        <SearchInput value={busca} onChange={setBusca} placeholder="Buscar OS, cliente, placa…" />
+        <FilterSelect value={mecanico} onChange={setMecanico} options={mecanicos} ariaLabel="Filtrar por mecânico" />
+        <ResultBar shown={lista.length} total={ordens.length} active={filtroAtivo} onClear={limpar} />
       </div>
 
       <div className="adm-card overflow-hidden">
@@ -57,6 +78,7 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
               </tr>
             </thead>
             <tbody>
+              {lista.length === 0 && <EmptyRow colSpan={7} busca={busca} />}
               {lista.map((o) => (
                 <tr
                   key={o.id}
