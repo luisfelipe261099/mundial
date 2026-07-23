@@ -43,6 +43,13 @@ export default async function LoginPage() {
         </p>
 
         <p className="mt-4 text-center text-sm text-slate-400">
+          Já é cliente e é a primeira vez aqui?{" "}
+          <Link href="/primeiro-acesso" className="font-semibold text-blue-400">
+            Ativar acesso
+          </Link>
+        </p>
+
+        <p className="mt-2 text-center text-sm text-slate-400">
           Novo por aqui?{" "}
           <Link href="/cadastro" className="font-semibold text-blue-400">
             Criar conta

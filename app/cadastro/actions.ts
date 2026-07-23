@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { setSession } from "@/lib/auth";
+import { normPlate, normPhone } from "@/lib/identity";
 
 export type CadastroState = { error?: string };
 
@@ -25,6 +26,26 @@ export async function cadastrarCliente(
     where: { email: { equals: email, mode: "insensitive" } },
   });
   if (existing) return { error: "Já existe uma conta com esse e-mail." };
+
+  // Anti-duplicação: se a placa ou o telefone já pertencem a um cliente, ele já
+  // é da base (importado ou cadastrado pelo admin) → deve usar o Primeiro acesso.
+  const placaNorm = placa ? normPlate(placa) : "";
+  const foneNorm = telefone ? normPhone(telefone) : "";
+  if (placaNorm || foneNorm) {
+    const [veiculos, clientesComFone] = await Promise.all([
+      placaNorm ? prisma.vehicle.findMany({ select: { plate: true } }) : Promise.resolve([]),
+      foneNorm
+        ? prisma.client.findMany({ select: { phone: true, whatsapp: true } })
+        : Promise.resolve([]),
+    ]);
+    const placaExiste = veiculos.some((v) => normPlate(v.plate) === placaNorm);
+    const foneExiste = clientesComFone.some(
+      (c) => (c.phone && normPhone(c.phone) === foneNorm) || (c.whatsapp && normPhone(c.whatsapp) === foneNorm)
+    );
+    if (placaExiste || foneExiste) {
+      return { error: "Você já é nosso cliente. Use o Primeiro acesso para ativar sua conta (link na tela de login)." };
+    }
+  }
 
   const hash = await bcrypt.hash(senha, 10);
   let clientId = "";

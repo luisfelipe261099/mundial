@@ -4,9 +4,7 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { setSession, clearSession, homeFor, type Session } from "@/lib/auth";
-
-// normaliza placa: maiúsculas, só letras/números (ignora hífen/espaço)
-const normPlate = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "");
+import { normPlate } from "@/lib/identity";
 
 // Hash bcrypt "morto" (senha aleatória, sem correspondência real). Usado para
 // sempre pagar o custo de um bcrypt.compare, mesmo quando não existe conta —
