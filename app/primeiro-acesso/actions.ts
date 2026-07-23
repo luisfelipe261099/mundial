@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { setSession } from "@/lib/auth";
 import { normPlate, normPhone, podeAtivar } from "@/lib/identity";
+import { ipDaRequisicao, excedeuTentativas, registrarFalha } from "@/lib/rate-limit";
 
 export type AtivarState = { error?: string };
 
@@ -19,6 +20,15 @@ export async function ativarAcesso(_prev: AtivarState, formData: FormData): Prom
   if (!placa || !telefone) return { error: "Informe a placa do carro e o telefone." };
   if (senha.length < 6) return { error: "Escolha uma senha de pelo menos 6 caracteres." };
 
+  const ip = await ipDaRequisicao();
+  if (await excedeuTentativas(ip, "ativacao")) {
+    return { error: "Muitas tentativas. Aguarde alguns minutos e tente de novo." };
+  }
+
+  // Hash calculado cedo e reusado no sucesso: assim todo desfecho paga o mesmo
+  // custo de bcrypt, e o tempo de resposta não revela se placa/telefone conferem.
+  const hash = await bcrypt.hash(senha, 10);
+
   // placa → veículo (normalizado) → cliente
   const veiculos = await prisma.vehicle.findMany({ select: { plate: true, clientId: true } });
   const match = veiculos.find((v) => normPlate(v.plate) === placa);
@@ -28,12 +38,14 @@ export async function ativarAcesso(_prev: AtivarState, formData: FormData): Prom
   // a ir pro login). Qualquer outra falha usa mensagem genérica — não revela se a
   // placa existe nem se o telefone confere (evita enumeração de dados).
   if (client?.password) {
+    await registrarFalha(ip, "ativacao");
     return { error: "Essa conta já tem acesso. Faça login (esqueceu a senha? fale com a oficina)." };
   }
   const veredito = client
     ? podeAtivar(client, telefone)
     : ({ ok: false, reason: "nao_confere" } as const);
   if (!veredito.ok) {
+    await registrarFalha(ip, "ativacao");
     return { error: "Placa e telefone não conferem. Confira os dados ou procure a oficina." };
   }
 
@@ -48,7 +60,6 @@ export async function ativarAcesso(_prev: AtivarState, formData: FormData): Prom
     emailParaGravar = email;
   }
 
-  const hash = await bcrypt.hash(senha, 10);
   await prisma.client.update({
     where: { id: client!.id },
     data: { password: hash, ...(emailParaGravar ? { email: emailParaGravar } : {}) },

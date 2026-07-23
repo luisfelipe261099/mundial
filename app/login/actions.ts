@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { setSession, clearSession, homeFor, type Session } from "@/lib/auth";
 import { normPlate } from "@/lib/identity";
+import { ipDaRequisicao, excedeuTentativas, registrarFalha } from "@/lib/rate-limit";
 
 // Hash bcrypt "morto" (senha aleatória, sem correspondência real). Usado para
 // sempre pagar o custo de um bcrypt.compare, mesmo quando não existe conta —
@@ -17,6 +18,11 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   if (!identifier || !password) return { error: "Preencha e-mail/placa e senha." };
+
+  const ip = await ipDaRequisicao();
+  if (await excedeuTentativas(ip, "login")) {
+    return { error: "Muitas tentativas. Aguarde alguns minutos e tente de novo." };
+  }
 
   let session: Session | null = null;
 
@@ -51,7 +57,10 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     }
   }
 
-  if (!session) return { error: "E-mail/placa ou senha inválidos." };
+  if (!session) {
+    await registrarFalha(ip, "login");
+    return { error: "E-mail/placa ou senha inválidos." };
+  }
 
   await setSession(session);
   redirect(homeFor(session.kind));

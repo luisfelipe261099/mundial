@@ -290,3 +290,15 @@ model User {
 
   @@map("users")
 }
+
+// Tentativas de autenticação FALHAS, por IP, para rate limiting do login e do
+// primeiro acesso. Fail-open: erro de infra nunca bloqueia cliente legítimo.
+model AuthAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  kind      String // "login" | "ativacao"
+  createdAt DateTime @default(now())
+
+  @@index([ip, kind, createdAt])
+  @@map("auth_attempts")
+}
