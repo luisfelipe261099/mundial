@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { brl, osBadgeClass } from "../../_data/mock";
 import { getClienteDetalhe } from "@/lib/admin-data";
+import { AccessPanel } from "./access-panel";
 
 export default async function ClienteDetalhe({
   params,
@@ -23,7 +24,7 @@ export default async function ClienteDetalhe({
   const { id } = await params;
   const data = await getClienteDetalhe(id);
   if (!data) notFound();
-  const { cliente, veiculos, ordens } = data;
+  const { cliente, veiculos, ordens, temAcesso } = data;
 
   const contato = [
     { icon: Hash, label: "CPF", value: cliente.cpf },
@@ -86,6 +87,8 @@ export default async function ClienteDetalhe({
           })}
         </div>
       </div>
+
+      <AccessPanel clientId={id} temAcesso={temAcesso} temVeiculo={veiculos.length > 0} />
 
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">

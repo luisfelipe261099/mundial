@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { gerarSenhaTemporaria } from "@/lib/identity";
 
 function split(full: string) {
   const [brand, ...rest] = full.trim().split(" ");
@@ -188,7 +189,8 @@ export async function salvarConfiguracoes(input: {
 
 export async function criarCliente(values: Record<string, string>) {
   await requireAdmin();
-  const senha = await bcrypt.hash("cliente123", 10);
+  // Sem senha: o cliente ativa a conta por Primeiro acesso (placa + telefone) ou
+  // o admin gera acesso no detalhe do cliente. Nunca uma senha padrão conhecida.
   await prisma.client.create({
     data: {
       name: values.nome,
@@ -199,10 +201,24 @@ export async function criarCliente(values: Record<string, string>) {
       city: values.cidade || null,
       address: values.endereco || null,
       since: "2026",
-      password: senha,
+      password: null,
     },
   });
   revalidatePath("/oficina/clientes");
+}
+
+// Gera (ou redefine) o acesso de um cliente ao app: cria uma senha temporária,
+// grava o hash e devolve o texto plano UMA vez para o admin repassar. Serve
+// tanto para quem não consegue o autoatendimento quanto como reset de senha.
+export async function gerarAcessoCliente(clientId: string): Promise<{ senha?: string; error?: string }> {
+  await requireAdmin();
+  const client = await prisma.client.findUnique({ where: { id: clientId } });
+  if (!client) return { error: "Cliente não encontrado." };
+  const senha = gerarSenhaTemporaria();
+  const hash = await bcrypt.hash(senha, 10);
+  await prisma.client.update({ where: { id: clientId }, data: { password: hash } });
+  revalidatePath(`/oficina/clientes/${clientId}`);
+  return { senha };
 }
 
 export async function criarVeiculo(values: Record<string, string>) {

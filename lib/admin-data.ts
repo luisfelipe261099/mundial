@@ -137,6 +137,7 @@ export async function getClienteDetalhe(id: string) {
     cliente: mapCliente(c, veiculos.length, gasto._sum.total ?? 0),
     veiculos: veiculos.map(mapVeiculo),
     ordens: ordens.map(mapOrdem),
+    temAcesso: !!c.password,
   };
 }
 
