@@ -24,21 +24,44 @@ export interface Session {
   name: string;
 }
 
+// Payload gravado no cookie: a sessão + o instante de expiração. O maxAge do
+// cookie sozinho não basta — ele é uma dica ao navegador, e um token copiado
+// continuaria válido para sempre se o servidor não checasse o prazo.
+interface TokenPayload extends Session {
+  exp: number;
+}
+
+const DURACAO_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
+
 function sign(data: string): string {
   return crypto.createHmac("sha256", getSecret()).update(data).digest("base64url");
 }
 
+// Comparação em tempo constante: um `!==` de string vaza, pelo tempo de
+// resposta, quantos bytes iniciais da assinatura o atacante já acertou.
+function assinaturaConfere(payload: string, sig: string): boolean {
+  const esperada = Buffer.from(sign(payload));
+  const recebida = Buffer.from(sig);
+  if (esperada.length !== recebida.length) return false;
+  return crypto.timingSafeEqual(esperada, recebida);
+}
+
 export function encodeSession(session: Session): string {
-  const payload = Buffer.from(JSON.stringify(session)).toString("base64url");
+  const dados: TokenPayload = { ...session, exp: Date.now() + DURACAO_MS };
+  const payload = Buffer.from(JSON.stringify(dados)).toString("base64url");
   return `${payload}.${sign(payload)}`;
 }
 
 export function decodeSession(token: string | undefined): Session | null {
   if (!token) return null;
   const [payload, sig] = token.split(".");
-  if (!payload || !sig || sign(payload) !== sig) return null;
+  if (!payload || !sig || !assinaturaConfere(payload, sig)) return null;
   try {
-    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Session;
+    const dados = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as TokenPayload;
+    if (!dados || typeof dados.exp !== "number" || dados.exp < Date.now()) return null;
+    if (dados.kind !== "admin" && dados.kind !== "mecanico" && dados.kind !== "cliente") return null;
+    if (typeof dados.id !== "string" || !dados.id) return null;
+    return { kind: dados.kind, id: dados.id, name: String(dados.name ?? "") };
   } catch {
     return null;
   }
@@ -56,7 +79,7 @@ export async function setSession(session: Session): Promise<void> {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 dias
+    maxAge: DURACAO_MS / 1000, // espelha o `exp` assinado dentro do token
   });
 }
 

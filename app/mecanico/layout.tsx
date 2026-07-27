@@ -6,7 +6,7 @@ import MecShell from "./_components/mec-shell";
 
 export const metadata: Metadata = {
   title: "Mecânico — Auto Mecânica Mundial",
-  description: "Área do mecânico (protótipo).",
+  description: "Área do mecânico da Auto Mecânica Mundial.",
   robots: { index: false, follow: false },
 };
 

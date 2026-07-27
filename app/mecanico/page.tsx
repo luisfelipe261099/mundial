@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { osBadgeClass, type StatusOS } from "../oficina/_data/mock";
 import { getOrdens, getOrdensMecanico } from "@/lib/admin-data";
-import { requireSession } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
 const stripeClass: Record<StatusOS, string> = {
   Aberta: "mec-stripe mec-stripe-aberta",
@@ -13,7 +13,7 @@ const stripeClass: Record<StatusOS, string> = {
 };
 
 export default async function MecanicoHome() {
-  const session = await requireSession();
+  const session = await requireStaff();
   const todas =
     session.kind === "mecanico" ? await getOrdensMecanico(session.id) : await getOrdens();
   const ativas = todas.filter((o) => o.status !== "Entregue");

@@ -45,7 +45,7 @@ export function TutorialView({ papelInicial }: { papelInicial: Papel }) {
       <section className="tut-hero mb-6 p-6">
         <p className="tut-eyebrow tut-brand-c">Central de treinamento</p>
         <h1 className="tut-display-xl mt-2 text-[2rem] text-[var(--tut-ink)]">
-          Como usar a Oficina Noturna
+          Como usar a Auto Mecânica Mundial
         </h1>
         <p className="mt-2 text-sm text-[var(--tut-ink-2)]">
           Um guia passo a passo, tela por tela. Escolha seu papel e avance no seu ritmo.

@@ -7,16 +7,42 @@ import type {
   Agendamento,
 } from "@/app/oficina/_data/mock";
 import { computeMaintenance, maintList } from "@/lib/maintenance";
+import { requireAdmin, requireStaff, requireSession } from "@/lib/auth";
+import { hojeISO } from "@/lib/datas";
 
-// Trend de 6 meses é ilustrativo (o banco não guarda histórico mensal).
-export const faturamentoMensal = [
-  { mes: "Jan", valor: 52300 },
-  { mes: "Fev", valor: 47800 },
-  { mes: "Mar", valor: 61200 },
-  { mes: "Abr", valor: 58900 },
-  { mes: "Mai", valor: 69400 },
-  { mes: "Jun", valor: 78450 },
-];
+const MES_CURTO = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+// Primeiro instante do mês, no fuso da oficina (o servidor da Vercel roda UTC).
+function inicioDoMes(offsetMeses = 0, now = new Date()): Date {
+  const saoPaulo = new Date(now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+  return new Date(Date.UTC(saoPaulo.getFullYear(), saoPaulo.getMonth() + offsetMeses, 1, 3, 0, 0));
+}
+
+// Série real dos últimos 6 meses, a partir de Transaction.createdAt (timestamp
+// de verdade — o campo `date` é texto livre e não serve para agrupar).
+export async function getFaturamentoMensal(): Promise<{ mes: string; valor: number }[]> {
+  await requireAdmin();
+  const desde = inicioDoMes(-5);
+  const rows = await prisma.transaction.findMany({
+    where: { type: "receita", createdAt: { gte: desde } },
+    select: { value: true, createdAt: true },
+  });
+
+  const baldes = new Map<string, number>();
+  for (let i = 5; i >= 0; i--) {
+    const d = inicioDoMes(-i);
+    baldes.set(`${d.getUTCFullYear()}-${d.getUTCMonth()}`, 0);
+  }
+  for (const t of rows) {
+    const d = new Date(t.createdAt.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const chave = `${d.getFullYear()}-${d.getMonth()}`;
+    if (baldes.has(chave)) baldes.set(chave, (baldes.get(chave) ?? 0) + t.value);
+  }
+  return [...baldes.entries()].map(([chave, valor]) => ({
+    mes: MES_CURTO[Number(chave.split("-")[1])],
+    valor,
+  }));
+}
 
 type ClientRow = { id: string; name: string; phone: string | null; cpf: string | null; whatsapp: string | null; email: string | null; city: string | null; address: string | null; since: string | null };
 
@@ -83,7 +109,29 @@ function mapCliente(c: ClientRow, veiculos: number, gastoTotal: number, placas: 
 const ABERTAS = ["Aberta", "Aguardando aprovação", "Em execução"];
 const CONCLUIDAS = ["Finalizada", "Entregue"];
 
+// A coluna Vehicle.revisionOverdue nunca é escrita por nenhuma ação — só o seed
+// a preenchia. O número honesto vem do motor de manutenção.
+async function contarRevisoesVencidas(): Promise<number> {
+  const [veiculos, s] = await Promise.all([
+    prisma.vehicle.findMany({
+      select: { plate: true, lastOilChangeAt: true, lastRevisaoAt: true },
+    }),
+    prisma.settings.findUnique({ where: { id: "default" } }),
+  ]);
+  const toggles = {
+    notifOleo: s?.notifOleo ?? true,
+    notifRevisao: s?.notifRevisao ?? true,
+    notifIpva: s?.notifIpva ?? true,
+  };
+  const agora = new Date();
+  return veiculos.filter((v) => {
+    const m = computeMaintenance(v, toggles, agora);
+    return m.oleo?.status === "vencido" || m.revisao?.status === "vencido";
+  }).length;
+}
+
 export async function getKpis() {
+  await requireAdmin();
   const [clientes, veiculos, osAbertas, osConcluidasMes, osAguardando, revisoesVencidas, receita, faturamentoAnoAgg] =
     await Promise.all([
       prisma.client.count(),
@@ -91,8 +139,11 @@ export async function getKpis() {
       prisma.serviceOrder.count({ where: { status: { in: ABERTAS } } }),
       prisma.serviceOrder.count({ where: { status: { in: CONCLUIDAS } } }),
       prisma.serviceOrder.count({ where: { status: "Aguardando aprovação" } }),
-      prisma.vehicle.count({ where: { revisionOverdue: true } }),
-      prisma.transaction.aggregate({ where: { type: "receita" }, _sum: { value: true } }),
+      contarRevisoesVencidas(),
+      prisma.transaction.aggregate({
+        where: { type: "receita", createdAt: { gte: inicioDoMes(0) } },
+        _sum: { value: true },
+      }),
       prisma.serviceOrder.aggregate({ _sum: { total: true }, _count: true }),
     ]);
   const faturamentoAno = faturamentoAnoAgg._sum.total ?? 0;
@@ -112,6 +163,7 @@ export async function getKpis() {
 }
 
 export async function getClientes(): Promise<Cliente[]> {
+  await requireAdmin();
   const [clients, gastos] = await Promise.all([
     prisma.client.findMany({
       include: { vehicles: { select: { plate: true } } },
@@ -126,6 +178,7 @@ export async function getClientes(): Promise<Cliente[]> {
 }
 
 export async function getClienteDetalhe(id: string) {
+  await requireAdmin();
   const c = await prisma.client.findUnique({ where: { id } });
   if (!c) return null;
   const [veiculos, ordens, gasto] = await Promise.all([
@@ -142,11 +195,13 @@ export async function getClienteDetalhe(id: string) {
 }
 
 export async function getVeiculos(): Promise<VeiculoAdmin[]> {
+  await requireAdmin();
   const rows = await prisma.vehicle.findMany({ include: { client: true }, orderBy: { plate: "asc" } });
   return rows.map(mapVeiculo);
 }
 
 export async function getVeiculoDetalhe(id: string) {
+  await requireAdmin();
   const v = await prisma.vehicle.findUnique({ where: { id }, include: { client: true } });
   if (!v) return null;
   const ordens = await prisma.serviceOrder.findMany({ where: { vehicleId: id }, include: { items: true }, orderBy: { createdAt: "desc" } });
@@ -166,11 +221,13 @@ export async function getVeiculoDetalhe(id: string) {
 }
 
 export async function getOrdens(): Promise<OrdemServicoAdmin[]> {
+  await requireStaff();
   const rows = await prisma.serviceOrder.findMany({ include: { items: true }, orderBy: { createdAt: "desc" } });
   return rows.map(mapOrdem);
 }
 
 export async function getOrdem(id: string): Promise<OrdemServicoAdmin | null> {
+  await requireAdmin();
   const o = await prisma.serviceOrder.findUnique({ where: { id }, include: { items: true } });
   return o ? mapOrdem(o) : null;
 }
@@ -182,7 +239,10 @@ export type OrdemPdf = OrdemServicoAdmin & {
   veiculoInfo: { ano: string; cor: string; combustivel: string };
 };
 
+// Única leitura aberta ao cliente: a rota do PDF confere a posse da OS antes
+// de chamar (equipe baixa qualquer uma, cliente só as próprias).
 export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
+  await requireSession();
   const o = await prisma.serviceOrder.findUnique({
     where: { id },
     include: { items: true, client: true, vehicle: true },
@@ -204,8 +264,21 @@ export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
 }
 
 // OS completa para o "centro de controle" (vistoria + itens com id + status do orçamento).
+// wa.me exige só dígitos com DDI. Números salvos como "(41) 99770-4359"
+// viravam um link sem destinatário, que abria o seletor de contatos.
+function normWhats(v: string | null | undefined): string | null {
+  if (!v) return null;
+  const d = v.replace(/\D/g, "");
+  if (d.length < 10) return null;
+  return d.startsWith("55") ? d : `55${d}`;
+}
+
 export async function getOrdemControle(id: string) {
-  const o = await prisma.serviceOrder.findUnique({ where: { id }, include: { items: true } });
+  await requireStaff();
+  const o = await prisma.serviceOrder.findUnique({
+    where: { id },
+    include: { items: true, client: { select: { whatsapp: true, phone: true } } },
+  });
   if (!o) return null;
   const budget = await prisma.budget.findFirst({
     where: { serviceOrderId: id },
@@ -219,6 +292,8 @@ export async function getOrdemControle(id: string) {
   return {
     id: o.id,
     cliente: o.clientName,
+    // Só dígitos com DDI, no formato que o wa.me espera.
+    clienteWhats: normWhats(o.client?.whatsapp ?? o.client?.phone),
     veiculo: o.vehicleName,
     placa: o.plate ?? "—",
     data: o.date,
@@ -252,6 +327,7 @@ export async function getOrdemControle(id: string) {
 export type OsControle = NonNullable<Awaited<ReturnType<typeof getOrdemControle>>>;
 
 export async function getMecanicos() {
+  await requireAdmin();
   return prisma.user.findMany({
     where: { role: "mecanico" },
     select: { id: true, name: true },
@@ -260,6 +336,7 @@ export async function getMecanicos() {
 }
 
 export async function getOrdensMecanico(mechanicId: string): Promise<OrdemServicoAdmin[]> {
+  await requireStaff();
   const rows = await prisma.serviceOrder.findMany({
     where: { mechanicId },
     include: { items: true },
@@ -269,10 +346,17 @@ export async function getOrdensMecanico(mechanicId: string): Promise<OrdemServic
 }
 
 export async function getAgendaHoje(): Promise<Agendamento[]> {
-  const rows = await prisma.appointment.findMany({ where: { date: "Hoje" }, include: { client: true }, orderBy: { time: "asc" } });
+  await requireAdmin();
+  // Data real de hoje em ISO. Antes comparava com o literal "Hoje", então
+  // nenhum agendamento feito pelo cliente (que grava ISO) aparecia aqui.
+  const rows = await prisma.appointment.findMany({
+    where: { date: hojeISO() },
+    include: { client: true },
+    orderBy: { time: "asc" },
+  });
   return rows.map((a) => ({
     hora: a.time,
-    cliente: a.client?.name ?? "—",
+    cliente: a.clientName ?? a.client?.name ?? "—",
     veiculo: a.vehicleName,
     servico: a.service,
     status: a.status === "Confirmado" ? "Confirmado" : "Aguardando",
@@ -280,6 +364,7 @@ export async function getAgendaHoje(): Promise<Agendamento[]> {
 }
 
 export async function getEstoque(): Promise<Produto[]> {
+  await requireStaff();
   const rows = await prisma.product.findMany({
     include: { _count: { select: { movements: true } } },
     orderBy: { name: "asc" },
@@ -308,6 +393,7 @@ export type Movimentacao = {
 
 // Trilha de auditoria do estoque (entradas/saídas), mais recentes primeiro.
 export async function getMovimentacoes(): Promise<Movimentacao[]> {
+  await requireAdmin();
   const rows = await prisma.stockMovement.findMany({
     orderBy: { createdAt: "desc" },
     take: 60,
@@ -341,6 +427,7 @@ export type AgendaItem = {
 };
 
 export async function getAgendaAdmin(): Promise<AgendaItem[]> {
+  await requireAdmin();
   const rows = await prisma.appointment.findMany({
     include: { client: true },
     orderBy: [{ date: "asc" }, { time: "asc" }],
@@ -357,6 +444,7 @@ export async function getAgendaAdmin(): Promise<AgendaItem[]> {
 }
 
 export async function getFinanceiroResumo() {
+  await requireAdmin();
   const [receitas, despesas] = await Promise.all([
     prisma.transaction.groupBy({ by: ["category"], where: { type: "receita" }, _sum: { value: true } }),
     prisma.transaction.groupBy({ by: ["category"], where: { type: "despesa" }, _sum: { value: true } }),
@@ -368,6 +456,7 @@ export async function getFinanceiroResumo() {
 }
 
 export async function getLancamentos() {
+  await requireAdmin();
   const rows = await prisma.transaction.findMany({ orderBy: { createdAt: "desc" } });
   return rows.map((t) => ({
     id: t.id,
@@ -381,11 +470,13 @@ export async function getLancamentos() {
 }
 
 export async function getSettings() {
+  await requireAdmin();
   return prisma.settings.findUnique({ where: { id: "default" } });
 }
 
 // Equipe real: usuários cadastrados (admin/mecânico).
 export async function getEquipe() {
+  await requireAdmin();
   const users = await prisma.user.findMany({ orderBy: { name: "asc" } });
   return users.map((u) => ({
     nome: u.name,
@@ -394,6 +485,7 @@ export async function getEquipe() {
 }
 
 export async function getRelatorios() {
+  await requireAdmin();
   const [servicos, gastos, vencidas] = await Promise.all([
     prisma.serviceOrderItem.groupBy({
       by: ["description"],
@@ -419,6 +511,7 @@ export async function getRelatorios() {
 }
 
 export async function getClientesVeiculosParaOS() {
+  await requireAdmin();
   const [clientes, veiculos] = await Promise.all([
     prisma.client.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.vehicle.findMany({ include: { client: true }, orderBy: { plate: "asc" } }),
@@ -431,6 +524,7 @@ export async function getClientesVeiculosParaOS() {
 
 // ── Acessos da equipe (model User) ──────────────────────────────────────
 export async function getUsers() {
+  await requireAdmin();
   const users = await prisma.user.findMany({
     orderBy: [{ role: "asc" }, { createdAt: "asc" }],
   });

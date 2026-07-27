@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { gerarSenhaTemporaria } from "@/lib/identity";
+import { hojeISO, hojeBR } from "@/lib/datas";
+import { comIdUnico, proximoIdOS } from "@/lib/ids";
 
 function split(full: string) {
   const [brand, ...rest] = full.trim().split(" ");
@@ -26,8 +28,8 @@ export async function criarOS(input: {
     prisma.vehicle.findUnique({ where: { id: input.veiculoId } }),
   ]);
   const total = input.itens.reduce((s, i) => s + i.valor * i.qtd, 0);
-  const id = `OS-${2100 + Math.floor(Math.random() * 8999)}`;
-  await prisma.serviceOrder.create({
+  const { id } = await comIdUnico(proximoIdOS, (id) =>
+    prisma.serviceOrder.create({
     data: {
       id,
       clientId: input.clienteId || null,
@@ -35,7 +37,7 @@ export async function criarOS(input: {
       clientName: cliente?.name ?? "—",
       vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
       plate: veiculo?.plate ?? null,
-      date: input.data || "Hoje",
+      date: input.data || hojeBR(),
       km: input.km || 0,
       defect: input.defeito,
       status: "Aberta",
@@ -45,7 +47,8 @@ export async function criarOS(input: {
         create: input.itens.map((i) => ({ type: i.tipo, description: i.descricao, qty: i.qtd, value: i.valor })),
       },
     },
-  });
+    })
+  );
   revalidatePath("/oficina/ordens");
   revalidatePath("/oficina");
   return { id };
@@ -145,7 +148,7 @@ export async function criarAgendamento(input: {
       clientName: input.cliente.trim() || null,
       vehicleName: input.veiculo.trim() || "—",
       service: input.servico.trim() || "—",
-      date: input.data || "Hoje",
+      date: input.data || hojeISO(),
       time: input.hora || "—",
       status: input.status || "Confirmado",
     },
@@ -162,7 +165,7 @@ export async function criarLancamento(input: {
 }) {
   await requireAdmin();
   await prisma.transaction.create({
-    data: { type: input.tipo, description: input.descricao, category: input.categoria, value: input.valor, date: "Hoje" },
+    data: { type: input.tipo, description: input.descricao, category: input.categoria, value: input.valor, date: hojeBR() },
   });
   revalidatePath("/oficina/financeiro");
   revalidatePath("/oficina");

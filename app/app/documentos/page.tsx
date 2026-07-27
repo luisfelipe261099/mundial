@@ -54,22 +54,23 @@ export default async function DocumentosPage() {
             <h2 className="app-display mb-3 text-[1.05rem] font-bold t-ink">{tipo}</h2>
             <div className="app-card divide-y divide-[var(--app-line)] px-4">
               {docs.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 py-3">
+                <a key={d.id} href={d.href} className="flex items-center gap-3 py-3">
                   <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--app-surface-2)]">
                     <Icon className="size-5 t-brand" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[0.95rem] font-semibold t-ink">{d.nome}</p>
-                    <p className="text-xs t-muted">{d.data} · PDF</p>
+                    <p className="text-xs t-muted">
+                      {d.data} · {d.formato}
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    aria-label={`Baixar ${d.nome}`}
+                  <span
+                    aria-hidden="true"
                     className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--app-brand)]/15 t-brand"
                   >
                     <Download className="size-4" />
-                  </button>
-                </div>
+                  </span>
+                </a>
               ))}
             </div>
           </section>

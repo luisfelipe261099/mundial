@@ -31,8 +31,11 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
     const email = identifier.toLowerCase();
     const user = await prisma.user.findUnique({ where: { email } });
     if (await bcrypt.compare(password, user?.password ?? DUMMY_HASH)) {
-      if (user?.password) {
-        session = { kind: user.role === "mecanico" ? "mecanico" : "admin", id: user.id, name: user.name };
+      // Allowlist explícita: role desconhecida NÃO vira admin. Um `User` com
+      // role "cliente" (ou um typo) precisa cair fora, não herdar a oficina.
+      const kind = user?.role === "admin" ? "admin" : user?.role === "mecanico" ? "mecanico" : null;
+      if (user?.password && kind) {
+        session = { kind, id: user.id, name: user.name };
       }
     }
     if (!session) {

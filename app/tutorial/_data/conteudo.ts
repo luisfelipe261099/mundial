@@ -35,7 +35,7 @@ export const conteudoPorPapel: Record<Papel, PassoTutorial[]> = {
     {
       titulo: "Ordens de Serviço",
       texto:
-        "O coração do sistema. Uma OS nasce na Entrada — a vistoria de entrada registra o que o cliente autorizou, o nível de combustível, avarias e o km. Dali ela avança: mecânico executa, você lança peças/serviços, marca como finalizada e gera o PDF da ordem para o cliente. O status de cada OS (Agendado → Em andamento → Finalizado → Entregue) aparece sempre visível na lista.",
+        "O coração do sistema. Uma OS nasce na Entrada — a vistoria de entrada registra o que o cliente autorizou, o nível de combustível, avarias e o km. Dali ela avança: mecânico executa, você lança peças/serviços, marca como finalizada e gera o PDF da ordem para o cliente. O status de cada OS (Aberta → Aguardando aprovação → Em execução → Finalizada → Entregue) aparece sempre visível na lista.",
       imagem: "/tutorial/admin/ordens.png",
     },
     {
@@ -97,7 +97,7 @@ export const conteudoPorPapel: Record<Papel, PassoTutorial[]> = {
     {
       titulo: "Finalizar o serviço",
       texto:
-        "Quando o serviço termina, marque a ordem como finalizada. Isso libera a baixa de estoque das peças usadas e o lançamento financeiro para o administrador — não precisa fazer nada além de finalizar.",
+        "Quando o serviço termina, marque a ordem como finalizada. Isso dá baixa automática no estoque das peças usadas e avisa o cliente de que o carro está pronto. O lançamento financeiro entra depois, quando o administrador registra a entrega.",
       imagem: "/tutorial/mecanico/finalizar.png",
     },
   ],
@@ -147,7 +147,7 @@ export const conteudoPorPapel: Record<Papel, PassoTutorial[]> = {
     {
       titulo: "Documentos",
       texto:
-        "Notas fiscais e outros documentos relacionados aos seus serviços, sempre à mão.",
+        "As ordens de serviço em PDF e os orçamentos dos seus atendimentos, sempre à mão.",
       imagem: "/tutorial/cliente/documentos.png",
     },
     {

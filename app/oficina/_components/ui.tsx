@@ -21,6 +21,7 @@ export function Sparkline({
 }) {
   const w = 100;
   const h = 32;
+  if (data.length === 0) return null; // série vazia → sem SVG (evita NaN nos pontos)
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
@@ -106,7 +107,9 @@ export function StatCard({
 // Barras em CSS puro — refinado: trilho de fundo, mês corrente em destaque,
 // valor no topo. Mesma assinatura de antes.
 export function BarChart({ data }: { data: { mes: string; valor: number }[] }) {
-  const max = Math.max(...data.map((d) => d.valor));
+  // Math.max de série vazia é -Infinity e série toda zerada divide por 0 →
+  // height: "NaN%". O piso em 1 mantém as barras em 0% sem quebrar o layout.
+  const max = Math.max(1, ...data.map((d) => d.valor));
   return (
     <div className="flex h-52 items-end justify-between gap-2.5 px-1 sm:gap-3">
       {data.map((d, i) => {

@@ -85,14 +85,14 @@ export default function AdminShell({
             </h1>
           </div>
 
-          {/* busca (protótipo — afordância visual) */}
-          <div className="hidden items-center gap-2 rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-muted lg:flex lg:w-72">
+          {/* Busca real: leva à lista de OS, que tem filtro por cliente/placa. */}
+          <Link
+            href="/oficina/ordens"
+            className="hidden items-center gap-2 rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-muted transition-colors hover:border-[var(--ad-line-2)] lg:flex lg:w-72"
+          >
             <Search className="size-4 shrink-0" />
             <span className="flex-1 truncate">Buscar cliente, placa, OS…</span>
-            <kbd className="adm-mono rounded border border-[var(--ad-line-2)] px-1.5 py-0.5 text-[0.6rem] tracking-normal adm-muted">
-              ⌘K
-            </kbd>
-          </div>
+          </Link>
 
           <Link
             href="/tutorial?papel=admin"

@@ -13,16 +13,17 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { brl, osBadgeClass } from "./_data/mock";
-import { getKpis, getOrdens, getEstoque, getAgendaHoje, faturamentoMensal } from "@/lib/admin-data";
+import { getKpis, getOrdens, getEstoque, getAgendaHoje, getFaturamentoMensal } from "@/lib/admin-data";
 import { business } from "../_data/business";
 import { StatCard, Sparkline, Delta, BarChart, Panel } from "./_components/ui";
 
 export default async function DashboardPage() {
-  const [kpis, ordens, estoque, agenda] = await Promise.all([
+  const [kpis, ordens, estoque, agenda, faturamentoMensal] = await Promise.all([
     getKpis(),
     getOrdens(),
     getEstoque(),
     getAgendaHoje(),
+    getFaturamentoMensal(),
   ]);
 
   const baixoEstoque = estoque.filter((p) => p.qtd < p.minimo);
@@ -47,12 +48,15 @@ export default async function DashboardPage() {
     ) % 24;
   const saudacao = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
-  // Trend real (série 6m, ilustrativa no protótipo) → sparkline + variação MoM.
+  // Série real de 6 meses (Transaction.createdAt) → sparkline + variação MoM.
+  // Sem mês anterior faturado não existe comparação: a pílula some em vez de
+  // exibir um percentual inventado.
   const serie = faturamentoMensal.map((m) => m.valor);
-  const ult = serie[serie.length - 1];
-  const pen = serie[serie.length - 2];
-  const momPct = Math.round(((ult - pen) / pen) * 100);
-  const momDir = momPct > 0 ? "up" : momPct < 0 ? "down" : "flat";
+  const ult = serie[serie.length - 1] ?? 0;
+  const pen = serie[serie.length - 2] ?? 0;
+  const momPct = pen > 0 ? Math.round(((ult - pen) / pen) * 100) : null;
+  const momDir = momPct === null ? "flat" : momPct > 0 ? "up" : momPct < 0 ? "down" : "flat";
+  const temSerie = serie.some((v) => v > 0);
 
   // Pulso operacional de hoje/agora (ações que pedem atenção).
   const pulso = [
@@ -82,13 +86,17 @@ export default async function DashboardPage() {
                 <p className="adm-display-xl text-[clamp(2.6rem,7vw,4rem)] adm-ink">
                   {brl(kpis.faturamentoMes)}
                 </p>
-                <Delta dir={momDir}>
-                  {momPct > 0 ? "+" : ""}
-                  {momPct}%
-                </Delta>
+                {momPct !== null && (
+                  <Delta dir={momDir}>
+                    {momPct > 0 ? "+" : ""}
+                    {momPct}%
+                  </Delta>
+                )}
               </div>
               <p className="mt-2 text-xs adm-muted">
-                Receita registrada · variação vs. mês anterior (série de 6 meses)
+                {momPct !== null
+                  ? "Receita registrada · variação vs. mês anterior"
+                  : "Receita registrada no mês corrente"}
               </p>
             </div>
 
@@ -116,15 +124,23 @@ export default async function DashboardPage() {
               <p className="adm-eyebrow">Faturamento · 6 meses</p>
               <TrendingUp className="size-4 adm-brand" strokeWidth={2} />
             </div>
-            <div className="mt-4 h-24 w-full">
-              <Sparkline data={serie} className="h-full w-full" />
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="adm-eyebrow">{faturamentoMensal[0].mes}</span>
-              <span className="adm-mono text-[0.62rem] adm-brand">
-                {faturamentoMensal[faturamentoMensal.length - 1].mes} · {brl(ult)}
-              </span>
-            </div>
+            {temSerie ? (
+              <>
+                <div className="mt-4 h-24 w-full">
+                  <Sparkline data={serie} className="h-full w-full" />
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="adm-eyebrow">{faturamentoMensal[0]?.mes}</span>
+                  <span className="adm-mono text-[0.62rem] adm-brand">
+                    {faturamentoMensal[faturamentoMensal.length - 1]?.mes} · {brl(ult)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="mt-4 flex h-24 items-center text-xs adm-muted">
+                O gráfico aparece assim que houver receitas lançadas no financeiro.
+              </p>
+            )}
           </div>
         </div>
 
@@ -185,7 +201,14 @@ export default async function DashboardPage() {
             icon={TrendingUp}
             bodyClass="p-5"
           >
-            <BarChart data={faturamentoMensal} />
+            {temSerie ? (
+              <BarChart data={faturamentoMensal} />
+            ) : (
+              <p className="text-sm adm-muted">
+                Nenhuma receita lançada ainda. O gráfico se preenche conforme as
+                OS forem entregues e os lançamentos entrarem no financeiro.
+              </p>
+            )}
           </Panel>
         </div>
         <Panel title="Resumo do ano" eyebrow="Acumulado" bodyClass="divide-y divide-[var(--ad-line)]">

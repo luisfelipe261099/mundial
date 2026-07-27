@@ -8,6 +8,6 @@ export const mecTourSteps: TourStep[] = [
   },
   {
     titulo: "Finalize quando terminar",
-    texto: "Ao marcar como finalizada, a baixa de estoque e o lançamento financeiro acontecem sozinhos.",
+    texto: "Ao marcar como finalizada, a baixa de estoque acontece sozinha e o cliente é avisado. O financeiro entra na entrega, com o administrador.",
   },
 ];

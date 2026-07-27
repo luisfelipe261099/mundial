@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { setSession } from "@/lib/auth";
 import { normPlate, normPhone } from "@/lib/identity";
+import { ipDaRequisicao, excedeuTentativas, registrarFalha } from "@/lib/rate-limit";
 
 export type CadastroState = { error?: string };
 
@@ -22,10 +23,22 @@ export async function cadastrarCliente(
   if (!nome || !email || senha.length < 6) {
     return { error: "Preencha nome, e-mail e uma senha (mín. 6 caracteres)." };
   }
+
+  // Este formulário responde "você já é nosso cliente" quando a placa ou o
+  // telefone existem — ou seja, é um oráculo sobre a base de clientes. Sem
+  // limite, dá para varrer placas e descobrir quais pertencem à oficina.
+  const ip = await ipDaRequisicao();
+  if (await excedeuTentativas(ip, "cadastro")) {
+    return { error: "Muitas tentativas. Aguarde alguns minutos e tente de novo." };
+  }
+
   const existing = await prisma.client.findFirst({
     where: { email: { equals: email, mode: "insensitive" } },
   });
-  if (existing) return { error: "Já existe uma conta com esse e-mail." };
+  if (existing) {
+    await registrarFalha(ip, "cadastro");
+    return { error: "Já existe uma conta com esse e-mail." };
+  }
 
   // Anti-duplicação: se a placa ou o telefone já pertencem a um cliente, ele já
   // é da base (importado ou cadastrado pelo admin) → deve usar o Primeiro acesso.
@@ -43,6 +56,7 @@ export async function cadastrarCliente(
       (c) => (c.phone && normPhone(c.phone) === foneNorm) || (c.whatsapp && normPhone(c.whatsapp) === foneNorm)
     );
     if (placaExiste || foneExiste) {
+      await registrarFalha(ip, "cadastro");
       return { error: "Você já é nosso cliente. Use o Primeiro acesso para ativar sua conta (link na tela de login)." };
     }
   }

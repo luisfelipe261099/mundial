@@ -349,7 +349,13 @@ export function OrderControl({
 
       {/* Footer */}
       <div className="flex flex-wrap gap-3">
-        <a href={`https://wa.me/?text=${encodeURIComponent(`Olá! Sobre a OS ${os.id} do seu ${os.veiculo}.`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink hover:bg-[var(--ad-surface-2)]">
+        <a
+          href={`https://wa.me/${os.clienteWhats ?? ""}?text=${encodeURIComponent(`Olá! Sobre a OS ${os.id} do seu ${os.veiculo}.`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={os.clienteWhats ? undefined : "Cliente sem telefone cadastrado"}
+          className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-ink hover:bg-[var(--ad-surface-2)]"
+        >
           <MessageCircle className="size-4 text-emerald-400" />
           Avisar no WhatsApp
         </a>

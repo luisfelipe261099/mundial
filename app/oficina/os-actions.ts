@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin, requireStaff } from "@/lib/auth";
+import { hojeBR } from "@/lib/datas";
+import { comIdUnico, proximoIdOS, proximoIdOrcamento } from "@/lib/ids";
 
-function hoje() {
-  return new Date().toLocaleDateString("pt-BR");
-}
+// toLocaleDateString sem timeZone usa o fuso do servidor — na Vercel isso é
+// UTC, e depois das 21h de Curitiba a OS nasceria datada do dia seguinte.
+const hoje = hojeBR;
 
 // Notificação por evento para o cliente (aparece no app dele).
 async function notificar(clientId: string | null, type: string, title: string, text: string) {
@@ -44,8 +46,8 @@ export async function darEntrada(input: EntradaInput): Promise<{ id: string }> {
     prisma.client.findUnique({ where: { id: input.clienteId } }),
     prisma.vehicle.findUnique({ where: { id: input.veiculoId } }),
   ]);
-  const id = `OS-${2100 + Math.floor(Math.random() * 8999)}`;
-  await prisma.serviceOrder.create({
+  const { id } = await comIdUnico(proximoIdOS, (id) =>
+    prisma.serviceOrder.create({
     data: {
       id,
       clientId: input.clienteId || null,
@@ -66,17 +68,31 @@ export async function darEntrada(input: EntradaInput): Promise<{ id: string }> {
       } as Prisma.InputJsonValue,
       total: 0,
     },
-  });
+    })
+  );
   revalidatePath("/oficina/ordens");
   revalidatePath("/oficina");
   return { id };
+}
+
+// Mecânico só mexe na OS atribuída a ele. Admin mexe em qualquer uma.
+// Sem isto, `requireStaff()` sozinho deixava qualquer mecânico alterar itens,
+// status, checklist e fotos de qualquer ordem da oficina.
+async function assertPodeEditarOS(osId: string): Promise<void> {
+  const session = await requireStaff();
+  if (session.kind === "admin") return;
+  const os = await prisma.serviceOrder.findFirst({
+    where: { id: osId, mechanicId: session.id },
+    select: { id: true },
+  });
+  if (!os) throw new Error("Esta OS não está atribuída a você.");
 }
 
 export async function adicionarItemOS(
   osId: string,
   item: { tipo: string; descricao: string; qtd: number; valor: number; productId?: string }
 ) {
-  await requireStaff();
+  await assertPodeEditarOS(osId);
   await prisma.serviceOrderItem.create({
     data: {
       serviceOrderId: osId,
@@ -92,15 +108,23 @@ export async function adicionarItemOS(
 }
 
 export async function removerItemOS(itemId: string, osId: string) {
-  await requireStaff();
-  await prisma.serviceOrderItem.delete({ where: { id: itemId } });
+  await assertPodeEditarOS(osId);
+  // Apagar por itemId sozinho permitia remover o item de OUTRA OS e recalcular
+  // o total desta, dessincronizando as duas.
+  await prisma.serviceOrderItem.deleteMany({ where: { id: itemId, serviceOrderId: osId } });
   await recomputeTotal(osId);
   revalidatePath(`/oficina/ordens/${osId}`);
 }
 
 // Avançar/voltar status. Ao FINALIZAR, baixa o estoque das peças vinculadas (1x).
+const STATUS_VALIDOS = ["Aberta", "Aguardando aprovação", "Em execução", "Finalizada", "Entregue"];
+
 export async function mudarStatus(osId: string, novoStatus: string) {
   const staff = await requireStaff();
+  // Status é string livre no schema; sem validar, uma chamada forjada gravava
+  // qualquer texto e quebrava os badges e os filtros de KPI.
+  if (!STATUS_VALIDOS.includes(novoStatus)) throw new Error("Status inválido.");
+  await assertPodeEditarOS(osId);
   const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: true } });
   if (!os) return;
 
@@ -163,9 +187,10 @@ export async function enviarParaAprovacao(osId: string) {
       data: { status: "pendente", subtotal: total, total, date: hoje(), items: { create: itensBudget } },
     });
   } else {
-    await prisma.budget.create({
+    await comIdUnico(proximoIdOrcamento, (id) =>
+      prisma.budget.create({
       data: {
-        id: `ORC-${300 + Math.floor(Math.random() * 699)}`,
+        id,
         clientId: os.clientId,
         vehicleName: os.vehicleName,
         date: hoje(),
@@ -176,7 +201,8 @@ export async function enviarParaAprovacao(osId: string) {
         serviceOrderId: osId,
         items: { create: itensBudget },
       },
-    });
+      })
+    );
   }
 
   await prisma.serviceOrder.update({ where: { id: osId }, data: { status: "Aguardando aprovação", total } });
@@ -237,7 +263,7 @@ export async function salvarTechChecklist(
   osId: string,
   checklist: { item: string; status: string }[]
 ) {
-  await requireStaff();
+  await assertPodeEditarOS(osId);
   await prisma.serviceOrder.update({
     where: { id: osId },
     data: { techChecklist: checklist as Prisma.InputJsonValue },
@@ -248,7 +274,7 @@ export async function salvarTechChecklist(
 
 // Fotos da OS (URLs no Vercel Blob), salvas pela equipe.
 export async function salvarFotos(osId: string, fotos: string[]) {
-  await requireStaff();
+  await assertPodeEditarOS(osId);
   await prisma.serviceOrder.update({
     where: { id: osId },
     data: { photos: fotos as Prisma.InputJsonValue },

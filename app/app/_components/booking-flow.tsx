@@ -15,14 +15,10 @@ interface ServicoOpt {
   categoria: string;
 }
 
-const DATAS = [
-  "Seg · 23/06",
-  "Ter · 24/06",
-  "Qua · 25/06",
-  "Qui · 26/06",
-  "Sex · 27/06",
-  "Sáb · 28/06",
-];
+interface DataOpt {
+  iso: string;
+  rotulo: string;
+}
 
 const PASSOS = ["Veículo", "Serviço", "Data", "Horário"];
 
@@ -30,16 +26,19 @@ export function BookingFlow({
   veiculos,
   servicos,
   horarios,
+  datas,
 }: {
   veiculos: VeiculoOpt[];
   servicos: ServicoOpt[];
   horarios: string[];
+  /** Dias disponíveis, calculados no servidor a cada render — nunca fixos. */
+  datas: DataOpt[];
 }) {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const [veiculo, setVeiculo] = useState<VeiculoOpt | null>(null);
   const [servico, setServico] = useState<ServicoOpt | null>(null);
-  const [data, setData] = useState<string | null>(null);
+  const [data, setData] = useState<DataOpt | null>(null);
   const [hora, setHora] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -66,7 +65,7 @@ export function BookingFlow({
           {servico?.nome} · {veiculo?.modelo}
         </p>
         <p className="text-sm t-muted">
-          {data} às {hora}
+          {data?.rotulo} às {hora}
         </p>
         <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[var(--app-brand)]/15 px-3 py-1 text-xs font-semibold t-brand">
           <CalendarCheck className="size-4" />
@@ -113,7 +112,14 @@ export function BookingFlow({
       </div>
 
       {/* conteúdo do passo */}
-      {step === 0 && (
+      {step === 0 && veiculos.length === 0 && (
+        <div className="rounded-xl border border-[var(--app-line)] p-4 text-sm t-muted">
+          Você ainda não tem veículo cadastrado. Fale com a oficina pelo WhatsApp
+          para incluir o seu — depois o agendamento fica liberado por aqui.
+        </div>
+      )}
+
+      {step === 0 && veiculos.length > 0 && (
         <div className="space-y-2">
           {veiculos.map((v) => (
             <button
@@ -154,16 +160,16 @@ export function BookingFlow({
 
       {step === 2 && (
         <div className="grid grid-cols-2 gap-2">
-          {DATAS.map((d) => (
+          {datas.map((d) => (
             <button
-              key={d}
+              key={d.iso}
               type="button"
               onClick={() => setData(d)}
               className={`rounded-xl border py-3 text-sm font-semibold t-ink transition-colors ${sel(
-                data === d
+                data?.iso === d.iso
               )}`}
             >
-              {d}
+              {d.rotulo}
             </button>
           ))}
         </div>
@@ -212,7 +218,7 @@ export function BookingFlow({
                 criarAgendamento({
                   veiculoNome: veiculo.modelo,
                   servico: servico.nome,
-                  data,
+                  data: data.iso,
                   hora,
                 })
               );

@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireClientId } from "@/lib/auth";
+import { hojeBR } from "@/lib/datas";
+import { comIdUnico, proximoIdOS } from "@/lib/ids";
 
 export async function solicitarOrcamento(input: {
   veiculoId: string;
@@ -13,22 +15,26 @@ export async function solicitarOrcamento(input: {
     prisma.vehicle.findFirst({ where: { id: input.veiculoId, clientId } }),
     prisma.client.findUnique({ where: { id: clientId } }),
   ]);
-  const id = `OS-${2100 + Math.floor(Math.random() * 8999)}`;
-  await prisma.serviceOrder.create({
-    data: {
-      id,
-      clientId,
-      vehicleId: veiculo?.id ?? null,
-      clientName: cliente?.name ?? "—",
-      vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
-      plate: veiculo?.plate ?? null,
-      date: new Date().toLocaleDateString("pt-BR"),
-      km: veiculo?.km ?? 0,
-      defect: input.descricao,
-      status: "Aberta",
-      total: 0,
-    },
-  });
+  // Veículo inexistente ou de outro cliente: nada de abrir OS órfã com "—".
+  if (!veiculo) throw new Error("Veículo não encontrado.");
+
+  const { id } = await comIdUnico(proximoIdOS, (id) =>
+    prisma.serviceOrder.create({
+      data: {
+        id,
+        clientId,
+        vehicleId: veiculo.id,
+        clientName: cliente?.name ?? "—",
+        vehicleName: `${veiculo.brand} ${veiculo.model}`,
+        plate: veiculo.plate,
+        date: hojeBR(),
+        km: veiculo.km,
+        defect: input.descricao,
+        status: "Aberta",
+        total: 0,
+      },
+    })
+  );
   await prisma.notification.create({
     data: {
       clientId,

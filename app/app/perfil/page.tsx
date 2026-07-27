@@ -17,10 +17,11 @@ import { getCliente } from "@/lib/client-data";
 import { logout } from "../../login/actions";
 import { PushToggle } from "./push-toggle";
 
+// Só entra aqui item com destino real — botão sem ação vira reclamação.
 const AJUSTES = [
-  { icon: Bell, label: "Notificações" },
-  { icon: ShieldCheck, label: "Privacidade e segurança" },
-  { icon: Settings, label: "Preferências" },
+  { icon: Bell, label: "Minhas notificações", href: "/app/notificacoes" },
+  { icon: Settings, label: "Editar meus dados", href: "/app/perfil/editar" },
+  { icon: ShieldCheck, label: "Como usar o app", href: "/tutorial?papel=cliente" },
 ];
 
 export default async function PerfilPage() {
@@ -88,11 +89,11 @@ export default async function PerfilPage() {
           {AJUSTES.map((a) => {
             const Icon = a.icon;
             return (
-              <button key={a.label} type="button" className="flex w-full items-center gap-3 py-3.5 text-left">
+              <Link key={a.label} href={a.href} className="flex w-full items-center gap-3 py-3.5 text-left">
                 <Icon className="size-5 shrink-0 t-muted" />
                 <span className="flex-1 text-sm font-medium t-ink">{a.label}</span>
                 <ChevronRight className="size-4 shrink-0 t-muted" />
-              </button>
+              </Link>
             );
           })}
         </div>

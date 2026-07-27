@@ -14,9 +14,11 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#0a0e17",
     theme_color: "#0a0e17",
     orientation: "portrait",
+    // Android exige 192 e 512 para oferecer o "instalar na tela inicial".
     icons: [
-      { src: "/images/logo.png", sizes: "400x400", type: "image/png", purpose: "any" },
-      { src: "/images/logo.png", sizes: "400x400", type: "image/png", purpose: "maskable" },
+      { src: "/images/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/images/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/images/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

@@ -6,6 +6,7 @@ import {
   Wrench,
   ChevronRight,
 } from "lucide-react";
+import { requireClientId } from "@/lib/auth";
 import { getCatalogoServicos } from "@/lib/client-data";
 import { CatChip } from "../_components/category";
 import { AppHeader } from "../_components/app-header";
@@ -18,6 +19,7 @@ const ATALHOS = [
 ];
 
 export default async function ServicosPage() {
+  await requireClientId();
   const catalogo = await getCatalogoServicos();
 
   return (

@@ -1,27 +1,18 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { requireStaff } from "@/lib/auth";
 
-async function requireStaff() {
-  const s = await getSession();
-  if (!s) redirect("/login");
-  if (s.kind !== "mecanico" && s.kind !== "admin") redirect("/login");
-}
-
-export async function avancarStatus(id: string, novoStatus: string) {
-  await requireStaff();
-  await prisma.serviceOrder.update({ where: { id }, data: { status: novoStatus } });
-  revalidatePath(`/mecanico/${id}`);
-  revalidatePath("/mecanico");
-  revalidatePath("/oficina/ordens");
-  revalidatePath("/oficina");
-}
+// `avancarStatus` foi removida: não tinha nenhum call site (a tela usa
+// os-actions.mudarStatus) e, por não replicar a baixa de estoque nem a
+// notificação ao cliente, era uma armadilha para a próxima edição.
 
 export async function salvarObservacoes(id: string, texto: string) {
-  await requireStaff();
-  await prisma.serviceOrder.update({ where: { id }, data: { observations: texto } });
+  const session = await requireStaff();
+  // Mecânico só escreve na OS atribuída a ele; o admin escreve em qualquer uma.
+  const escopo =
+    session.kind === "mecanico" ? { id, mechanicId: session.id } : { id };
+  await prisma.serviceOrder.updateMany({ where: escopo, data: { observations: texto } });
   revalidatePath(`/mecanico/${id}`);
 }

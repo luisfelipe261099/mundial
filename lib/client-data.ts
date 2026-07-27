@@ -11,6 +11,16 @@ import type {
   Categoria,
 } from "@/app/app/_data/mock";
 import { computeMaintenance, maintList } from "@/lib/maintenance";
+import { getSession, requireSession } from "@/lib/auth";
+import { notFound } from "next/navigation";
+
+// Guarda da DAL: nenhuma leitura do portal aceita um clientId que não seja o
+// da sessão em curso. Sem isso, bastaria uma página esquecer o
+// requireClientId() para expor os dados de outro cliente.
+async function assertDono(clientId: string): Promise<void> {
+  const session = await getSession();
+  if (!session || session.kind !== "cliente" || session.id !== clientId) notFound();
+}
 
 // ── Mapeadores: linha do Prisma → tipo que os componentes já consomem ──────
 
@@ -86,6 +96,7 @@ function mapBudget(b: BudgetRow): Orcamento {
 // ── Queries (escopadas ao cliente logado) ──────────────────────────────────
 
 export async function getCliente(clientId: string) {
+  await assertDono(clientId);
   const c = await prisma.client.findUnique({ where: { id: clientId } });
   if (!c) return null;
   const iniciais = c.name.split(" ").map((n) => n[0]).slice(0, 2).join("");
@@ -102,8 +113,23 @@ export async function getCliente(clientId: string) {
 }
 
 export async function getVeiculos(clientId: string): Promise<Veiculo[]> {
+  await assertDono(clientId);
   const rows = await prisma.vehicle.findMany({ where: { clientId }, orderBy: { plate: "asc" } });
-  return rows.map((v, i) => mapVehicle(v, i));
+  // As colunas nextRevisionKm/nextRevisionDate só eram preenchidas pelo seed;
+  // a fonte real é o motor de manutenção (última troca de óleo/revisão + placa).
+  const toggles = await togglesManutencao();
+  const agora = new Date();
+  return rows.map((v, i) => {
+    const veiculo = mapVehicle(v, i);
+    veiculo.proximasManutencoes = maintList(
+      computeMaintenance(
+        { plate: v.plate, lastOilChangeAt: v.lastOilChangeAt, lastRevisaoAt: v.lastRevisaoAt },
+        toggles,
+        agora
+      )
+    );
+    return veiculo;
+  });
 }
 
 // Toggles de lembrete (Settings), com defaults ligados.
@@ -117,6 +143,7 @@ async function togglesManutencao() {
 }
 
 export async function getVeiculo(id: string, clientId: string): Promise<Veiculo | null> {
+  await assertDono(clientId);
   const v = await prisma.vehicle.findFirst({ where: { id, clientId } });
   if (!v) return null;
   const veiculo = mapVehicle(v);
@@ -130,9 +157,14 @@ export async function getVeiculo(id: string, clientId: string): Promise<Veiculo 
   return veiculo;
 }
 
+// Histórico = só o que já foi concluído. Sem este filtro, uma OS "Aberta" ou
+// "Em execução" caía no histórico rotulada como "Entregue" (ver mapOrder).
+const CONCLUIDAS = ["Finalizada", "Entregue"];
+
 export async function getOrdens(clientId: string): Promise<OrdemServico[]> {
+  await assertDono(clientId);
   const rows = await prisma.serviceOrder.findMany({
-    where: { clientId },
+    where: { clientId, status: { in: CONCLUIDAS } },
     include: { items: true },
     orderBy: { createdAt: "desc" },
   });
@@ -140,13 +172,15 @@ export async function getOrdens(clientId: string): Promise<OrdemServico[]> {
 }
 
 export async function getOrdem(id: string, clientId: string): Promise<OrdemServico | null> {
+  await assertDono(clientId);
   const o = await prisma.serviceOrder.findFirst({ where: { id, clientId }, include: { items: true } });
   return o ? mapOrder(o) : null;
 }
 
 export async function getOrdensVeiculo(vehicleId: string, clientId: string): Promise<OrdemServico[]> {
+  await assertDono(clientId);
   const rows = await prisma.serviceOrder.findMany({
-    where: { vehicleId, clientId },
+    where: { vehicleId, clientId, status: { in: CONCLUIDAS } },
     include: { items: true },
     orderBy: { createdAt: "desc" },
   });
@@ -154,8 +188,9 @@ export async function getOrdensVeiculo(vehicleId: string, clientId: string): Pro
 }
 
 export async function getReparosRecentes(clientId: string): Promise<Reparo[]> {
+  await assertDono(clientId);
   const rows = await prisma.serviceOrder.findMany({
-    where: { clientId },
+    where: { clientId, status: { in: CONCLUIDAS } },
     include: { items: true },
     orderBy: { createdAt: "desc" },
     take: 3,
@@ -170,6 +205,7 @@ export async function getReparosRecentes(clientId: string): Promise<Reparo[]> {
 }
 
 export async function getOrcamentos(clientId: string): Promise<Orcamento[]> {
+  await assertDono(clientId);
   const rows = await prisma.budget.findMany({
     where: { clientId },
     include: { items: true },
@@ -179,11 +215,13 @@ export async function getOrcamentos(clientId: string): Promise<Orcamento[]> {
 }
 
 export async function getOrcamento(id: string, clientId: string): Promise<Orcamento | null> {
+  await assertDono(clientId);
   const b = await prisma.budget.findFirst({ where: { id, clientId }, include: { items: true } });
   return b ? mapBudget(b) : null;
 }
 
 export async function getNotificacoes(clientId: string): Promise<Notificacao[]> {
+  await assertDono(clientId);
   const rows = await prisma.notification.findMany({ where: { clientId }, orderBy: { id: "asc" } });
   return rows.map((n) => ({
     id: n.id,
@@ -196,11 +234,18 @@ export async function getNotificacoes(clientId: string): Promise<Notificacao[]> 
 }
 
 export async function getNaoLidas(clientId: string): Promise<number> {
+  await assertDono(clientId);
   return prisma.notification.count({ where: { clientId, read: false } });
 }
 
+// Cada documento aponta para onde ele realmente existe: a OS vira PDF, o
+// orçamento vira a tela de aprovação. Sem isso os botões de download eram
+// decorativos.
+export type DocumentoLink = Documento & { href: string; formato: string };
+
 // Documentos derivados dos dados REAIS do cliente (OS, orçamentos, comprovantes).
-export async function getDocumentos(clientId: string): Promise<Documento[]> {
+export async function getDocumentos(clientId: string): Promise<DocumentoLink[]> {
+  await assertDono(clientId);
   const [ordens, budgets] = await Promise.all([
     prisma.serviceOrder.findMany({
       where: { clientId, status: { in: ["Finalizada", "Entregue"] } },
@@ -208,21 +253,44 @@ export async function getDocumentos(clientId: string): Promise<Documento[]> {
     }),
     prisma.budget.findMany({ where: { clientId }, orderBy: { date: "desc" } }),
   ]);
-  const docs: Documento[] = [];
+  const docs: DocumentoLink[] = [];
   for (const o of ordens) {
-    docs.push({ id: `os-${o.id}`, nome: `${o.id} — ${o.vehicleName}`, tipo: "Ordem de serviço", data: o.date });
+    const pdf = `/oficina/ordens/${o.id}/pdf`;
+    docs.push({
+      id: `os-${o.id}`,
+      nome: `${o.id} — ${o.vehicleName}`,
+      tipo: "Ordem de serviço",
+      data: o.date,
+      href: pdf,
+      formato: "PDF",
+    });
     if (o.paid) {
-      docs.push({ id: `cp-${o.id}`, nome: `Comprovante — ${o.id}`, tipo: "Comprovante", data: o.deliveredAt ?? o.date });
+      docs.push({
+        id: `cp-${o.id}`,
+        nome: `Comprovante — ${o.id}`,
+        tipo: "Comprovante",
+        data: o.deliveredAt ?? o.date,
+        href: pdf,
+        formato: "PDF",
+      });
     }
   }
   for (const b of budgets) {
-    docs.push({ id: `orc-${b.id}`, nome: `Orçamento ${b.id} — ${b.vehicleName}`, tipo: "Orçamento", data: b.date });
+    docs.push({
+      id: `orc-${b.id}`,
+      nome: `Orçamento ${b.id} — ${b.vehicleName}`,
+      tipo: "Orçamento",
+      data: b.date,
+      href: `/app/orcamentos/${b.id}`,
+      formato: "ver no app",
+    });
   }
   return docs;
 }
 
 // OS ativas do cliente (para "acompanhar o carro"), com o status real.
 export async function getOrdensAtivas(clientId: string) {
+  await assertDono(clientId);
   const rows = await prisma.serviceOrder.findMany({
     where: { clientId, status: { not: "Entregue" } },
     orderBy: { createdAt: "desc" },
@@ -237,6 +305,7 @@ export async function getOrdensAtivas(clientId: string) {
 }
 
 export async function getAgendamentos(clientId: string): Promise<Agendamento[]> {
+  await assertDono(clientId);
   const rows = await prisma.appointment.findMany({ where: { clientId }, orderBy: { id: "desc" } });
   return rows.map((a) => ({
     id: a.id,
@@ -249,6 +318,7 @@ export async function getAgendamentos(clientId: string): Promise<Agendamento[]> 
 }
 
 export async function getCatalogoServicos(): Promise<{ nome: string; categoria: Categoria }[]> {
+  await requireSession();
   const rows = await prisma.service.findMany({ orderBy: { id: "asc" } });
   return rows.map((s) => ({ nome: s.name, categoria: (s.category ?? "geral") as Categoria }));
 }

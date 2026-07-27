@@ -80,13 +80,13 @@ export default async function OsDetalhe({
         </section>
       )}
 
-      <button
-        type="button"
+      <a
+        href={`/oficina/ordens/${os.id}/pdf`}
         className="app-card-2 flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold t-ink"
       >
         <FileDown className="size-4 t-brand" />
         Baixar relatório (PDF)
-      </button>
+      </a>
     </div>
   );
 }

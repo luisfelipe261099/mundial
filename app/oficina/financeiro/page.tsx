@@ -1,10 +1,14 @@
 import { TrendingUp } from "lucide-react";
-import { getLancamentos, faturamentoMensal } from "@/lib/admin-data";
+import { getLancamentos, getFaturamentoMensal } from "@/lib/admin-data";
 import { BarChart, Panel, PageHeader } from "../_components/ui";
 import { FinanceManager } from "../_components/finance-manager";
 
 export default async function FinanceiroPage() {
-  const lancamentos = await getLancamentos();
+  const [lancamentos, faturamentoMensal] = await Promise.all([
+    getLancamentos(),
+    getFaturamentoMensal(),
+  ]);
+  const temFaturamento = faturamentoMensal.some((m) => m.valor > 0);
 
   return (
     <div className="space-y-6">
@@ -15,7 +19,14 @@ export default async function FinanceiroPage() {
       />
       <FinanceManager seed={lancamentos} />
       <Panel title="Faturamento" eyebrow="Últimos 6 meses" icon={TrendingUp} bodyClass="p-5">
-        <BarChart data={faturamentoMensal} />
+        {temFaturamento ? (
+          <BarChart data={faturamentoMensal} />
+        ) : (
+          <p className="text-sm adm-muted">
+            Nenhuma receita lançada nos últimos 6 meses. O gráfico aparece
+            automaticamente conforme as OS forem entregues.
+          </p>
+        )}
       </Panel>
     </div>
   );

@@ -1,5 +1,6 @@
 import { renderToBuffer } from "@react-pdf/renderer";
-import { requireAdmin } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { getOrdemParaPdf } from "@/lib/admin-data";
 import { registerPdfAssets, getLogoDataUri } from "./assets";
 import { ServiceOrderPDF } from "./document";
@@ -17,8 +18,20 @@ function slug(v: string) {
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  await requireAdmin(); // Route Handlers não herdam o layout — protege explicitamente.
+  // Route Handlers não herdam o layout — a checagem é explícita aqui.
+  // Equipe baixa qualquer OS; o cliente baixa apenas as próprias.
+  const session = await getSession();
+  if (!session) return new Response("Não autorizado", { status: 401 });
   const { id } = await params;
+
+  if (session.kind === "cliente") {
+    const propria = await prisma.serviceOrder.findFirst({
+      where: { id, clientId: session.id },
+      select: { id: true },
+    });
+    if (!propria) return new Response("Ordem de serviço não encontrada", { status: 404 });
+  }
+
   const os = await getOrdemParaPdf(id);
   if (!os) return new Response("Ordem de serviço não encontrada", { status: 404 });
 

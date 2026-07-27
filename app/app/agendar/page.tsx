@@ -1,6 +1,7 @@
 import { CalendarCheck } from "lucide-react";
 import { requireClientId } from "@/lib/auth";
 import { getAgendamentos, getVeiculos, getCatalogoServicos } from "@/lib/client-data";
+import { proximosDiasUteis, dataBR } from "@/lib/datas";
 import { agendamentoBadge } from "../_components/category";
 import { BookingFlow } from "../_components/booking-flow";
 import { AppHeader } from "../_components/app-header";
@@ -34,7 +35,7 @@ export default async function AgendarPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[0.95rem] font-semibold t-ink">{a.servico}</p>
                   <p className="truncate text-xs t-muted">
-                    {a.veiculoNome} · {a.data} às {a.hora}
+                    {a.veiculoNome} · {dataBR(a.data)} às {a.hora}
                   </p>
                 </div>
                 <span className={agendamentoBadge[a.status]}>{a.status}</span>
@@ -52,6 +53,7 @@ export default async function AgendarPage() {
           veiculos={veiculos.map((v) => ({ id: v.id, modelo: v.modelo, placa: v.placa }))}
           servicos={catalogo}
           horarios={HORARIOS}
+          datas={proximosDiasUteis(6)}
         />
       </section>
     </div>
