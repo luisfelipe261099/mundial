@@ -7,6 +7,7 @@ import type {
   Agendamento,
 } from "@/app/oficina/_data/mock";
 import { computeMaintenance, maintList } from "@/lib/maintenance";
+import { normalizarStatus } from "@/lib/agendamentos";
 import { requireAdmin, requireStaff, requireSession } from "@/lib/auth";
 import { hojeISO } from "@/lib/datas";
 
@@ -359,7 +360,7 @@ export async function getAgendaHoje(): Promise<Agendamento[]> {
     cliente: a.clientName ?? a.client?.name ?? "—",
     veiculo: a.vehicleName,
     servico: a.service,
-    status: a.status === "Confirmado" ? "Confirmado" : "Aguardando",
+    status: normalizarStatus(a.status),
   }));
 }
 

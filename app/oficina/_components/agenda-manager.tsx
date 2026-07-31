@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { CalendarPlus, Check, Plus, X } from "lucide-react";
 import type { AgendaItem } from "@/lib/admin-data";
+import { badgeAdmin, normalizarStatus } from "@/lib/agendamentos";
 import { criarAgendamento } from "../actions";
 
 const inputCls =
@@ -103,7 +104,7 @@ export function AgendaManager({ seed }: { seed: AgendaItem[] }) {
                 {a.cliente} · {a.veiculo}
               </p>
             </div>
-            <span className={a.status === "Confirmado" ? "osb osb-finalizada" : "osb osb-aguardando"}>{a.status}</span>
+            <span className={badgeAdmin[normalizarStatus(a.status)]}>{a.status}</span>
           </div>
         ))}
       </div>

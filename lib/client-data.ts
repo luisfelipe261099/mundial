@@ -11,6 +11,7 @@ import type {
   Categoria,
 } from "@/app/app/_data/mock";
 import { computeMaintenance, maintList } from "@/lib/maintenance";
+import { normalizarStatus } from "@/lib/agendamentos";
 import { getSession, requireSession } from "@/lib/auth";
 import { notFound } from "next/navigation";
 
@@ -313,7 +314,7 @@ export async function getAgendamentos(clientId: string): Promise<Agendamento[]> 
     servico: a.service,
     data: a.date,
     hora: a.time,
-    status: a.status as Agendamento["status"],
+    status: normalizarStatus(a.status),
   }));
 }
 

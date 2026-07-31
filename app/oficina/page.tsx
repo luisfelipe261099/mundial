@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { brl, osBadgeClass } from "./_data/mock";
 import { getKpis, getOrdens, getEstoque, getAgendaHoje, getFaturamentoMensal } from "@/lib/admin-data";
+import { badgeAdmin } from "@/lib/agendamentos";
 import { business } from "../_data/business";
 import { StatCard, Sparkline, Delta, BarChart, Panel } from "./_components/ui";
 
@@ -315,13 +316,7 @@ export default async function DashboardPage() {
                     {a.veiculo} · {a.servico}
                   </p>
                 </div>
-                <span
-                  className={
-                    a.status === "Confirmado" ? "osb osb-finalizada" : "osb osb-aguardando"
-                  }
-                >
-                  {a.status}
-                </span>
+                <span className={badgeAdmin[a.status]}>{a.status}</span>
               </div>
             ))}
           </Panel>

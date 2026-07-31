@@ -1,5 +1,6 @@
 // Fonte única de verdade do PROTÓTIPO do painel da oficina (admin). Fictício.
 // Quando o banco chegar, troca-se por queries Prisma.
+import type { StatusAgendamento } from "@/lib/agendamentos";
 
 export type StatusOS =
   | "Aberta"
@@ -188,15 +189,15 @@ export interface Agendamento {
   cliente: string;
   veiculo: string;
   servico: string;
-  status: "Confirmado" | "Aguardando";
+  status: StatusAgendamento;
 }
 
 export const agendaHoje: Agendamento[] = [
   { hora: "08:00", cliente: "Patrícia Lopes", veiculo: "Fiat Argo", servico: "Troca de óleo", status: "Confirmado" },
   { hora: "09:30", cliente: "Rafael Antunes", veiculo: "Corolla", servico: "Revisão", status: "Confirmado" },
-  { hora: "11:00", cliente: "Marina Schmidt", veiculo: "HB20", servico: "Diagnóstico", status: "Aguardando" },
+  { hora: "11:00", cliente: "Marina Schmidt", veiculo: "HB20", servico: "Diagnóstico", status: "Agendado" },
   { hora: "14:00", cliente: "Eduardo Nakamura", veiculo: "Civic", servico: "Alinhamento", status: "Confirmado" },
-  { hora: "16:30", cliente: "João Mendes", veiculo: "Golf", servico: "Revisão", status: "Aguardando" },
+  { hora: "16:30", cliente: "João Mendes", veiculo: "Golf", servico: "Revisão", status: "Agendado" },
 ];
 
 export interface Produto {

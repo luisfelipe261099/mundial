@@ -13,11 +13,10 @@ export type Categoria =
   | "bateria"
   | "geral";
 
-export type StatusAgendamento =
-  | "Agendado"
-  | "Confirmado"
-  | "Em andamento"
-  | "Finalizado";
+// Definição única em lib/agendamentos.ts. Importada para uso local E
+// reexportada, porque as telas do portal já importam o tipo daqui.
+import type { StatusAgendamento } from "@/lib/agendamentos";
+export type { StatusAgendamento };
 
 export type StatusOrcamento = "pendente" | "aprovado" | "rejeitado";
 
@@ -243,7 +242,7 @@ export const ordensServico: OrdemServico[] = [
 export const agendamentos: Agendamento[] = [
   { id: "a1", veiculoNome: "Golf 1.4 TSI", servico: "Revisão completa", data: "28/06/2026", hora: "09:00", status: "Confirmado" },
   { id: "a2", veiculoNome: "Onix 1.0 Turbo", servico: "Troca de óleo", data: "05/07/2026", hora: "14:30", status: "Agendado" },
-  { id: "a3", veiculoNome: "Golf 1.4 TSI", servico: "Alinhamento", data: "10/06/2026", hora: "10:00", status: "Finalizado" },
+  { id: "a3", veiculoNome: "Golf 1.4 TSI", servico: "Alinhamento", data: "10/06/2026", hora: "10:00", status: "Compareceu" },
 ];
 
 export const orcamentos: Orcamento[] = [

@@ -51,12 +51,7 @@ export function CatChip({
   );
 }
 
-export const agendamentoBadge: Record<string, string> = {
-  Agendado: "badge badge-agendado",
-  Confirmado: "badge badge-confirmado",
-  "Em andamento": "badge badge-andamento",
-  Finalizado: "badge badge-finalizado",
-};
+export { badgePortal as agendamentoBadge } from "@/lib/agendamentos";
 
 export const orcamentoBadge: Record<string, { cls: string; label: string }> = {
   pendente: { cls: "badge badge-pendente", label: "Pendente" },
