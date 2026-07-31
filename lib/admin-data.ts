@@ -7,7 +7,7 @@ import type {
   Agendamento,
 } from "@/app/oficina/_data/mock";
 import { computeMaintenance, maintList } from "@/lib/maintenance";
-import { normalizarStatus } from "@/lib/agendamentos";
+import { normalizarStatus, type StatusAgendamento } from "@/lib/agendamentos";
 import { requireAdmin, requireStaff, requireSession } from "@/lib/auth";
 import { hojeISO } from "@/lib/datas";
 
@@ -421,26 +421,34 @@ export type AgendaItem = {
   id: string;
   data: string;
   hora: string;
+  clienteId: string | null;
   cliente: string;
+  veiculoId: string | null;
   veiculo: string;
+  placa: string | null;
   servico: string;
-  status: string;
+  status: StatusAgendamento;
 };
 
 export async function getAgendaAdmin(): Promise<AgendaItem[]> {
   await requireAdmin();
   const rows = await prisma.appointment.findMany({
-    include: { client: true },
+    include: { client: true, vehicle: true },
     orderBy: [{ date: "asc" }, { time: "asc" }],
   });
   return rows.map((a) => ({
     id: a.id,
     data: a.date,
     hora: a.time,
+    clienteId: a.clientId,
+    // clientName só é preenchido para cliente avulso; com vínculo, o nome vem
+    // da relação e acompanha renomeações.
     cliente: a.clientName ?? a.client?.name ?? "—",
-    veiculo: a.vehicleName,
+    veiculoId: a.vehicleId,
+    veiculo: a.vehicle ? `${a.vehicle.brand} ${a.vehicle.model}` : a.vehicleName,
+    placa: a.vehicle?.plate ?? null,
     servico: a.service,
-    status: a.status,
+    status: normalizarStatus(a.status),
   }));
 }
 
