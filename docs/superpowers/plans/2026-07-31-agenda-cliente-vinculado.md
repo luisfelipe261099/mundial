@@ -56,7 +56,7 @@ Esta task cria a definição única, com testes, e conserta todos os consumidore
   - `type GrupoDia<T> = { iso: string; rotulo: string; itens: T[] }`
   - `agruparPorDia<T extends { data: string }>(itens: T[], hoje: string): { futuros: GrupoDia<T>[]; passados: GrupoDia<T>[] }`
 
-- [ ] **Step 1: Instalar o vitest**
+- [x] **Step 1: Instalar o vitest**
 
 Este projeto não tem infraestrutura de teste. A convenção adotada é a mesma que o usuário já usa em outro projeto: **vitest em ambiente node, cobrindo só lógica pura** — nada de DOM nem `@testing-library`. Componentes são verificados com lint, `tsc` e navegador.
 
@@ -64,7 +64,7 @@ Este projeto não tem infraestrutura de teste. A convenção adotada é a mesma 
 npm install --save-dev vitest
 ```
 
-- [ ] **Step 2: Configurar o vitest**
+- [x] **Step 2: Configurar o vitest**
 
 Create `vitest.config.ts`:
 
@@ -88,7 +88,7 @@ Modify `package.json`, acrescentando aos `scripts` (depois de `"lint": "eslint"`
     "test:watch": "vitest",
 ```
 
-- [ ] **Step 3: Escrever os testes que falham**
+- [x] **Step 3: Escrever os testes que falham**
 
 Create `lib/agendamentos.test.ts`:
 
@@ -173,12 +173,12 @@ describe("agruparPorDia", () => {
 });
 ```
 
-- [ ] **Step 4: Rodar os testes e confirmar que falham**
+- [x] **Step 4: Rodar os testes e confirmar que falham**
 
 Run: `npm test`
 Expected: FAIL — `Failed to resolve import "./agendamentos"`.
 
-- [ ] **Step 5: Implementar `lib/agendamentos.ts`**
+- [x] **Step 5: Implementar `lib/agendamentos.ts`**
 
 Create `lib/agendamentos.ts`:
 
@@ -274,12 +274,12 @@ export function agruparPorDia<T extends { data: string }>(
 }
 ```
 
-- [ ] **Step 6: Rodar os testes e confirmar que passam**
+- [x] **Step 6: Rodar os testes e confirmar que passam**
 
 Run: `npm test`
 Expected: PASS — 12 testes.
 
-- [ ] **Step 7: Acrescentar a classe CSS que falta**
+- [x] **Step 7: Acrescentar a classe CSS que falta**
 
 `badgeAdmin` usa `osb-cancelada`, que não existe. Modify `app/oficina/admin.css`, logo após a linha `.osb-entregue` (linha 165):
 
@@ -287,7 +287,7 @@ Expected: PASS — 12 testes.
 .osb-cancelada  { color: #fca5a5; background: rgba(220, 38, 38, 0.16); }
 ```
 
-- [ ] **Step 8: Apontar os tipos existentes para a definição única**
+- [x] **Step 8: Apontar os tipos existentes para a definição única**
 
 Modify `app/app/_data/mock.ts` — substituir o bloco das linhas 16-21:
 
@@ -325,7 +325,7 @@ e acrescentar no topo do arquivo (após a linha 2):
 import type { StatusAgendamento } from "@/lib/agendamentos";
 ```
 
-- [ ] **Step 9: Trocar o mapa de badge do portal**
+- [x] **Step 9: Trocar o mapa de badge do portal**
 
 Modify `app/app/_components/category.tsx` — substituir o bloco `agendamentoBadge` (linhas 54-59) por:
 
@@ -335,7 +335,7 @@ export { badgePortal as agendamentoBadge } from "@/lib/agendamentos";
 
 Se algum consumidor indexar `agendamentoBadge` com uma `string` solta em vez de `StatusAgendamento`, o `tsc` vai apontar — corrija passando o valor por `normalizarStatus` na origem, nunca com `as`.
 
-- [ ] **Step 10: Eliminar o cast sem verificação**
+- [x] **Step 10: Eliminar o cast sem verificação**
 
 Modify `lib/client-data.ts` linha 316:
 
@@ -355,7 +355,7 @@ e acrescentar o import no topo do arquivo:
 import { normalizarStatus } from "./agendamentos";
 ```
 
-- [ ] **Step 11: Parar de achatar o status no `getAgendaHoje`**
+- [x] **Step 11: Parar de achatar o status no `getAgendaHoje`**
 
 Modify `lib/admin-data.ts` — na função `getAgendaHoje` (linha 348), trocar:
 
@@ -371,7 +371,7 @@ por:
 
 e acrescentar `normalizarStatus` aos imports de `@/lib/agendamentos` no topo do arquivo. Remova também o comentário das linhas 350-351, que descrevia o achatamento antigo.
 
-- [ ] **Step 12: Usar o mapa de badge nas duas telas do admin**
+- [x] **Step 12: Usar o mapa de badge nas duas telas do admin**
 
 Modify `app/oficina/page.tsx` linha 320 — trocar:
 
@@ -399,14 +399,14 @@ importando `badgeAdmin` **e** `normalizarStatus` de `@/lib/agendamentos`.
 
 Em `app/oficina/page.tsx` o `normalizarStatus` **não** é preciso: o `a` ali vem de `getAgendaHoje()`, cujo status já é `StatusAgendamento` depois dos Steps 8 e 11.
 
-- [ ] **Step 13: Verificar tudo**
+- [x] **Step 13: Verificar tudo**
 
 Run: `npm test && npx tsc --noEmit && npm run lint`
 Expected: 12 testes PASS, zero erro de tipo, zero erro de lint.
 
 Se o `tsc` reclamar de `AgendaItem.status` em `lib/admin-data.ts:426` (ainda tipado como `string`), deixe como está — a Task 5 troca esse tipo. `string` aceita `StatusAgendamento` sem erro.
 
-- [ ] **Step 14: Commit**
+- [x] **Step 14: Commit**
 
 ```bash
 git add vitest.config.ts package.json package-lock.json lib/agendamentos.ts lib/agendamentos.test.ts \
@@ -429,7 +429,7 @@ O `clientId` já existe no model. Falta o vínculo com o veículo e um índice p
 **Interfaces:**
 - Produces: campo `vehicleId String?` e relação `vehicle` em `Appointment`; relação `appointments` em `Vehicle`.
 
-- [ ] **Step 1: Editar o schema**
+- [x] **Step 1: Editar o schema**
 
 Modify `prisma/schema.prisma`, no model `Appointment`, acrescentando após a linha `client       Client? @relation(...)`:
 
@@ -451,12 +451,12 @@ No model `Vehicle`, acrescentar o lado inverso junto das outras relações (pert
   appointments     Appointment[]
 ```
 
-- [ ] **Step 2: Validar o schema sem tocar no banco**
+- [x] **Step 2: Validar o schema sem tocar no banco**
 
 Run: `npx prisma validate`
 Expected: `The schema at prisma/schema.prisma is valid 🚀`
 
-- [ ] **Step 3: PARAR e pedir confirmação ao usuário**
+- [x] **Step 3: PARAR e pedir confirmação ao usuário**
 
 > ⚠️ **`db push` acerta o banco de PRODUÇÃO.** O `.env` local aponta para o mesmo Postgres da Vercel — é o risco 3 de `docs/DEPLOY.md`. São dados reais de 124 clientes.
 >
@@ -464,17 +464,17 @@ Expected: `The schema at prisma/schema.prisma is valid 🚀`
 
 Pergunte ao usuário e aguarde a resposta antes do Step 4.
 
-- [ ] **Step 4: Aplicar no banco e regerar o client**
+- [x] **Step 4: Aplicar no banco e regerar o client**
 
 Run: `npm run db:push && npx prisma generate`
 Expected: `Your database is now in sync with your Prisma schema.` seguido de `Generated Prisma Client`.
 
-- [ ] **Step 5: Verificar que o client tem o campo novo**
+- [x] **Step 5: Verificar que o client tem o campo novo**
 
 Run: `npx tsc --noEmit`
 Expected: zero erro. O tipo gerado em `lib/generated/prisma/models/Appointment.ts` passa a ter `vehicleId`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add prisma/schema.prisma lib/generated/prisma
@@ -497,7 +497,7 @@ Componente de busca conforme digita, sem saber nada de agenda nem de estoque. A 
   - `type ComboValue = { id: string | null; texto: string }`
   - `Combobox` com as props: `value: ComboValue`, `onChange: (v: ComboValue) => void`, `options: ComboOption[]`, `ariaLabel: string`, `placeholder?: string`, `criarLabel?: (texto: string) => string`, `onCriar?: (texto: string) => void`, `className?: string`
 
-- [ ] **Step 1: Escrever o componente**
+- [x] **Step 1: Escrever o componente**
 
 Create `app/oficina/_components/combobox.tsx`:
 
@@ -677,12 +677,12 @@ export function Combobox({
 }
 ```
 
-- [ ] **Step 2: Verificar tipos e lint**
+- [x] **Step 2: Verificar tipos e lint**
 
 Run: `npx tsc --noEmit && npm run lint`
 Expected: zero erro em ambos. O componente ainda não é usado por ninguém — é esperado.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/oficina/_components/combobox.tsx
@@ -708,7 +708,7 @@ O `client-picker` é uma casca fina sobre o `Combobox`. Junto, conserta-se a fon
   - `ClientPicker` com props `value: ComboValue`, `onChange: (v: ComboValue) => void`, `clientes: ClienteOpt[]`, `veiculos: VeiculoOpt[]`
   - `getClientesVeiculosParaOS()` passa a devolver `clienteId` em cada veículo.
 
-- [ ] **Step 1: Acrescentar `clienteId` na fonte de dados**
+- [x] **Step 1: Acrescentar `clienteId` na fonte de dados**
 
 Modify `lib/admin-data.ts`, na função `getClientesVeiculosParaOS` (linha 513), trocar o `map` de veículos:
 
@@ -728,7 +728,7 @@ por:
     })),
 ```
 
-- [ ] **Step 2: Filtrar por id no formulário de nova OS**
+- [x] **Step 2: Filtrar por id no formulário de nova OS**
 
 Modify `app/oficina/_components/new-order-form.tsx`, acrescentando `clienteId` à interface `VeiculoOpt` (por volta da linha 14):
 
@@ -759,7 +759,7 @@ por:
   const veiculosDoCliente = clienteId ? veiculos.filter((v) => v.clienteId === clienteId) : veiculos;
 ```
 
-- [ ] **Step 3: Escrever o seletor de cliente**
+- [x] **Step 3: Escrever o seletor de cliente**
 
 Create `app/oficina/_components/client-picker.tsx`:
 
@@ -820,7 +820,7 @@ export function ClientPicker({
 }
 ```
 
-- [ ] **Step 4: Verificar tipos e lint**
+- [x] **Step 4: Verificar tipos e lint**
 
 Run: `npx tsc --noEmit && npm run lint`
 Expected: zero erro em ambos.
@@ -831,7 +831,7 @@ Run: `npm run dev` (se ainda não estiver rodando)
 
 Abra `http://localhost:3000/oficina/ordens/nova`, faça login como admin se preciso, escolha um cliente e confirme que a lista de veículos mostra só os carros dele. Este é o caminho que a mudança de filtro tocou.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add lib/admin-data.ts app/oficina/_components/new-order-form.tsx app/oficina/_components/client-picker.tsx
@@ -866,7 +866,7 @@ git commit -m "feat(admin): seletor de cliente e filtro de veiculos por id"
   };
   ```
 
-- [ ] **Step 1: Enriquecer o tipo e a query**
+- [x] **Step 1: Enriquecer o tipo e a query**
 
 Modify `lib/admin-data.ts`, substituindo o bloco das linhas 419-444:
 
@@ -909,7 +909,7 @@ export async function getAgendaAdmin(): Promise<AgendaItem[]> {
 
 Confirme que `StatusAgendamento` está nos imports de `@/lib/agendamentos` no topo do arquivo (o `normalizarStatus` já entrou na Task 1).
 
-- [ ] **Step 2: Carregar clientes, veículos e o "hoje" do servidor na página**
+- [x] **Step 2: Carregar clientes, veículos e o "hoje" do servidor na página**
 
 Modify `app/oficina/agenda/page.tsx` inteiro:
 
@@ -947,12 +947,12 @@ export default async function AgendaPage() {
 }
 ```
 
-- [ ] **Step 3: Verificar tipos**
+- [x] **Step 3: Verificar tipos**
 
 Run: `npx tsc --noEmit`
 Expected: erros **apenas** em `agenda-manager.tsx`, que ainda não recebe as props novas. As Tasks 7 e 8 resolvem. Se aparecer erro em qualquer outro arquivo, corrija antes de seguir.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add lib/admin-data.ts app/oficina/agenda/page.tsx
@@ -988,7 +988,7 @@ git commit -m "feat(agenda): leitura com clienteId, veiculoId e placa"
   excluirAgendamento(id: string): Promise<void>
   ```
 
-- [ ] **Step 1: Substituir `criarAgendamento` e acrescentar as três actions**
+- [x] **Step 1: Substituir `criarAgendamento` e acrescentar as três actions**
 
 Modify `app/oficina/actions.ts`, trocando todo o bloco de `criarAgendamento` (linhas 137-158) por:
 
@@ -1067,12 +1067,12 @@ import { normalizarStatus } from "@/lib/agendamentos";
 
 > `revalidatePath("/app")` é novo: o agendamento agora aparece no portal do cliente, então a home dele precisa recarregar.
 
-- [ ] **Step 2: Verificar tipos e lint**
+- [x] **Step 2: Verificar tipos e lint**
 
 Run: `npx tsc --noEmit && npm run lint`
 Expected: erros só em `agenda-manager.tsx` (Task 8) — ele ainda chama `criarAgendamento` com a forma antiga.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/oficina/actions.ts
@@ -1105,7 +1105,7 @@ Um formulário só, usado para criar e para editar.
   AgendaForm({ inicial, clientes, veiculos, onSalvar, onCancelar, titulo })
   ```
 
-- [ ] **Step 1: Escrever o formulário**
+- [x] **Step 1: Escrever o formulário**
 
 Create `app/oficina/_components/agenda-form.tsx`:
 
@@ -1322,12 +1322,12 @@ export function AgendaForm({
 }
 ```
 
-- [ ] **Step 2: Verificar tipos e lint**
+- [x] **Step 2: Verificar tipos e lint**
 
 Run: `npx tsc --noEmit && npm run lint`
 Expected: erros só em `agenda-manager.tsx` (Task 8).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add app/oficina/_components/agenda-form.tsx
@@ -1346,7 +1346,7 @@ Reescreve o `agenda-manager.tsx`, que hoje é uma lista corrida sem busca, sem f
 **Interfaces:**
 - Consumes: `agruparPorDia`, `badgeAdmin`, `STATUS_AGENDAMENTO`, `STATUS_INATIVOS` (Task 1); `AgendaItem` (Task 5); as 4 actions (Task 6); `AgendaForm`, `deItem`, `AgendaFormValor` (Task 7); `SearchInput`, `FilterChip`, `FilterSelect`, `ResultBar` de `./table-filters`; `matches` de `./filter-utils`.
 
-- [ ] **Step 1: Reescrever o componente**
+- [x] **Step 1: Reescrever o componente**
 
 Modify `app/oficina/_components/agenda-manager.tsx` — substituir o arquivo inteiro:
 
@@ -1732,7 +1732,7 @@ function Linha({
 }
 ```
 
-- [ ] **Step 2: Verificar tipos, lint e testes**
+- [x] **Step 2: Verificar tipos, lint e testes**
 
 Run: `npm test && npx tsc --noEmit && npm run lint`
 Expected: 12 testes PASS, zero erro de tipo, zero erro de lint. Todos os erros pendentes das tasks anteriores devem ter sumido.
@@ -1756,7 +1756,7 @@ Em `http://localhost:3000/oficina/agenda`, confirme:
 
 Ainda no navegador: crie um agendamento vinculado a um cliente cadastrado, saia do admin, entre como esse cliente e confirme que o agendamento aparece em `/app`. **Este é o bug principal que a fase 1 conserta** — antes, agendamento criado pelo admin nunca aparecia para o cliente.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/oficina/_components/agenda-manager.tsx
@@ -1777,7 +1777,7 @@ O botão "Cliente chegou" da Task 8 aponta para `/oficina/entrada?cliente=…&ve
 - Consumes: `getClientesVeiculosParaOS` com `clienteId` (Task 4).
 - Produces: `EntradaForm` aceita `clienteInicial?: string` e `veiculoInicial?: string`.
 
-- [ ] **Step 1: Ler `searchParams` na página**
+- [x] **Step 1: Ler `searchParams` na página**
 
 Modify `app/oficina/entrada/page.tsx` inteiro:
 
@@ -1807,7 +1807,7 @@ export default async function EntradaPage({
 }
 ```
 
-- [ ] **Step 2: Aceitar os valores iniciais no formulário**
+- [x] **Step 2: Aceitar os valores iniciais no formulário**
 
 Modify `app/oficina/_components/entrada-form.tsx`, na interface `VeiculoOpt` (linha 11), acrescentar `clienteId`:
 
@@ -1849,7 +1849,7 @@ export function EntradaForm({
 
 > A validação do veículo checa **também** se ele pertence ao cliente da URL — senão daria para dar entrada num carro de outra pessoa montando a URL à mão.
 
-- [ ] **Step 3: Verificar tipos, lint e testes**
+- [x] **Step 3: Verificar tipos, lint e testes**
 
 Run: `npm test && npx tsc --noEmit && npm run lint`
 Expected: tudo verde.
@@ -1860,12 +1860,12 @@ Expected: tudo verde.
 2. Abra `/oficina/entrada?cliente=inexistente&veiculo=inexistente` → a tela carrega normal, com os campos vazios, sem erro.
 3. Abra `/oficina/entrada?cliente=<idA>&veiculo=<idDeOutroCliente>` → o veículo **não** é pré-selecionado.
 
-- [ ] **Step 5: Rodar o build completo**
+- [x] **Step 5: Rodar o build completo**
 
 Run: `npm run build`
 Expected: build conclui sem erro. É o que a Vercel roda no deploy.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/oficina/entrada/page.tsx app/oficina/_components/entrada-form.tsx
@@ -1899,8 +1899,8 @@ git commit -m "feat(agenda): cliente chegou pre-preenche a entrada do veiculo"
 
 Depois da Task 9, com a app rodando:
 
-- [ ] `npm test` — 12 testes passando
-- [ ] `npx tsc --noEmit` — zero erro
-- [ ] `npm run lint` — zero erro
-- [ ] `npm run build` — build completo sem erro
+- [x] `npm test` — 12 testes passando
+- [x] `npx tsc --noEmit` — zero erro
+- [x] `npm run lint` — zero erro
+- [x] `npm run build` — build completo sem erro
 - [ ] Roteiro de navegador das Tasks 8 (steps 3 e 4) e 9 (step 4) refeito do começo
