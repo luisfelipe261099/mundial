@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { normalizarStatus } from "@/lib/agendamentos";
 import { requireAdmin } from "@/lib/auth";
 import { gerarSenhaTemporaria } from "@/lib/identity";
 import { hojeISO, hojeBR } from "@/lib/datas";
@@ -134,27 +135,67 @@ export async function excluirProduto(id: string) {
   revalidatePath("/oficina");
 }
 
-export async function criarAgendamento(input: {
+export type AgendamentoInput = {
+  /** Preenchido = cliente cadastrado. Nulo/vazio = avulso. */
+  clienteId?: string | null;
+  /** Nome digitado — usado só quando não há clienteId. */
   cliente: string;
+  veiculoId?: string | null;
   veiculo: string;
   servico: string;
   data: string;
   hora: string;
   status: string;
-}) {
-  await requireAdmin();
-  await prisma.appointment.create({
-    data: {
-      clientName: input.cliente.trim() || null,
-      vehicleName: input.veiculo.trim() || "—",
-      service: input.servico.trim() || "—",
-      date: input.data || hojeISO(),
-      time: input.hora || "—",
-      status: input.status || "Confirmado",
-    },
-  });
+};
+
+// Com cliente vinculado, clientName fica NULO de propósito: a leitura faz
+// `clientName ?? client?.name`, então o nome passa a acompanhar renomeações.
+// O campo significa exatamente uma coisa: "este agendamento é de um avulso".
+function dadosAgendamento(input: AgendamentoInput) {
+  const clientId = input.clienteId || null;
+  return {
+    clientId,
+    clientName: clientId ? null : input.cliente.trim() || null,
+    vehicleId: input.veiculoId || null,
+    vehicleName: input.veiculo.trim() || "—",
+    service: input.servico.trim() || "—",
+    date: input.data || hojeISO(),
+    time: input.hora || "—",
+    status: normalizarStatus(input.status),
+  };
+}
+
+function revalidarAgenda() {
   revalidatePath("/oficina/agenda");
   revalidatePath("/oficina");
+  revalidatePath("/app");
+}
+
+export async function criarAgendamento(input: AgendamentoInput) {
+  await requireAdmin();
+  await prisma.appointment.create({ data: dadosAgendamento(input) });
+  revalidarAgenda();
+}
+
+export async function atualizarAgendamento(id: string, input: AgendamentoInput) {
+  await requireAdmin();
+  await prisma.appointment.update({ where: { id }, data: dadosAgendamento(input) });
+  revalidarAgenda();
+}
+
+export async function mudarStatusAgendamento(id: string, status: string) {
+  await requireAdmin();
+  await prisma.appointment.update({
+    where: { id },
+    data: { status: normalizarStatus(status) },
+  });
+  revalidarAgenda();
+}
+
+export async function excluirAgendamento(id: string) {
+  await requireAdmin();
+  await prisma.appointment.delete({ where: { id } });
+  revalidarAgenda();
 }
 
 export async function criarLancamento(input: {
