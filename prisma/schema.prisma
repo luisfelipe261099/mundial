@@ -56,6 +56,7 @@ model Vehicle {
   lastRevisaoAt    DateTime? // base do lembrete de revisão (por tempo)
   reminders        Reminder[]
   serviceOrders    ServiceOrder[]
+  appointments     Appointment[]
 
   @@index([clientId])
   @@map("vehicles")
@@ -145,10 +146,12 @@ model BudgetItem {
 }
 
 model Appointment {
-  id          String  @id @default(cuid())
+  id          String   @id @default(cuid())
   clientId    String?
-  client      Client? @relation(fields: [clientId], references: [id])
-  clientName  String? // nome livre (agendamento de quem ainda não é cadastrado)
+  client      Client?  @relation(fields: [clientId], references: [id])
+  clientName  String? // nome livre — SÓ para avulso; com clientId fica nulo
+  vehicleId   String?
+  vehicle     Vehicle? @relation(fields: [vehicleId], references: [id])
   vehicleName String
   service     String
   date        String
@@ -156,6 +159,8 @@ model Appointment {
   status      String
 
   @@index([clientId])
+  @@index([vehicleId])
+  @@index([date])
   @@map("appointments")
 }
 
