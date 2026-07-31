@@ -519,7 +519,13 @@ export async function getClientesVeiculosParaOS() {
   ]);
   return {
     clientes: clientes.map((c) => ({ id: c.id, nome: c.name })),
-    veiculos: veiculos.map((v) => ({ id: v.id, proprietario: v.client?.name ?? "—", modelo: `${v.brand} ${v.model}`, placa: v.plate })),
+    veiculos: veiculos.map((v) => ({
+      id: v.id,
+      clienteId: v.clientId,
+      proprietario: v.client?.name ?? "—",
+      modelo: `${v.brand} ${v.model}`,
+      placa: v.plate,
+    })),
   };
 }
 

@@ -12,6 +12,7 @@ interface ClienteOpt {
 }
 interface VeiculoOpt {
   id: string;
+  clienteId: string | null;
   proprietario: string;
   modelo: string;
   placa: string;
@@ -46,9 +47,8 @@ export function NewOrderForm({
   const [pending, startTransition] = useTransition();
 
   const clienteNome = clientes.find((c) => c.id === clienteId)?.nome ?? "";
-  const veiculosDoCliente = clienteId
-    ? veiculos.filter((v) => v.proprietario === clienteNome)
-    : veiculos;
+  // Filtra por id, não por nome: dois clientes homônimos misturariam os carros.
+  const veiculosDoCliente = clienteId ? veiculos.filter((v) => v.clienteId === clienteId) : veiculos;
   const total = itens.reduce((s, i) => s + i.valor * i.qtd, 0);
   const podeAdicionar = draft.descricao.trim() !== "" && draft.valor > 0;
   const podeCriar = clienteId !== "" && veiculoId !== "" && defeito.trim() !== "" && itens.length > 0;
