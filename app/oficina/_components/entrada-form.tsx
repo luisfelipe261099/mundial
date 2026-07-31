@@ -11,6 +11,7 @@ interface ClienteOpt {
 }
 interface VeiculoOpt {
   id: string;
+  clienteId: string | null;
   proprietario: string;
   modelo: string;
   placa: string;
@@ -46,12 +47,24 @@ const labelCls = "mb-1 block text-xs font-medium adm-muted";
 export function EntradaForm({
   clientes,
   veiculos,
+  clienteInicial,
+  veiculoInicial,
 }: {
   clientes: ClienteOpt[];
   veiculos: VeiculoOpt[];
+  clienteInicial?: string;
+  veiculoInicial?: string;
 }) {
-  const [clienteId, setClienteId] = useState("");
-  const [veiculoId, setVeiculoId] = useState("");
+  // Id vindo da URL só vale se existir de verdade na lista — URL adulterada
+  // ou registro apagado cai no comportamento normal (campo vazio).
+  const [clienteId, setClienteId] = useState(
+    clientes.some((c) => c.id === clienteInicial) ? clienteInicial! : ""
+  );
+  const [veiculoId, setVeiculoId] = useState(
+    veiculos.some((v) => v.id === veiculoInicial && v.clienteId === clienteInicial)
+      ? veiculoInicial!
+      : ""
+  );
   const [km, setKm] = useState("");
   const [fuel, setFuel] = useState("1/2");
   const [defeito, setDefeito] = useState("");
