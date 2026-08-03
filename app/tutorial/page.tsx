@@ -1,7 +1,6 @@
-import type { Papel } from "./_data/conteudo";
-import { TutorialView } from "./tutorial-view";
+import { TutorialView, type Aba } from "./tutorial-view";
 
-const PAPEIS: Papel[] = ["admin", "mecanico", "cliente"];
+const ABAS: Aba[] = ["fluxo", "admin", "mecanico", "cliente"];
 
 export default async function TutorialPage({
   searchParams,
@@ -9,6 +8,8 @@ export default async function TutorialPage({
   searchParams: Promise<{ papel?: string }>;
 }) {
   const { papel } = await searchParams;
-  const inicial: Papel = PAPEIS.includes(papel as Papel) ? (papel as Papel) : "admin";
-  return <TutorialView papelInicial={inicial} />;
+  // Sem parâmetro (ou inválido), abre em "O fluxo" — a visão de como tudo se
+  // conecta. Os links "Como usar" dos painéis passam ?papel= e caem na aba certa.
+  const inicial: Aba = ABAS.includes(papel as Aba) ? (papel as Aba) : "fluxo";
+  return <TutorialView abaInicial={inicial} />;
 }

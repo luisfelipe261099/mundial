@@ -8,27 +8,43 @@ import {
   ArrowRight,
   ChevronLeft,
   LayoutDashboard,
-  Wrench,
+  Route,
   Smartphone,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { conteudoPorPapel, papelLabel, type Papel } from "./_data/conteudo";
+import {
+  conteudoPorPapel,
+  fluxoDoCarro,
+  guiaImplantacao,
+  papelLabel,
+  perguntasFrequentes,
+  quemLabel,
+  type Papel,
+} from "./_data/conteudo";
 
-const PAPEIS: Papel[] = ["admin", "mecanico", "cliente"];
-const PAPEL_ICON: Record<Papel, LucideIcon> = {
+export type Aba = "fluxo" | Papel;
+
+const ABAS: Aba[] = ["fluxo", "admin", "mecanico", "cliente"];
+const ABA_ICON: Record<Aba, LucideIcon> = {
+  fluxo: Route,
   admin: LayoutDashboard,
   mecanico: Wrench,
   cliente: Smartphone,
 };
+const ABA_LABEL: Record<Aba, string> = {
+  fluxo: "O fluxo",
+  admin: papelLabel.admin,
+  mecanico: papelLabel.mecanico,
+  cliente: papelLabel.cliente,
+};
 
-export function TutorialView({ papelInicial }: { papelInicial: Papel }) {
-  const [papel, setPapel] = useState<Papel>(papelInicial);
+export function TutorialView({ abaInicial }: { abaInicial: Aba }) {
+  const [aba, setAba] = useState<Aba>(abaInicial);
   const [passo, setPasso] = useState(0);
-  const passos = conteudoPorPapel[papel];
-  const atual = passos[passo];
 
-  function trocarPapel(novo: Papel) {
-    setPapel(novo);
+  function trocarAba(nova: Aba) {
+    setAba(nova);
     setPasso(0);
   }
 
@@ -48,20 +64,21 @@ export function TutorialView({ papelInicial }: { papelInicial: Papel }) {
           Como usar a Oficina Noturna
         </h1>
         <p className="mt-2 text-sm text-[var(--tut-ink-2)]">
-          Um guia passo a passo, tela por tela. Escolha seu papel e avance no seu ritmo.
+          Comece por <strong className="text-[var(--tut-ink)]">O fluxo</strong> para entender como
+          tudo se conecta — depois veja o passo a passo, tela por tela, do seu papel.
         </p>
       </section>
 
-      {/* ── Abas de papel ────────────────────────────────────────────── */}
-      <div className="mb-6 grid grid-cols-3 gap-2">
-        {PAPEIS.map((p) => {
-          const Icon = PAPEL_ICON[p];
-          const on = p === papel;
+      {/* ── Abas ─────────────────────────────────────────────────────── */}
+      <div className="mb-6 grid grid-cols-4 gap-2">
+        {ABAS.map((a) => {
+          const Icon = ABA_ICON[a];
+          const on = a === aba;
           return (
             <button
-              key={p}
+              key={a}
               type="button"
-              onClick={() => trocarPapel(p)}
+              onClick={() => trocarAba(a)}
               aria-pressed={on}
               className={`tut-card flex flex-col items-center gap-1.5 px-2 py-3 text-xs font-semibold transition-colors ${
                 on
@@ -70,12 +87,119 @@ export function TutorialView({ papelInicial }: { papelInicial: Papel }) {
               }`}
             >
               <Icon className={`size-5 ${on ? "tut-brand-c" : ""}`} strokeWidth={2} />
-              {papelLabel[p]}
+              {ABA_LABEL[a]}
             </button>
           );
         })}
       </div>
 
+      {aba === "fluxo" ? (
+        <FluxoTab />
+      ) : (
+        <PapelTab papel={aba} passo={passo} setPasso={setPasso} />
+      )}
+    </main>
+  );
+}
+
+/* ── Aba "O fluxo": jornada do carro + implantação + dúvidas ─────────── */
+
+function FluxoTab() {
+  return (
+    <div className="tut-rise">
+      <section className="mb-8">
+        <p className="tut-eyebrow mb-1">A jornada de um carro pela oficina</p>
+        <h2 className="tut-display mb-2 text-xl text-[var(--tut-ink)]">
+          Da entrada à entrega, quem faz o quê
+        </h2>
+        <p className="mb-5 text-sm leading-relaxed text-[var(--tut-ink-2)]">
+          Todo atendimento vive dentro de uma <strong className="text-[var(--tut-ink)]">Ordem de
+          Serviço</strong>, que passa pelos status{" "}
+          <em>Aberta → Aguardando aprovação → Em execução → Finalizada → Entregue</em>. As etapas
+          abaixo mostram o caminho completo e quem age em cada momento.
+        </p>
+
+        <ol className="tut-flow">
+          {fluxoDoCarro.map((etapa, i) => (
+            <li key={etapa.titulo} className="tut-flow-step">
+              <span className="tut-flow-num tut-mono">{i + 1}</span>
+              <div className="tut-card p-4">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className={`tut-who tut-who-${etapa.quem}`}>{quemLabel[etapa.quem]}</span>
+                  <span className="tut-eyebrow">{etapa.onde}</span>
+                </div>
+                <h3 className="tut-display mb-1.5 text-base text-[var(--tut-ink)]">
+                  {etapa.titulo}
+                </h3>
+                <p className="text-sm leading-relaxed text-[var(--tut-ink-2)]">{etapa.texto}</p>
+                {etapa.status && (
+                  <p className="tut-status mt-3">
+                    Status da OS: <strong>{etapa.status}</strong>
+                  </p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="mb-8">
+        <p className="tut-eyebrow mb-1">Para o administrador</p>
+        <h2 className="tut-display mb-2 text-xl text-[var(--tut-ink)]">
+          Guia de implantação — primeiros passos
+        </h2>
+        <p className="mb-5 text-sm leading-relaxed text-[var(--tut-ink-2)]">
+          Sete passos, na ordem, para deixar a oficina rodando sozinha no sistema.
+        </p>
+        <ol className="space-y-3">
+          {guiaImplantacao.map((p, i) => (
+            <li key={p.titulo} className="tut-card flex gap-3.5 p-4">
+              <span className="tut-flow-num tut-mono shrink-0">{i + 1}</span>
+              <div>
+                <h3 className="mb-1 text-sm font-semibold text-[var(--tut-ink)]">{p.titulo}</h3>
+                <p className="text-sm leading-relaxed text-[var(--tut-ink-2)]">{p.texto}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section>
+        <p className="tut-eyebrow mb-1">Dúvidas do dia a dia</p>
+        <h2 className="tut-display mb-4 text-xl text-[var(--tut-ink)]">E se…?</h2>
+        <div className="space-y-2">
+          {perguntasFrequentes.map((f) => (
+            <details key={f.pergunta} className="tut-card tut-faq">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[var(--tut-ink)]">
+                {f.pergunta}
+              </summary>
+              <p className="px-4 pb-4 text-sm leading-relaxed text-[var(--tut-ink-2)]">
+                {f.resposta}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ── Abas por papel: passo a passo com screenshot ─────────────────────── */
+
+function PapelTab({
+  papel,
+  passo,
+  setPasso,
+}: {
+  papel: Papel;
+  passo: number;
+  setPasso: (fn: (p: number) => number) => void;
+}) {
+  const passos = conteudoPorPapel[papel];
+  const atual = passos[passo];
+
+  return (
+    <>
       {/* ── Progresso ────────────────────────────────────────────────── */}
       <div className="mb-4 flex items-center justify-between gap-4">
         <p className="tut-eyebrow">
@@ -87,7 +211,7 @@ export function TutorialView({ papelInicial }: { papelInicial: Papel }) {
               key={i}
               type="button"
               aria-label={`Ir para o passo ${i + 1}`}
-              onClick={() => setPasso(i)}
+              onClick={() => setPasso(() => i)}
               className={`tut-dot ${
                 i === passo ? "tut-dot-active" : i < passo ? "tut-dot-done" : "tut-dot-todo"
               }`}
@@ -143,6 +267,6 @@ export function TutorialView({ papelInicial }: { papelInicial: Papel }) {
           </button>
         )}
       </div>
-    </main>
+    </>
   );
 }

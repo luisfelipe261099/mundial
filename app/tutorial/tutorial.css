@@ -111,6 +111,84 @@ body:has(.tut-root) {
 .tut-dot-done   { width: 0.4rem; background: var(--tut-brand-2); }
 .tut-dot-todo   { width: 0.4rem; background: var(--tut-line-2); }
 
+/* ── Aba "O fluxo" — linha do tempo da jornada do carro ─────────────── */
+.tut-flow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.tut-flow::before {
+  /* trilho vertical ligando os números das etapas */
+  content: "";
+  position: absolute;
+  left: 0.9375rem;
+  top: 1rem;
+  bottom: 1rem;
+  width: 1px;
+  background: var(--tut-line-2);
+}
+.tut-flow-step {
+  position: relative;
+  display: flex;
+  gap: 0.875rem;
+}
+.tut-flow-num {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.875rem;
+  height: 1.875rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--tut-line-2);
+  background: var(--tut-surface-2);
+  color: var(--tut-brand-2);
+  font-size: 0.7rem;
+  letter-spacing: 0;
+}
+.tut-flow-step > .tut-card { flex: 1; min-width: 0; }
+
+/* selo de quem age na etapa */
+.tut-who {
+  border-radius: 9999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tut-who-admin    { background: rgba(47, 123, 255, 0.16); color: #7aa8ff; }
+.tut-who-mecanico { background: rgba(245, 166, 35, 0.14); color: #f5b95c; }
+.tut-who-cliente  { background: rgba(52, 199, 123, 0.14); color: #5fd9a0; }
+
+/* chip do status da OS após a etapa */
+.tut-status {
+  display: inline-block;
+  border-radius: 0.5rem;
+  border: 1px solid var(--tut-line-2);
+  background: var(--tut-surface-2);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
+  color: var(--tut-muted);
+}
+.tut-status strong { color: var(--tut-ink); }
+
+/* FAQ em <details> */
+.tut-faq summary { list-style: none; position: relative; padding-right: 2.25rem; }
+.tut-faq summary::-webkit-details-marker { display: none; }
+.tut-faq summary::after {
+  content: "+";
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--tut-muted);
+  font-weight: 600;
+}
+.tut-faq[open] summary::after { content: "–"; }
+
 /* leve subida ao trocar de passo */
 @keyframes tut-rise {
   from {
