@@ -61,7 +61,7 @@ export function TutorialView({ abaInicial }: { abaInicial: Aba }) {
       <section className="tut-hero mb-6 p-6">
         <p className="tut-eyebrow tut-brand-c">Central de treinamento</p>
         <h1 className="tut-display-xl mt-2 text-[2rem] text-[var(--tut-ink)]">
-          Como usar a Oficina Noturna
+          Como usar a Oficina Virtual
         </h1>
         <p className="mt-2 text-sm text-[var(--tut-ink-2)]">
           Comece por <strong className="text-[var(--tut-ink)]">O fluxo</strong> para entender como

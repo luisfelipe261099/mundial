@@ -2,7 +2,7 @@ import type { TourStep } from "@/app/_components/welcome-tour";
 
 export const adminTourSteps: TourStep[] = [
   {
-    titulo: "Bem-vindo à Oficina Noturna",
+    titulo: "Bem-vindo à Oficina Virtual",
     texto:
       "Este é o painel administrativo. Vamos mostrar rapidinho os 5 lugares que você mais vai usar no dia a dia.",
   },

@@ -2,7 +2,7 @@ import type { TourStep } from "@/app/_components/welcome-tour";
 
 export const appTourSteps: TourStep[] = [
   {
-    titulo: "Bem-vindo ao app da Oficina Noturna",
+    titulo: "Bem-vindo ao app da Oficina Virtual",
     texto: "Vamos te mostrar rapidinho as 5 telas mais importantes.",
   },
   { titulo: "Início", texto: "Resumo do seu veículo e do serviço em andamento, se houver." },
