@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { brl, osBadgeClass } from "../../_data/mock";
 import { getVeiculoDetalhe } from "@/lib/admin-data";
 import { definirBaseManutencao } from "../../actions";
+import { ExcluirVeiculoCard } from "../../_components/delete-controls";
 
 export default async function VeiculoAdminDetalhe({
   params,
@@ -132,6 +133,8 @@ export default async function VeiculoAdminDetalhe({
           ))}
         </div>
       </div>
+
+      <ExcluirVeiculoCard id={id} modelo={veiculo.modelo} placa={veiculo.placa} />
     </div>
   );
 }

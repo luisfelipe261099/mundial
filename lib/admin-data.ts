@@ -64,7 +64,14 @@ function mapOrdem(o: {
   };
 }
 
-function mapCliente(c: ClientRow, veiculos: number, gastoTotal: number, placas: string[] = []): Cliente {
+function mapCliente(
+  c: ClientRow,
+  veiculos: number,
+  gastoTotal: number,
+  placas: string[] = [],
+  carros: { id: string; modelo: string; placa: string }[] = [],
+  ordens = 0
+): Cliente {
   return {
     id: c.id,
     nome: c.name,
@@ -77,6 +84,8 @@ function mapCliente(c: ClientRow, veiculos: number, gastoTotal: number, placas: 
     gastoTotal,
     desde: c.since ?? "—",
     placas,
+    carros,
+    ordens,
   };
 }
 
@@ -114,14 +123,24 @@ export async function getKpis() {
 export async function getClientes(): Promise<Cliente[]> {
   const [clients, gastos] = await Promise.all([
     prisma.client.findMany({
-      include: { vehicles: { select: { plate: true } } },
+      include: {
+        vehicles: { select: { id: true, brand: true, model: true, plate: true }, orderBy: { plate: "asc" } },
+        _count: { select: { serviceOrders: true } },
+      },
       orderBy: { name: "asc" },
     }),
     prisma.serviceOrder.groupBy({ by: ["clientId"], _sum: { total: true } }),
   ]);
   const gastoMap = new Map(gastos.map((g) => [g.clientId, g._sum.total ?? 0]));
   return clients.map((c) =>
-    mapCliente(c, c.vehicles.length, gastoMap.get(c.id) ?? 0, c.vehicles.map((v) => v.plate))
+    mapCliente(
+      c,
+      c.vehicles.length,
+      gastoMap.get(c.id) ?? 0,
+      c.vehicles.map((v) => v.plate),
+      c.vehicles.map((v) => ({ id: v.id, modelo: `${v.brand} ${v.model}`, placa: v.plate })),
+      c._count.serviceOrders
+    )
   );
 }
 
@@ -134,7 +153,14 @@ export async function getClienteDetalhe(id: string) {
     prisma.serviceOrder.aggregate({ where: { clientId: id }, _sum: { total: true } }),
   ]);
   return {
-    cliente: mapCliente(c, veiculos.length, gasto._sum.total ?? 0),
+    cliente: mapCliente(
+      c,
+      veiculos.length,
+      gasto._sum.total ?? 0,
+      veiculos.map((v) => v.plate),
+      veiculos.map((v) => ({ id: v.id, modelo: `${v.brand} ${v.model}`, placa: v.plate })),
+      ordens.length
+    ),
     veiculos: veiculos.map(mapVeiculo),
     ordens: ordens.map(mapOrdem),
     temAcesso: !!c.password,

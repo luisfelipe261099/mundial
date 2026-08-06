@@ -15,6 +15,7 @@ import {
 import { brl, osBadgeClass } from "../../_data/mock";
 import { getClienteDetalhe } from "@/lib/admin-data";
 import { AccessPanel } from "./access-panel";
+import { VeiculosDoCliente, ExcluirClienteCard } from "../../_components/delete-controls";
 
 export default async function ClienteDetalhe({
   params,
@@ -90,24 +91,9 @@ export default async function ClienteDetalhe({
 
       <AccessPanel clientId={id} temAcesso={temAcesso} temVeiculo={veiculos.length > 0} />
 
-      <div className="adm-card overflow-hidden">
-        <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
-          <h3 className="adm-display font-bold adm-ink">Veículos</h3>
-        </div>
-        <div className="divide-y divide-[var(--ad-line)]">
-          {veiculos.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhum veículo cadastrado.</p>}
-          {veiculos.map((v) => (
-            <Link key={v.id} href={`/oficina/veiculos/${v.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[var(--ad-surface-2)]">
-              <Car className="size-5 shrink-0 adm-muted" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold adm-ink">{v.modelo}</p>
-                <p className="font-mono text-xs adm-muted">{v.placa}</p>
-              </div>
-              <ChevronRight className="size-4 shrink-0 adm-muted" />
-            </Link>
-          ))}
-        </div>
-      </div>
+      <VeiculosDoCliente
+        veiculos={veiculos.map((v) => ({ id: v.id, modelo: v.modelo, placa: v.placa }))}
+      />
 
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
@@ -130,6 +116,8 @@ export default async function ClienteDetalhe({
           ))}
         </div>
       </div>
+
+      <ExcluirClienteCard id={id} nome={cliente.nome} veiculos={veiculos.length} ordens={ordens.length} />
     </div>
   );
 }

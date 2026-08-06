@@ -187,11 +187,26 @@ export async function salvarConfiguracoes(input: {
   revalidatePath("/oficina/configuracoes");
 }
 
-export async function criarCliente(values: Record<string, string>) {
+// Cadastra o cliente e, opcionalmente, já o primeiro veículo dele — o admin
+// costuma ter os dois em mãos no balcão. O veículo só entra quando modelo e
+// placa vieram preenchidos; qualquer outro campo dele é acessório.
+export async function criarCliente(values: Record<string, string>): Promise<{ error?: string }> {
   await requireAdmin();
+
+  const modelo = (values.veiculoModelo ?? "").trim();
+  const placa = (values.veiculoPlaca ?? "").trim().toUpperCase();
+  const querVeiculo = modelo !== "" || placa !== "";
+  if (querVeiculo && (modelo === "" || placa === "")) {
+    return { error: "Para cadastrar o veículo junto, informe modelo e placa." };
+  }
+  if (placa) {
+    const jaExiste = await prisma.vehicle.findUnique({ where: { plate: placa } });
+    if (jaExiste) return { error: `Já existe um veículo com a placa ${placa}.` };
+  }
+
   // Sem senha: o cliente ativa a conta por Primeiro acesso (placa + telefone) ou
   // o admin gera acesso no detalhe do cliente. Nunca uma senha padrão conhecida.
-  await prisma.client.create({
+  const cliente = await prisma.client.create({
     data: {
       name: values.nome,
       cpf: values.cpf || null,
@@ -204,7 +219,81 @@ export async function criarCliente(values: Record<string, string>) {
       password: null,
     },
   });
+
+  if (querVeiculo) {
+    const { brand, model } = split(modelo);
+    await prisma.vehicle.create({
+      data: {
+        clientId: cliente.id,
+        brand,
+        model,
+        year: Number(values.veiculoAno) || new Date().getFullYear(),
+        plate: placa,
+        km: Number(values.veiculoKm) || 0,
+        fuel: values.veiculoCombustivel || null,
+        color: values.veiculoCor || null,
+      },
+    });
+    revalidatePath("/oficina/veiculos");
+  }
+
   revalidatePath("/oficina/clientes");
+  revalidatePath("/oficina");
+  return {};
+}
+
+// Exclui um cliente com tudo que é exclusivamente dele (veículos, lembretes,
+// inscrições de push). O histórico financeiro NÃO some: OS, orçamentos,
+// agendamentos, documentos e notificações ficam, só perdem o vínculo — os
+// campos denormalizados (nome do cliente, veículo, placa) mantêm a leitura.
+export async function excluirCliente(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const cliente = await prisma.client.findUnique({
+    where: { id },
+    select: { id: true, vehicles: { select: { id: true } } },
+  });
+  if (!cliente) return { error: "Cliente não encontrado." };
+  const veiculoIds = cliente.vehicles.map((v) => v.id);
+
+  await prisma.$transaction([
+    prisma.serviceOrder.updateMany({
+      where: { OR: [{ clientId: id }, { vehicleId: { in: veiculoIds } }] },
+      data: { clientId: null, vehicleId: null },
+    }),
+    prisma.budget.updateMany({ where: { clientId: id }, data: { clientId: null } }),
+    prisma.appointment.updateMany({ where: { clientId: id }, data: { clientId: null } }),
+    prisma.document.updateMany({ where: { clientId: id }, data: { clientId: null } }),
+    prisma.notification.updateMany({ where: { clientId: id }, data: { clientId: null } }),
+    prisma.reminder.deleteMany({ where: { OR: [{ clientId: id }, { vehicleId: { in: veiculoIds } }] } }),
+    prisma.pushSubscription.deleteMany({ where: { clientId: id } }),
+    prisma.vehicle.deleteMany({ where: { clientId: id } }),
+    prisma.client.delete({ where: { id } }),
+  ]);
+
+  revalidatePath("/oficina/clientes");
+  revalidatePath("/oficina/veiculos");
+  revalidatePath("/oficina");
+  return {};
+}
+
+// Exclui um veículo e seus lembretes. As OS do veículo continuam no histórico,
+// só sem o vínculo (o nome e a placa gravados na OS seguem valendo).
+export async function excluirVeiculo(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const veiculo = await prisma.vehicle.findUnique({ where: { id }, select: { clientId: true } });
+  if (!veiculo) return { error: "Veículo não encontrado." };
+
+  await prisma.$transaction([
+    prisma.serviceOrder.updateMany({ where: { vehicleId: id }, data: { vehicleId: null } }),
+    prisma.reminder.deleteMany({ where: { vehicleId: id } }),
+    prisma.vehicle.delete({ where: { id } }),
+  ]);
+
+  revalidatePath("/oficina/veiculos");
+  revalidatePath("/oficina/clientes");
+  revalidatePath(`/oficina/clientes/${veiculo.clientId}`);
+  revalidatePath("/oficina");
+  return {};
 }
 
 // Gera (ou redefine) o acesso de um cliente ao app: cria uma senha temporária,
