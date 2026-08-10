@@ -230,6 +230,7 @@ export async function criarCliente(values: Record<string, string>): Promise<{ er
         year: Number(values.veiculoAno) || new Date().getFullYear(),
         plate: placa,
         km: Number(values.veiculoKm) || 0,
+        engine: values.veiculoMotor?.trim() || null,
         fuel: values.veiculoCombustivel || null,
         color: values.veiculoCor || null,
       },
@@ -323,10 +324,23 @@ export async function criarVeiculo(values: Record<string, string>) {
       year: Number(values.ano) || new Date().getFullYear(),
       plate: values.placa,
       km: Number(values.km) || 0,
+      engine: values.motor?.trim() || null,
       fuel: values.combustivel || null,
       color: values.cor || null,
     },
   });
+  revalidatePath("/oficina/veiculos");
+}
+
+// Motor do veículo (ex.: "1.0 Flex"). Campo livre: o que o admin digitar é o
+// que vale, inclusive apagar.
+export async function definirMotor(formData: FormData) {
+  await requireAdmin();
+  const vehicleId = String(formData.get("vehicleId") ?? "");
+  const motor = String(formData.get("motor") ?? "").trim();
+  if (!vehicleId) return;
+  await prisma.vehicle.update({ where: { id: vehicleId }, data: { engine: motor || null } });
+  revalidatePath(`/oficina/veiculos/${vehicleId}`);
   revalidatePath("/oficina/veiculos");
 }
 

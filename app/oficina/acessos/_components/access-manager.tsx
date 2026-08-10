@@ -251,7 +251,7 @@ export function AccessManager({
                       </span>
                     )}
                   </div>
-                  <p className="truncate text-sm adm-muted">{u.email}</p>
+                  <p className="truncate text-sm adm-muted">{u.email || "sem e-mail"}</p>
                 </div>
 
                 <RoleBadge role={u.role} />

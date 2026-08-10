@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import type { MecanicoRow, OrdemAtribuivel } from "@/lib/admin-data";
 import { osBadgeClass } from "../../_data/mock";
-import { criarMecanico, redefinirSenhaMecanico, excluirMecanico, vincularOS } from "../actions";
+import { criarMecanico, definirAcessoMecanico, excluirMecanico, vincularOS } from "../actions";
 
 const inputCls =
   "w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3.5 py-2.5 text-sm adm-ink outline-none transition-colors placeholder:text-[var(--ad-muted)] focus:border-[var(--ad-brand)]";
@@ -63,9 +63,10 @@ export function MecanicosManager({
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
 
-  // Estado por-mecânico
-  const [resetFor, setResetFor] = useState<string | null>(null);
-  const [resetPw, setResetPw] = useState("");
+  // Estado por-mecânico — painel de acesso (e-mail + senha) e exclusão
+  const [acessoFor, setAcessoFor] = useState<string | null>(null);
+  const [acessoEmail, setAcessoEmail] = useState("");
+  const [acessoPw, setAcessoPw] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   // Vínculo de OS
@@ -79,7 +80,12 @@ export function MecanicosManager({
     start(async () => {
       const r = await criarMecanico({ name, email, password });
       if (r.ok) {
-        setFeedback({ type: "ok", text: `${name} cadastrado. Repasse a senha — ela não aparece de novo.` });
+        setFeedback({
+          type: "ok",
+          text: password.trim()
+            ? `${name} cadastrado. Repasse a senha — ela não aparece de novo.`
+            : `${name} cadastrado. Já dá pra vincular OS a ele; o login pode ser criado depois.`,
+        });
         setName("");
         setEmail("");
         setPassword("");
@@ -91,16 +97,17 @@ export function MecanicosManager({
     });
   }
 
-  function submitReset(userId: string, userName: string) {
+  function submitAcesso(userId: string, userName: string) {
     start(async () => {
-      const r = await redefinirSenhaMecanico({ userId, password: resetPw });
+      const r = await definirAcessoMecanico({ userId, email: acessoEmail, password: acessoPw });
       if (r.ok) {
-        setFeedback({ type: "ok", text: `Senha de ${userName} redefinida.` });
-        setResetFor(null);
-        setResetPw("");
+        setFeedback({ type: "ok", text: `Acesso de ${userName} atualizado.` });
+        setAcessoFor(null);
+        setAcessoEmail("");
+        setAcessoPw("");
         router.refresh();
       } else {
-        setFeedback({ type: "err", text: r.error ?? "Não foi possível redefinir a senha." });
+        setFeedback({ type: "err", text: r.error ?? "Não foi possível salvar o acesso." });
       }
     });
   }
@@ -164,7 +171,10 @@ export function MecanicosManager({
             <Wrench className="size-4 text-amber-400" />
             Cadastrar mecânico
           </h2>
-          <p className="text-xs adm-muted">Cria o login que o mecânico usa para ver a fila dele.</p>
+          <p className="text-xs adm-muted">
+            Só o nome é obrigatório — assim ele já aparece para receber OS. E-mail e senha são o
+            login do app do mecânico, e podem ser definidos depois.
+          </p>
         </div>
 
         <form onSubmit={submitCreate} className="space-y-4 p-4 sm:p-5">
@@ -180,7 +190,9 @@ export function MecanicosManager({
                 />
               </label>
               <label className="block">
-                <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">E-mail (login)</span>
+                <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">
+                  E-mail (login) — opcional
+                </span>
                 <input
                   className={inputCls}
                   type="email"
@@ -193,7 +205,9 @@ export function MecanicosManager({
             </div>
 
             <label className="block sm:max-w-md">
-              <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">Senha inicial</span>
+              <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">
+                Senha inicial — opcional
+              </span>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <input
@@ -229,7 +243,7 @@ export function MecanicosManager({
 
             <button
               type="submit"
-              disabled={pending}
+              disabled={pending || name.trim() === ""}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40 sm:w-auto sm:px-6"
             >
               <Plus className="size-4" />
@@ -252,8 +266,9 @@ export function MecanicosManager({
 
         {mecanicos.map((m) => {
           const isSelf = m.id === currentUserId;
-          const isResetting = resetFor === m.id;
+          const isEditandoAcesso = acessoFor === m.id;
           const isConfirming = confirmDelete === m.id;
+          const temLogin = m.email !== "" && m.hasPassword;
           return (
             <div key={m.id} className="adm-card p-4 sm:p-5">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -264,14 +279,16 @@ export function MecanicosManager({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="truncate font-semibold adm-ink">{m.name}</p>
-                    {!m.hasPassword && (
+                    {!temLogin && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[0.6rem] font-semibold text-amber-300">
                         <AlertTriangle className="size-3" />
-                        sem senha
+                        {m.email === "" ? "sem login" : "sem senha"}
                       </span>
                     )}
                   </div>
-                  <p className="truncate text-sm adm-muted">{m.email}</p>
+                  <p className="truncate text-sm adm-muted">
+                    {m.email || "sem e-mail — recebe OS, mas não entra no app"}
+                  </p>
                 </div>
 
                 <div className="flex items-baseline gap-4">
@@ -291,14 +308,15 @@ export function MecanicosManager({
                   <button
                     type="button"
                     onClick={() => {
-                      setResetFor(isResetting ? null : m.id);
-                      setResetPw("");
+                      setAcessoFor(isEditandoAcesso ? null : m.id);
+                      setAcessoEmail(m.email);
+                      setAcessoPw("");
                       setConfirmDelete(null);
                     }}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-[var(--ad-line-2)] bg-[var(--ad-surface-2)] px-3 py-2 text-xs font-semibold adm-ink transition-colors hover:border-[var(--ad-brand)] sm:flex-none"
                   >
                     <KeyRound className="size-4" />
-                    Redefinir senha
+                    {temLogin ? "Alterar acesso" : "Criar login"}
                   </button>
                   {!isSelf &&
                     (isConfirming ? (
@@ -316,7 +334,7 @@ export function MecanicosManager({
                         type="button"
                         onClick={() => {
                           setConfirmDelete(m.id);
-                          setResetFor(null);
+                          setAcessoFor(null);
                         }}
                         aria-label={`Excluir acesso de ${m.name}`}
                         className="grid size-9 shrink-0 place-items-center rounded-lg border border-[var(--ad-line-2)] bg-[var(--ad-surface-2)] adm-muted transition-colors hover:border-red-500/50 hover:text-red-300"
@@ -335,41 +353,58 @@ export function MecanicosManager({
                 </p>
               )}
 
-              {isResetting && (
-                <div className="mt-4 border-t border-[var(--ad-line)] pt-4">
-                  <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">
-                    Nova senha para {m.name}
-                  </span>
-                  <div className="flex flex-col gap-2 sm:flex-row">
+              {isEditandoAcesso && (
+                <div className="mt-4 space-y-3 border-t border-[var(--ad-line)] pt-4">
+                  <label className="block">
+                    <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">
+                      E-mail (login) de {m.name}
+                    </span>
                     <input
-                      className={`${inputCls} flex-1`}
-                      type="text"
-                      value={resetPw}
-                      onChange={(e) => setResetPw(e.target.value)}
-                      placeholder="Mín. 6 caracteres"
+                      className={inputCls}
+                      type="email"
+                      value={acessoEmail}
+                      onChange={(e) => setAcessoEmail(e.target.value)}
+                      placeholder="Vazio = sem login no app"
                       autoComplete="off"
                     />
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setResetPw(genPassword())}
-                        className="flex items-center gap-1.5 rounded-lg border border-[var(--ad-line-2)] bg-[var(--ad-surface-2)] px-3 py-2.5 text-xs font-semibold adm-ink transition-colors hover:border-[var(--ad-brand)]"
-                      >
-                        <Dice5 className="size-4" />
-                        Gerar
-                      </button>
-                      <button
-                        type="button"
-                        disabled={pending}
-                        onClick={() => submitReset(m.id, m.name)}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-xs font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
-                      >
-                        <Check className="size-4" />
-                        {pending ? "Salvando…" : "Salvar"}
-                      </button>
+                  </label>
+
+                  <div>
+                    <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">
+                      {m.hasPassword ? "Nova senha (vazio mantém a atual)" : "Senha"}
+                    </span>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <input
+                        className={`${inputCls} flex-1`}
+                        type="text"
+                        value={acessoPw}
+                        onChange={(e) => setAcessoPw(e.target.value)}
+                        placeholder="Mín. 6 caracteres"
+                        autoComplete="off"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAcessoPw(genPassword())}
+                          className="flex items-center gap-1.5 rounded-lg border border-[var(--ad-line-2)] bg-[var(--ad-surface-2)] px-3 py-2.5 text-xs font-semibold adm-ink transition-colors hover:border-[var(--ad-brand)]"
+                        >
+                          <Dice5 className="size-4" />
+                          Gerar
+                        </button>
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => submitAcesso(m.id, m.name)}
+                          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-xs font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
+                        >
+                          <Check className="size-4" />
+                          {pending ? "Salvando…" : "Salvar"}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <p className="mt-2 text-xs adm-muted">
+
+                  <p className="text-xs adm-muted">
                     Anote e repasse a senha ao mecânico — ela não fica visível depois de salva.
                   </p>
                 </div>

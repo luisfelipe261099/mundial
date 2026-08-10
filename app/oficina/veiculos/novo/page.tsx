@@ -9,6 +9,7 @@ export default async function NovoVeiculoPage() {
     { name: "proprietario", label: "Proprietário", type: "select", options: clientes.map((c) => c.nome), full: true, required: true },
     { name: "modelo", label: "Modelo (marca + modelo)", required: true },
     { name: "placa", label: "Placa", required: true },
+    { name: "motor", label: "Motor (ex.: 1.0 Flex)" },
     { name: "ano", label: "Ano", type: "number" },
     { name: "km", label: "Quilometragem", type: "number" },
     { name: "combustivel", label: "Combustível", type: "select", options: ["Flex", "Gasolina", "Diesel", "Híbrido", "Elétrico"] },

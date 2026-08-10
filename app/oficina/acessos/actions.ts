@@ -56,7 +56,12 @@ export async function deleteAccess(input: { userId: string }): Promise<AccessRes
     const admins = await prisma.user.count({ where: { role: "admin" } });
     if (admins <= 1) return { ok: false, error: "Deve existir ao menos um administrador." };
   }
+  // Solta o vínculo das OS antes de apagar — o nome do mecânico já está
+  // gravado na OS, então o histórico não perde nada, mas o id não pode ficar
+  // apontando para um usuário que não existe mais.
+  await prisma.serviceOrder.updateMany({ where: { mechanicId: input.userId }, data: { mechanicId: null } });
   await prisma.user.delete({ where: { id: input.userId } });
   revalidatePath("/oficina/acessos");
+  revalidatePath("/oficina/mecanicos");
   return { ok: true };
 }

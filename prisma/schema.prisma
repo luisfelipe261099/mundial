@@ -42,6 +42,7 @@ model Vehicle {
   model            String
   year             Int
   version          String?
+  engine           String? // motor — ex.: "1.0 Flex", "2.0 Turbo"
   color            String?
   plate            String         @unique
   renavam          String?
@@ -283,9 +284,11 @@ model Service {
 model User {
   id        String   @id @default(cuid())
   name      String
-  email     String   @unique
+  // Opcional: mecânico de bancada pode ser cadastrado só pelo nome, para
+  // aparecer nas OS, e ganhar login depois. NULL não colide no unique.
+  email     String?  @unique
   role      String   @default("admin") // admin | mecanico | cliente
-  password  String? // placeholder até o login/auth ser implementado
+  password  String? // sem senha = ainda não consegue entrar
   createdAt DateTime @default(now())
 
   @@map("users")

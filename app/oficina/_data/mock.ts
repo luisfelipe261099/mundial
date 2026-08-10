@@ -66,6 +66,7 @@ export interface VeiculoAdmin {
   proximaRevisao: string;
   revisaoVencida: boolean;
   marca?: string;
+  motor?: string;
 }
 
 export const veiculosAdmin: VeiculoAdmin[] = [

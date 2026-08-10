@@ -23,6 +23,7 @@ const CLIENTE: Campo[] = [
 const VEICULO: Campo[] = [
   { name: "veiculoModelo", label: "Modelo (marca + modelo)", full: true, required: true },
   { name: "veiculoPlaca", label: "Placa", required: true },
+  { name: "veiculoMotor", label: "Motor (ex.: 1.0 Flex)" },
   { name: "veiculoAno", label: "Ano", type: "number" },
   { name: "veiculoKm", label: "Quilometragem", type: "number" },
   { name: "veiculoCombustivel", label: "Combustível", type: "select", options: ["Flex", "Gasolina", "Diesel", "Híbrido", "Elétrico"] },

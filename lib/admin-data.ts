@@ -20,7 +20,7 @@ export const faturamentoMensal = [
 
 type ClientRow = { id: string; name: string; phone: string | null; cpf: string | null; whatsapp: string | null; email: string | null; city: string | null; address: string | null; since: string | null };
 
-function mapVeiculo(v: { id: string; brand: string; model: string; year: number; plate: string; km: number; nextRevisionDate: string | null; revisionOverdue: boolean; client?: { name: string } | null }): VeiculoAdmin {
+function mapVeiculo(v: { id: string; brand: string; model: string; year: number; plate: string; km: number; engine?: string | null; nextRevisionDate: string | null; revisionOverdue: boolean; client?: { name: string } | null }): VeiculoAdmin {
   return {
     id: v.id,
     proprietario: v.client?.name ?? "—",
@@ -31,6 +31,7 @@ function mapVeiculo(v: { id: string; brand: string; model: string; year: number;
     proximaRevisao: v.nextRevisionDate ?? "—",
     revisaoVencida: v.revisionOverdue,
     marca: v.brand,
+    motor: v.engine ?? "",
   };
 }
 
@@ -351,7 +352,7 @@ export async function getMecanicosPainel(): Promise<{
     return {
       id: u.id,
       name: u.name,
-      email: u.email,
+      email: u.email ?? "",
       hasPassword: !!u.password,
       desde: u.createdAt.toLocaleDateString("pt-BR"),
       emAndamento: suas.filter((o) => ABERTAS.includes(o.status)).length,
@@ -546,7 +547,7 @@ export async function getUsers() {
   return users.map((u) => ({
     id: u.id,
     name: u.name,
-    email: u.email,
+    email: u.email ?? "",
     role: u.role,
     hasPassword: !!u.password,
     since: u.createdAt.toLocaleDateString("pt-BR"),

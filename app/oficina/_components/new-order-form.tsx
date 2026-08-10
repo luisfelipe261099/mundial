@@ -51,7 +51,9 @@ export function NewOrderForm({
     : veiculos;
   const total = itens.reduce((s, i) => s + i.valor * i.qtd, 0);
   const podeAdicionar = draft.descricao.trim() !== "" && draft.valor > 0;
-  const podeCriar = clienteId !== "" && veiculoId !== "" && defeito.trim() !== "" && itens.length > 0;
+  // Itens não entram na trava: OS de diagnóstico, garantia ou orçamento a
+  // definir nasce sem peça nenhuma e ganha os itens depois.
+  const podeCriar = clienteId !== "" && veiculoId !== "" && defeito.trim() !== "";
 
   function addItem() {
     if (!podeAdicionar) return;
@@ -150,7 +152,12 @@ export function NewOrderForm({
       </div>
 
       <div className="adm-card p-5">
-        <h2 className="adm-display mb-4 font-bold adm-ink">Peças e serviços</h2>
+        <h2 className="adm-display mb-1 font-bold adm-ink">
+          Peças e serviços <span className="text-xs font-medium adm-muted">(opcional)</span>
+        </h2>
+        <p className="mb-4 text-xs adm-muted">
+          Pode criar a OS sem nenhum item e lançar peças e serviços depois, dentro da ordem.
+        </p>
 
         {itens.length > 0 && (
           <div className="mb-4 divide-y divide-[var(--ad-line)] rounded-lg border border-[var(--ad-line)]">
@@ -198,7 +205,7 @@ export function NewOrderForm({
         {pending ? "Criando…" : "Criar ordem de serviço"}
       </button>
       {!podeCriar && (
-        <p className="-mt-3 text-center text-xs adm-muted">Selecione cliente, veículo, defeito e ao menos um item.</p>
+        <p className="-mt-3 text-center text-xs adm-muted">Selecione cliente, veículo e descreva o defeito.</p>
       )}
     </div>
   );
