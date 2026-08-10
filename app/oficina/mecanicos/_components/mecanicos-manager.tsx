@@ -56,8 +56,8 @@ export function MecanicosManager({
   const [feedback, setFeedback] = useState<Feedback>(null);
   const router = useRouter();
 
-  // Form de cadastro
-  const [aberto, setAberto] = useState(mecanicos.length === 0);
+  // Form de cadastro — sempre visível: cadastrar mecânico é a razão de ser
+  // desta tela, não pode ficar escondido atrás de um botão.
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -84,7 +84,6 @@ export function MecanicosManager({
         setEmail("");
         setPassword("");
         setShowPw(false);
-        setAberto(false);
         router.refresh();
       } else {
         setFeedback({ type: "err", text: r.error ?? "Não foi possível cadastrar o mecânico." });
@@ -160,26 +159,15 @@ export function MecanicosManager({
 
       {/* ── Cadastrar mecânico ───────────────────────────────────────── */}
       <section className="adm-card overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--ad-line)] px-4 py-3.5 sm:px-5">
-          <div>
-            <h2 className="adm-display flex items-center gap-2 adm-ink">
-              <Wrench className="size-4 text-amber-400" />
-              Cadastrar mecânico
-            </h2>
-            <p className="text-xs adm-muted">Cria o login que o mecânico usa para ver a fila dele.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAberto((v) => !v)}
-            className="flex items-center gap-2 rounded-lg border border-[var(--ad-line-2)] bg-[var(--ad-surface-2)] px-3.5 py-2 text-sm font-semibold adm-ink transition-colors hover:border-[var(--ad-brand)]"
-          >
-            {aberto ? <X className="size-4" /> : <Plus className="size-4" />}
-            {aberto ? "Fechar" : "Novo mecânico"}
-          </button>
+        <div className="border-b border-[var(--ad-line)] px-4 py-3.5 sm:px-5">
+          <h2 className="adm-display flex items-center gap-2 adm-ink">
+            <Wrench className="size-4 text-amber-400" />
+            Cadastrar mecânico
+          </h2>
+          <p className="text-xs adm-muted">Cria o login que o mecânico usa para ver a fila dele.</p>
         </div>
 
-        {aberto && (
-          <form onSubmit={submitCreate} className="space-y-4 p-4 sm:p-5">
+        <form onSubmit={submitCreate} className="space-y-4 p-4 sm:p-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="adm-mono mb-1.5 block text-[0.58rem] adm-muted">Nome</span>
@@ -247,8 +235,7 @@ export function MecanicosManager({
               <Plus className="size-4" />
               {pending ? "Cadastrando…" : "Cadastrar mecânico"}
             </button>
-          </form>
-        )}
+        </form>
       </section>
 
       {/* ── Equipe ───────────────────────────────────────────────────── */}
