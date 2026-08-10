@@ -10,6 +10,7 @@ import {
   BarChart3,
   Settings,
   KeyRound,
+  Wrench,
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -42,6 +43,10 @@ export const adminNavSections: AdminNavSection[] = [
       { href: "/oficina/financeiro", label: "Financeiro", icon: Wallet },
       { href: "/oficina/relatorios", label: "Relatórios", icon: BarChart3 },
     ],
+  },
+  {
+    title: "Equipe",
+    items: [{ href: "/oficina/mecanicos", label: "Mecânicos", icon: Wrench }],
   },
   {
     title: "Sistema",

@@ -285,6 +285,89 @@ export async function getMecanicos() {
   });
 }
 
+// ── Painel de mecânicos ─────────────────────────────────────────────────
+// Junta o cadastro da equipe (User role=mecanico) com a carga de trabalho de
+// cada um, para a tela onde o admin cadastra e vincula mecânico às OS.
+export type OrdemAtribuivel = {
+  id: string;
+  cliente: string;
+  veiculo: string;
+  placa: string;
+  data: string;
+  status: OrdemServicoAdmin["status"];
+  mechanicId: string | null;
+  mecanico: string | null;
+};
+
+export type MecanicoRow = {
+  id: string;
+  name: string;
+  email: string;
+  hasPassword: boolean;
+  desde: string;
+  emAndamento: number;
+  finalizadas: number;
+  entregues: number;
+  ordens: OrdemAtribuivel[];
+};
+
+export async function getMecanicosPainel(): Promise<{
+  mecanicos: MecanicoRow[];
+  ordensAtivas: OrdemAtribuivel[];
+  semMecanico: number;
+}> {
+  const [users, rows] = await Promise.all([
+    prisma.user.findMany({ where: { role: "mecanico" }, orderBy: { name: "asc" } }),
+    prisma.serviceOrder.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        clientName: true,
+        vehicleName: true,
+        plate: true,
+        date: true,
+        status: true,
+        mechanicId: true,
+        mechanic: true,
+      },
+    }),
+  ]);
+
+  const paraAtribuir = (o: (typeof rows)[number]): OrdemAtribuivel => ({
+    id: o.id,
+    cliente: o.clientName,
+    veiculo: o.vehicleName,
+    placa: o.plate ?? "—",
+    data: o.date,
+    status: o.status as OrdemServicoAdmin["status"],
+    mechanicId: o.mechanicId,
+    mecanico: o.mechanic,
+  });
+
+  const ativas = rows.filter((o) => o.status !== "Entregue");
+
+  const mecanicos = users.map((u) => {
+    const suas = rows.filter((o) => o.mechanicId === u.id);
+    return {
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      hasPassword: !!u.password,
+      desde: u.createdAt.toLocaleDateString("pt-BR"),
+      emAndamento: suas.filter((o) => ABERTAS.includes(o.status)).length,
+      finalizadas: suas.filter((o) => o.status === "Finalizada").length,
+      entregues: suas.filter((o) => o.status === "Entregue").length,
+      ordens: suas.filter((o) => o.status !== "Entregue").map(paraAtribuir),
+    };
+  });
+
+  return {
+    mecanicos,
+    ordensAtivas: ativas.map(paraAtribuir),
+    semMecanico: ativas.filter((o) => !o.mechanicId).length,
+  };
+}
+
 export async function getOrdensMecanico(mechanicId: string): Promise<OrdemServicoAdmin[]> {
   const rows = await prisma.serviceOrder.findMany({
     where: { mechanicId },
