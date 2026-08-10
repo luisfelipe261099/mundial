@@ -7,6 +7,24 @@ ambiente setar** e **onde no código já está o ponto de encaixe**.
 > Onde setar variáveis na Vercel: projeto → **Settings → Environment Variables**
 > (marque Production + Preview). Depois **redeploy**. Localmente, use o `.env`.
 
+## Onde o sistema está no ar
+
+- **Produção:** https://mundial-sepia.vercel.app — deploy automático a cada push na `main`.
+- O domínio `automecanicamundial.com.br` (fallback de `NEXT_PUBLIC_SITE_URL` em
+  [business.ts](../app/_data/business.ts)) está com o **DNS quebrado**: os name servers
+  respondem `REFUSED`. Enquanto não for resolvido no provedor do domínio, ele não
+  atende — e os links absolutos de metadata/sitemap apontam pra lá.
+
+## Mudança de schema no banco
+
+O projeto não usa migrations. O schema é aplicado de duas formas:
+
+- **`npm run db:push`** — quando alguém tem o `DATABASE_URL` em mãos.
+- **[lib/schema-guard.ts](../lib/schema-guard.ts)** — o app aplica sozinho, na primeira
+  query de cada processo, as mudanças aditivas listadas lá. É o que faz o deploy
+  automático funcionar sem ninguém abrir terminal no banco. Só instrução idempotente
+  e retrocompatível entra nessa lista, e ela tem que espelhar o `schema.prisma`.
+
 ---
 
 ## 0. Variáveis de ambiente já usadas

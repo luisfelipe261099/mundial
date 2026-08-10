@@ -332,16 +332,62 @@ export async function criarVeiculo(values: Record<string, string>) {
   revalidatePath("/oficina/veiculos");
 }
 
-// Motor do veículo (ex.: "1.0 Flex"). Campo livre: o que o admin digitar é o
-// que vale, inclusive apagar.
-export async function definirMotor(formData: FormData) {
+// Edita a ficha do veículo. Placa é única no sistema, então checa antes de
+// gravar; o resto é campo livre e pode ser apagado (vira null).
+export async function editarVeiculo(
+  id: string,
+  input: {
+    modelo: string;
+    placa: string;
+    motor: string;
+    ano: string;
+    km: string;
+    cor: string;
+    combustivel: string;
+    clienteId: string;
+  }
+): Promise<{ error?: string }> {
   await requireAdmin();
-  const vehicleId = String(formData.get("vehicleId") ?? "");
-  const motor = String(formData.get("motor") ?? "").trim();
-  if (!vehicleId) return;
-  await prisma.vehicle.update({ where: { id: vehicleId }, data: { engine: motor || null } });
-  revalidatePath(`/oficina/veiculos/${vehicleId}`);
+  const veiculo = await prisma.vehicle.findUnique({ where: { id }, select: { clientId: true } });
+  if (!veiculo) return { error: "Veículo não encontrado." };
+
+  const modelo = input.modelo.trim();
+  const placa = input.placa.trim().toUpperCase();
+  if (!modelo) return { error: "Informe a marca e o modelo." };
+  if (!placa) return { error: "Informe a placa." };
+
+  const comMesmaPlaca = await prisma.vehicle.findUnique({ where: { plate: placa } });
+  if (comMesmaPlaca && comMesmaPlaca.id !== id) {
+    return { error: `A placa ${placa} já está em outro veículo.` };
+  }
+
+  const dono = input.clienteId
+    ? await prisma.client.findUnique({ where: { id: input.clienteId }, select: { id: true } })
+    : null;
+  if (input.clienteId && !dono) return { error: "Proprietário não encontrado." };
+
+  const { brand, model } = split(modelo);
+  await prisma.vehicle.update({
+    where: { id },
+    data: {
+      brand,
+      model,
+      plate: placa,
+      engine: input.motor.trim() || null,
+      year: Number(input.ano) || new Date().getFullYear(),
+      km: Number(input.km) || 0,
+      color: input.cor.trim() || null,
+      fuel: input.combustivel || null,
+      ...(dono ? { clientId: dono.id } : {}),
+    },
+  });
+
+  revalidatePath(`/oficina/veiculos/${id}`);
   revalidatePath("/oficina/veiculos");
+  revalidatePath("/oficina/clientes");
+  revalidatePath(`/oficina/clientes/${veiculo.clientId}`);
+  if (dono && dono.id !== veiculo.clientId) revalidatePath(`/oficina/clientes/${dono.id}`);
+  return {};
 }
 
 // Define/atualiza a data-base de manutenção do veículo (destrava os lembretes).

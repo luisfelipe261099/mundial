@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { brl, osBadgeClass } from "../../_data/mock";
-import { getVeiculoDetalhe } from "@/lib/admin-data";
-import { definirBaseManutencao, definirMotor } from "../../actions";
+import { getVeiculoDetalhe, getClientesVeiculosParaOS } from "@/lib/admin-data";
+import { definirBaseManutencao } from "../../actions";
 import { ExcluirVeiculoCard } from "../../_components/delete-controls";
+import { VehicleEditForm } from "./edit-form";
 
 export default async function VeiculoAdminDetalhe({
   params,
@@ -14,9 +15,10 @@ export default async function VeiculoAdminDetalhe({
   const { id } = await params;
   const data = await getVeiculoDetalhe(id);
   if (!data) notFound();
-  const { veiculo, ordens, manutencoes, base } = data;
+  const { veiculo, ordens, manutencoes, base, ficha } = data;
+  const { clientes } = await getClientesVeiculosParaOS();
 
-  const ficha = [
+  const resumo = [
     { label: "Proprietário", value: veiculo.proprietario },
     { label: "Placa", value: veiculo.placa },
     { label: "Motor", value: veiculo.motor || "—" },
@@ -37,7 +39,7 @@ export default async function VeiculoAdminDetalhe({
       </div>
 
       <div className="adm-card grid grid-cols-2 gap-x-4 gap-y-4 p-5 sm:grid-cols-4">
-        {ficha.map((f) => (
+        {resumo.map((f) => (
           <div key={f.label}>
             <p className="text-xs adm-muted">{f.label}</p>
             <p className="text-sm font-semibold adm-ink">{f.value}</p>
@@ -79,28 +81,7 @@ export default async function VeiculoAdminDetalhe({
         </div>
       )}
 
-      <form action={definirMotor} className="adm-card space-y-3 p-5">
-        <input type="hidden" name="vehicleId" value={id} />
-        <div>
-          <h3 className="adm-display font-bold adm-ink">Motor</h3>
-          <p className="text-xs adm-muted">Ex.: 1.0 Flex, 1.4 TSI, 2.0 Turbo Diesel. Deixe vazio para limpar.</p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <input
-            type="text"
-            name="motor"
-            defaultValue={veiculo.motor ?? ""}
-            placeholder="Motor do carro"
-            className="w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)] sm:max-w-xs"
-          />
-          <button
-            type="submit"
-            className="rounded-lg bg-[var(--ad-brand)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1b5fe0] sm:shrink-0"
-          >
-            Salvar motor
-          </button>
-        </div>
-      </form>
+      <VehicleEditForm id={id} ficha={ficha} clientes={clientes} />
 
       <form action={definirBaseManutencao} className="adm-card space-y-3 p-5">
         <input type="hidden" name="vehicleId" value={id} />

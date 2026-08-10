@@ -189,7 +189,19 @@ export async function getVeiculoDetalhe(id: string) {
     oleo: v.lastOilChangeAt ? v.lastOilChangeAt.toISOString().slice(0, 10) : "",
     revisao: v.lastRevisaoAt ? v.lastRevisaoAt.toISOString().slice(0, 10) : "",
   };
-  return { veiculo: mapVeiculo(v), ordens: ordens.map(mapOrdem), manutencoes, base };
+  // Campos crus para o formulário de edição (o mapVeiculo junta marca+modelo
+  // e formata, o que não serve para editar).
+  const ficha = {
+    modelo: `${v.brand} ${v.model}`,
+    placa: v.plate,
+    motor: v.engine ?? "",
+    ano: v.year,
+    km: v.km,
+    cor: v.color ?? "",
+    combustivel: v.fuel ?? "",
+    clienteId: v.clientId,
+  };
+  return { veiculo: mapVeiculo(v), ordens: ordens.map(mapOrdem), manutencoes, base, ficha };
 }
 
 export async function getOrdens(): Promise<OrdemServicoAdmin[]> {
