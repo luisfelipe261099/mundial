@@ -8,6 +8,7 @@ import {
   Check,
   ChevronLeft,
   Plus,
+  Pencil,
   Trash2,
   MessageCircle,
   FileDown,
@@ -20,6 +21,7 @@ import type { OsControle } from "@/lib/admin-data";
 import {
   mudarStatus,
   adicionarItemOS,
+  editarItemOS,
   removerItemOS,
   enviarParaAprovacao,
   entregarOS,
@@ -52,8 +54,28 @@ export function OrderControl({
   const [exitKm, setExitKm] = useState("");
   const [paid, setPaid] = useState(true);
 
+  // edição de um item já lançado
+  const [editId, setEditId] = useState<string | null>(null);
+  const [edit, setEdit] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0 });
+  const [erroItem, setErroItem] = useState<string | null>(null);
+
   const idx = FLUXO.indexOf(os.status as StatusOS);
   const run = (fn: () => Promise<unknown>) => startTransition(() => void fn());
+
+  function abrirEdicao(it: OsControle["itens"][number]) {
+    setErroItem(null);
+    setEditId(it.id);
+    setEdit({ tipo: it.tipo, descricao: it.descricao, qtd: it.qtd, valor: it.valor });
+  }
+
+  function salvarItem(itemId: string) {
+    setErroItem(null);
+    startTransition(async () => {
+      const r = await editarItemOS(itemId, os.id, edit);
+      if (r.error) setErroItem(r.error);
+      else setEditId(null);
+    });
+  }
 
   function addItem() {
     if (!draft.descricao.trim() || draft.valor <= 0) return;
@@ -265,20 +287,87 @@ export function OrderControl({
         </div>
         <div className="divide-y divide-[var(--ad-line)]">
           {os.itens.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhum item ainda — adicione peças e serviços abaixo.</p>}
-          {os.itens.map((it) => (
-            <div key={it.id} className="flex items-center gap-3 px-5 py-3">
-              <span className="rounded-md bg-[var(--ad-surface-2)] px-2 py-0.5 text-xs font-medium adm-muted">{it.tipo}</span>
-              <span className="min-w-0 flex-1 truncate text-sm adm-ink">
-                {it.descricao}
-                {it.productId && <span className="ml-2 text-xs text-emerald-400">• estoque</span>}
-              </span>
-              <span className="text-xs adm-muted">×{it.qtd}</span>
-              <span className="text-sm font-semibold adm-ink">{brl(it.valor * it.qtd)}</span>
-              <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
-                <Trash2 className="size-4 text-rose-400" />
-              </button>
-            </div>
-          ))}
+          {os.itens.map((it) =>
+            editId === it.id ? (
+              <div key={it.id} className="bg-[var(--ad-surface-2)]/40 px-5 py-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-[6.5rem_1fr_3.5rem_5.5rem_auto_auto]">
+                  <select
+                    value={edit.tipo}
+                    onChange={(e) => setEdit((d) => ({ ...d, tipo: e.target.value }))}
+                    className={inputCls}
+                    aria-label="Tipo do item"
+                  >
+                    <option value="Peça">Peça</option>
+                    <option value="Serviço">Serviço</option>
+                  </select>
+                  <input
+                    value={edit.descricao}
+                    onChange={(e) => setEdit((d) => ({ ...d, descricao: e.target.value }))}
+                    className={inputCls}
+                    aria-label="Descrição do item"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    value={edit.qtd}
+                    onChange={(e) => setEdit((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))}
+                    className={inputCls}
+                    aria-label="Quantidade"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    value={edit.valor || ""}
+                    onChange={(e) => setEdit((d) => ({ ...d, valor: Number(e.target.value) }))}
+                    placeholder="R$"
+                    className={inputCls}
+                    aria-label="Valor unitário"
+                  />
+                  <button
+                    type="button"
+                    disabled={pending || !edit.descricao.trim()}
+                    onClick={() => salvarItem(it.id)}
+                    className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
+                  >
+                    <Check className="size-4" />
+                    Salvar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditId(null)}
+                    className="rounded-lg border border-[var(--ad-line)] px-3 py-2.5 text-sm font-semibold adm-muted"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+                {it.productId && edit.tipo === "Serviço" && (
+                  <p className="mt-2 text-xs adm-muted">Virando serviço, o vínculo com o estoque sai.</p>
+                )}
+                {os.status === "Entregue" && (
+                  <p className="mt-2 text-xs text-amber-300">
+                    OS já entregue — mudar o valor aqui não corrige sozinho o lançamento no financeiro.
+                  </p>
+                )}
+                {erroItem && <p className="mt-2 text-xs text-rose-300">{erroItem}</p>}
+              </div>
+            ) : (
+              <div key={it.id} className="flex items-center gap-3 px-5 py-3">
+                <span className="rounded-md bg-[var(--ad-surface-2)] px-2 py-0.5 text-xs font-medium adm-muted">{it.tipo}</span>
+                <span className="min-w-0 flex-1 truncate text-sm adm-ink">
+                  {it.descricao}
+                  {it.productId && <span className="ml-2 text-xs text-emerald-400">• estoque</span>}
+                </span>
+                <span className="text-xs adm-muted">×{it.qtd}</span>
+                <span className="text-sm font-semibold adm-ink">{brl(it.valor * it.qtd)}</span>
+                <button type="button" onClick={() => abrirEdicao(it)} aria-label={`Editar ${it.descricao}`}>
+                  <Pencil className="size-4 adm-muted hover:adm-brand" />
+                </button>
+                <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
+                  <Trash2 className="size-4 text-rose-400" />
+                </button>
+              </div>
+            )
+          )}
         </div>
 
         {/* linha de adição */}

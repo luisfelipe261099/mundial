@@ -91,6 +91,40 @@ export async function adicionarItemOS(
   revalidatePath(`/oficina/ordens/${osId}`);
 }
 
+// Corrige um item já lançado (valor errado, descrição, quantidade, tipo) sem
+// precisar apagar e lançar de novo. Trocar para "Serviço" solta o vínculo com
+// o estoque, que só faz sentido em peça.
+export async function editarItemOS(
+  itemId: string,
+  osId: string,
+  item: { tipo: string; descricao: string; qtd: number; valor: number }
+): Promise<{ error?: string }> {
+  await requireStaff();
+  const atual = await prisma.serviceOrderItem.findUnique({ where: { id: itemId } });
+  if (!atual || atual.serviceOrderId !== osId) return { error: "Item não encontrado nesta OS." };
+
+  const descricao = item.descricao.trim();
+  if (!descricao) return { error: "Informe a descrição do item." };
+  const qtd = Math.max(1, Math.trunc(item.qtd) || 1);
+  const valor = Math.max(0, Math.trunc(item.valor) || 0);
+
+  await prisma.serviceOrderItem.update({
+    where: { id: itemId },
+    data: {
+      type: item.tipo,
+      description: descricao,
+      qty: qtd,
+      value: valor,
+      ...(item.tipo === "Serviço" ? { productId: null } : {}),
+    },
+  });
+  await recomputeTotal(osId);
+  revalidatePath(`/oficina/ordens/${osId}`);
+  revalidatePath("/oficina/ordens");
+  revalidatePath(`/mecanico/${osId}`);
+  return {};
+}
+
 export async function removerItemOS(itemId: string, osId: string) {
   await requireStaff();
   await prisma.serviceOrderItem.delete({ where: { id: itemId } });

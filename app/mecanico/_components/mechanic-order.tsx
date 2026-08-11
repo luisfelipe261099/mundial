@@ -3,12 +3,13 @@
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { upload } from "@vercel/blob/client";
-import { Check, Camera, ChevronRight, Plus, Trash2, ClipboardList } from "lucide-react";
+import { Check, Camera, ChevronRight, Plus, Pencil, Trash2, ClipboardList } from "lucide-react";
 import { brl, osBadgeClass, type StatusOS, type Produto } from "../../oficina/_data/mock";
 import type { OsControle } from "@/lib/admin-data";
 import {
   mudarStatus,
   adicionarItemOS,
+  editarItemOS,
   removerItemOS,
   salvarTechChecklist,
   salvarFotos,
@@ -97,6 +98,26 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
     const payload = { ...draft, productId: draft.productId || undefined };
     setDraft({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
     run(() => adicionarItemOS(os.id, payload));
+  }
+
+  // edição de um item já lançado
+  const [editId, setEditId] = useState<string | null>(null);
+  const [edit, setEdit] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0 });
+  const [erroItem, setErroItem] = useState<string | null>(null);
+
+  function abrirEdicao(it: (typeof os.itens)[number]) {
+    setErroItem(null);
+    setEditId(it.id);
+    setEdit({ tipo: it.tipo, descricao: it.descricao, qtd: it.qtd, valor: it.valor });
+  }
+
+  function salvarItem(itemId: string) {
+    setErroItem(null);
+    startTransition(async () => {
+      const r = await editarItemOS(itemId, os.id, edit);
+      if (r.error) setErroItem(r.error);
+      else setEditId(null);
+    });
   }
 
   return (
@@ -210,17 +231,77 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
         <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Peças e serviços</h2>
         <div className="mec-card divide-y divide-[var(--mec-line)] px-4">
           {os.itens.length === 0 && <p className="py-3 text-sm mec-muted">Nenhum item ainda.</p>}
-          {os.itens.map((it) => (
-            <div key={it.id} className="flex items-center gap-2 py-2.5">
-              <span className="rounded-md bg-[var(--mec-surface-2)] px-2 py-0.5 text-xs mec-muted">{it.tipo}</span>
-              <span className="min-w-0 flex-1 truncate text-sm mec-ink">{it.descricao}</span>
-              <span className="text-xs mec-muted">×{it.qtd}</span>
-              <span className="text-sm font-semibold mec-ink">{brl(it.valor * it.qtd)}</span>
-              <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
-                <Trash2 className="size-4 text-rose-400" />
-              </button>
-            </div>
-          ))}
+          {os.itens.map((it) =>
+            editId === it.id ? (
+              <div key={it.id} className="space-y-2 py-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={edit.tipo}
+                    onChange={(e) => setEdit((d) => ({ ...d, tipo: e.target.value }))}
+                    className={inputCls}
+                    aria-label="Tipo do item"
+                  >
+                    <option value="Peça">Peça</option>
+                    <option value="Serviço">Serviço</option>
+                  </select>
+                  <input
+                    type="number"
+                    min={0}
+                    value={edit.valor || ""}
+                    onChange={(e) => setEdit((d) => ({ ...d, valor: Number(e.target.value) }))}
+                    placeholder="Valor R$"
+                    className={inputCls}
+                    aria-label="Valor unitário"
+                  />
+                </div>
+                <input
+                  value={edit.descricao}
+                  onChange={(e) => setEdit((d) => ({ ...d, descricao: e.target.value }))}
+                  className={inputCls}
+                  aria-label="Descrição do item"
+                />
+                <div className="grid grid-cols-[4.5rem_1fr_1fr] gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    value={edit.qtd}
+                    onChange={(e) => setEdit((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))}
+                    className={inputCls}
+                    aria-label="Quantidade"
+                  />
+                  <button
+                    type="button"
+                    disabled={pending || !edit.descricao.trim()}
+                    onClick={() => salvarItem(it.id)}
+                    className="rounded-lg bg-[var(--mec-brand)] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+                  >
+                    Salvar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditId(null)}
+                    className="rounded-lg border border-[var(--mec-line)] px-3 py-2.5 text-sm font-semibold mec-muted"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+                {erroItem && <p className="text-xs text-rose-300">{erroItem}</p>}
+              </div>
+            ) : (
+              <div key={it.id} className="flex items-center gap-2 py-2.5">
+                <span className="rounded-md bg-[var(--mec-surface-2)] px-2 py-0.5 text-xs mec-muted">{it.tipo}</span>
+                <span className="min-w-0 flex-1 truncate text-sm mec-ink">{it.descricao}</span>
+                <span className="text-xs mec-muted">×{it.qtd}</span>
+                <span className="text-sm font-semibold mec-ink">{brl(it.valor * it.qtd)}</span>
+                <button type="button" onClick={() => abrirEdicao(it)} aria-label={`Editar ${it.descricao}`}>
+                  <Pencil className="size-4 mec-muted" />
+                </button>
+                <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
+                  <Trash2 className="size-4 text-rose-400" />
+                </button>
+              </div>
+            )
+          )}
         </div>
 
         <div className="mt-2 space-y-2 rounded-xl border border-[var(--mec-line)] p-3">
