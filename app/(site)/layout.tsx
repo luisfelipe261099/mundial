@@ -1,21 +1,27 @@
-import { Bricolage_Grotesque, Hanken_Grotesk, Space_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./v2.css";
 
 // Tipografia do site principal (tema escuro editorial "Oficina Noturna").
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
+// Arquivos locais em app/_fonts — ver o comentário no layout raiz.
+const bricolage = localFont({
+  src: "../_fonts/bricolage-var.woff2",
   variable: "--font-bricolage",
-  weight: ["400", "600", "700", "800"],
+  weight: "200 800",
+  display: "swap",
 });
-const hanken = Hanken_Grotesk({
-  subsets: ["latin"],
+const hanken = localFont({
+  src: "../_fonts/hanken-var.woff2",
   variable: "--font-hanken",
-  weight: ["400", "500", "600", "700"],
+  weight: "100 900",
+  display: "swap",
 });
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
+const spaceMono = localFont({
+  src: [
+    { path: "../_fonts/space-mono-400.woff2", weight: "400", style: "normal" },
+    { path: "../_fonts/space-mono-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-spacemono",
-  weight: ["400", "700"],
+  display: "swap",
 });
 
 // Sem metadata própria: o site herda o SEO real do layout raiz (indexável).

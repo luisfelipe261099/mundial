@@ -1,45 +1,51 @@
 import type { Metadata } from "next";
-import {
-  Outfit,
-  Work_Sans,
-  JetBrains_Mono,
-  Bricolage_Grotesque,
-  Space_Mono,
-} from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { business, fullAddress, mapsLink, siteUrl } from "./_data/business";
 
-const outfit = Outfit({
-  subsets: ["latin"],
+// Fontes hospedadas no próprio projeto (app/_fonts, subset latino).
+// Antes vinham do next/font/google, que baixa do Google durante o build — uma
+// falha de rede lá derrubava o deploy inteiro e a Vercel mantinha a versão
+// anterior no ar sem aviso. Agora o build não depende de rede externa.
+// Cinco delas são variáveis: um arquivo só cobre toda a faixa de peso.
+const outfit = localFont({
+  src: "./_fonts/outfit-var.woff2",
   variable: "--font-outfit",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const workSans = Work_Sans({
-  subsets: ["latin"],
+const workSans = localFont({
+  src: "./_fonts/work-sans-var.woff2",
   variable: "--font-work-sans",
-  weight: ["400", "500", "600", "700"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const jetBrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
+const jetBrainsMono = localFont({
+  src: "./_fonts/jetbrains-mono-var.woff2",
   variable: "--font-mono-tech",
-  weight: ["400", "500"],
+  weight: "100 800",
+  display: "swap",
 });
 
 // Fontes de marca "Oficina Noturna" — mesmas do site (v2), agora disponíveis
 // para o app do cliente e o painel da oficina, para coesão de plataforma.
 // Bricolage = display-pôster; Space Mono = rótulos técnicos.
-const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
+const bricolage = localFont({
+  src: "./_fonts/bricolage-var.woff2",
   variable: "--font-bricolage",
-  weight: ["600", "700", "800"],
+  weight: "200 800",
+  display: "swap",
 });
 
-const spaceMono = Space_Mono({
-  subsets: ["latin"],
+const spaceMono = localFont({
+  src: [
+    { path: "./_fonts/space-mono-400.woff2", weight: "400", style: "normal" },
+    { path: "./_fonts/space-mono-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-spacemono",
-  weight: ["400", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
