@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { brl, osBadgeClass, type OrdemServicoAdmin, type StatusOS } from "../_data/mock";
 import { matches } from "./filter-utils";
 import { SearchInput, FilterSelect, ResultBar, EmptyRow } from "./table-filters";
 
-const FILTROS: ("Todas" | StatusOS)[] = [
-  "Todas",
+const STATUS: StatusOS[] = [
   "Aberta",
   "Aguardando aprovação",
   "Em execução",
@@ -16,46 +15,94 @@ const FILTROS: ("Todas" | StatusOS)[] = [
   "Entregue",
 ];
 
+// Atalho do dia a dia: o que ainda está na oficina.
+const EM_ANDAMENTO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execução"];
+
 const TODOS = "Todos os mecânicos";
 
 export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
-  const [filtro, setFiltro] = useState<"Todas" | StatusOS>("Todas");
+  // Vazio = todas. Cada status é um toggle, dá pra combinar quantos quiser.
+  const [selecionados, setSelecionados] = useState<StatusOS[]>([]);
   const [busca, setBusca] = useState("");
   const [mecanico, setMecanico] = useState(TODOS);
 
   const mecanicos = [TODOS, ...Array.from(new Set(ordens.map((o) => o.mecanico).filter((m) => m !== "—"))).sort()];
 
+  const conta = (s: StatusOS) => ordens.filter((o) => o.status === s).length;
+  const ativo = (s: StatusOS) => selecionados.includes(s);
+  const emAndamentoAtivo =
+    selecionados.length === EM_ANDAMENTO.length && EM_ANDAMENTO.every((s) => selecionados.includes(s));
+
+  function alternar(s: StatusOS) {
+    setSelecionados((x) => (x.includes(s) ? x.filter((v) => v !== s) : [...x, s]));
+  }
+
   const lista = ordens.filter((o) => {
-    if (filtro !== "Todas" && o.status !== filtro) return false;
+    if (selecionados.length > 0 && !selecionados.includes(o.status)) return false;
     if (mecanico !== TODOS && o.mecanico !== mecanico) return false;
     return matches([o.id, o.cliente, o.placa, o.veiculo], busca);
   });
-  const filtroAtivo = busca !== "" || mecanico !== TODOS || filtro !== "Todas";
+  const filtroAtivo = busca !== "" || mecanico !== TODOS || selecionados.length > 0;
 
   function limpar() {
     setBusca("");
     setMecanico(TODOS);
-    setFiltro("Todas");
+    setSelecionados([]);
   }
 
   return (
     <div>
-      <div className="no-scrollbar mb-4 flex gap-2 overflow-x-auto">
-        {FILTROS.map((x) => (
+      <div className="no-scrollbar mb-2 flex gap-2 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setSelecionados([])}
+          className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+            selecionados.length === 0
+              ? "border-[var(--ad-brand)] bg-[var(--ad-brand)] text-white"
+              : "border-[var(--ad-line)] adm-muted hover:adm-ink"
+          }`}
+        >
+          Todas
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelecionados(emAndamentoAtivo ? [] : [...EM_ANDAMENTO])}
+          className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+            emAndamentoAtivo
+              ? "border-[var(--ad-brand)] bg-[var(--ad-brand)] text-white"
+              : "border-[var(--ad-line)] adm-muted hover:adm-ink"
+          }`}
+        >
+          Na oficina
+        </button>
+
+        <span className="shrink-0 self-center text-[var(--ad-line-2)]">|</span>
+
+        {STATUS.map((s) => (
           <button
-            key={x}
+            key={s}
             type="button"
-            onClick={() => setFiltro(x)}
-            className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-              filtro === x
+            onClick={() => alternar(s)}
+            aria-pressed={ativo(s)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              ativo(s)
                 ? "border-[var(--ad-brand)] bg-[var(--ad-brand)] text-white"
-                : "border-[var(--ad-line)] adm-muted"
+                : "border-[var(--ad-line)] adm-muted hover:adm-ink"
             }`}
           >
-            {x}
+            {ativo(s) && <Check className="size-3.5" />}
+            {s}
+            <span className={ativo(s) ? "text-white/70" : "text-[var(--ad-muted)]"}>{conta(s)}</span>
           </button>
         ))}
       </div>
+
+      <p className="mb-4 text-xs adm-muted">
+        {selecionados.length === 0
+          ? "Mostrando todos os status — clique para combinar os que quiser ver."
+          : `Filtrando por ${selecionados.length} status: ${selecionados.join(", ")}.`}
+      </p>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <SearchInput value={busca} onChange={setBusca} placeholder="Buscar OS, cliente, placa…" />

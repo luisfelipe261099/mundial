@@ -154,6 +154,22 @@ export async function criarAgendamento(input: {
   revalidatePath("/oficina");
 }
 
+// Marca o agendamento como concluído/cancelado (ou volta pra confirmado).
+// É o que tira o compromisso velho do meio dos próximos sem apagar o registro.
+export async function atualizarStatusAgendamento(id: string, status: string) {
+  await requireAdmin();
+  await prisma.appointment.update({ where: { id }, data: { status } });
+  revalidatePath("/oficina/agenda");
+  revalidatePath("/oficina");
+}
+
+export async function excluirAgendamento(id: string) {
+  await requireAdmin();
+  await prisma.appointment.delete({ where: { id } });
+  revalidatePath("/oficina/agenda");
+  revalidatePath("/oficina");
+}
+
 export async function criarLancamento(input: {
   tipo: "receita" | "despesa";
   descricao: string;

@@ -391,7 +391,13 @@ export async function getOrdensMecanico(mechanicId: string): Promise<OrdemServic
 }
 
 export async function getAgendaHoje(): Promise<Agendamento[]> {
-  const rows = await prisma.appointment.findMany({ where: { date: "Hoje" }, include: { client: true }, orderBy: { time: "asc" } });
+  // Não dá pra filtrar no banco: a coluna `date` mistura "Hoje", DD/MM/AAAA e
+  // AAAA-MM-DD. Normaliza e compara com o hoje da oficina.
+  const todas = await prisma.appointment.findMany({ include: { client: true }, orderBy: { time: "asc" } });
+  const hoje = hojeISO();
+  const rows = todas.filter(
+    (a) => agendaISO(a.date, hoje) === hoje && !["Concluído", "Concluido", "Finalizado", "Cancelado"].includes(a.status)
+  );
   return rows.map((a) => ({
     hora: a.time,
     cliente: a.client?.name ?? "—",
@@ -455,6 +461,8 @@ export async function getMovimentacoes(): Promise<Movimentacao[]> {
 export type AgendaItem = {
   id: string;
   data: string;
+  /** Data normalizada em AAAA-MM-DD. Vazio quando não dá pra interpretar. */
+  iso: string;
   hora: string;
   cliente: string;
   veiculo: string;
@@ -462,20 +470,54 @@ export type AgendaItem = {
   status: string;
 };
 
+// Fuso da oficina — "hoje" tem que ser o hoje de Curitiba, não o do servidor.
+export function hojeISO(agora = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(agora);
+}
+
+// A coluna `date` é texto livre e acumulou três formatos: AAAA-MM-DD (input
+// date), DD/MM/AAAA (app do cliente e seed) e rótulos como "Hoje"/"Amanhã".
+// Normaliza tudo para poder ordenar e saber o que já passou.
+function agendaISO(valor: string, hoje: string): string {
+  const s = (valor ?? "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const br = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);
+  if (br) return `${br[3]}-${br[2]}-${br[1]}`;
+  const rotulo = s.toLowerCase();
+  if (rotulo === "hoje") return hoje;
+  if (rotulo === "amanhã" || rotulo === "amanha") {
+    const d = new Date(`${hoje}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+  }
+  return "";
+}
+
 export async function getAgendaAdmin(): Promise<AgendaItem[]> {
-  const rows = await prisma.appointment.findMany({
-    include: { client: true },
-    orderBy: [{ date: "asc" }, { time: "asc" }],
-  });
-  return rows.map((a) => ({
-    id: a.id,
-    data: a.date,
-    hora: a.time,
-    cliente: a.clientName ?? a.client?.name ?? "—",
-    veiculo: a.vehicleName,
-    servico: a.service,
-    status: a.status,
-  }));
+  const rows = await prisma.appointment.findMany({ include: { client: true } });
+  const hoje = hojeISO();
+  return rows
+    .map((a) => ({
+      id: a.id,
+      data: a.date,
+      iso: agendaISO(a.date, hoje),
+      hora: a.time,
+      cliente: a.clientName ?? a.client?.name ?? "—",
+      veiculo: a.vehicleName,
+      servico: a.service,
+      status: a.status,
+    }))
+    // Sem data legível vai pro fim; o resto em ordem cronológica de verdade
+    // (o orderBy do banco ordenava texto, misturando os formatos).
+    .sort((a, b) => {
+      if (!a.iso !== !b.iso) return a.iso ? -1 : 1;
+      return a.iso.localeCompare(b.iso) || a.hora.localeCompare(b.hora);
+    });
 }
 
 export async function getFinanceiroResumo() {
