@@ -91,6 +91,77 @@ export async function adicionarItemOS(
   revalidatePath(`/oficina/ordens/${osId}`);
 }
 
+// Edita a ficha da OS: cliente, veículo, entrada, km, combustível, defeito e
+// observações. Trocar cliente/veículo regrava também os campos denormalizados
+// (nome e placa), que são o que aparece na lista e no PDF.
+export async function editarOS(
+  osId: string,
+  input: {
+    clienteId: string;
+    veiculoId: string;
+    data: string;
+    km: string;
+    fuelLevel: string;
+    defeito: string;
+    observacoes: string;
+  }
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, select: { id: true } });
+  if (!os) return { error: "OS não encontrada." };
+
+  const [cliente, veiculo] = await Promise.all([
+    input.clienteId ? prisma.client.findUnique({ where: { id: input.clienteId } }) : null,
+    input.veiculoId ? prisma.vehicle.findUnique({ where: { id: input.veiculoId } }) : null,
+  ]);
+  if (input.clienteId && !cliente) return { error: "Cliente não encontrado." };
+  if (input.veiculoId && !veiculo) return { error: "Veículo não encontrado." };
+
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: {
+      clientId: cliente?.id ?? null,
+      vehicleId: veiculo?.id ?? null,
+      clientName: cliente?.name ?? "—",
+      vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
+      plate: veiculo?.plate ?? null,
+      date: input.data.trim() || hoje(),
+      km: Math.max(0, Math.trunc(Number(input.km)) || 0),
+      fuelLevel: input.fuelLevel || null,
+      defect: input.defeito.trim() || null,
+      observations: input.observacoes.trim() || null,
+    },
+  });
+
+  revalidatePath(`/oficina/ordens/${osId}`);
+  revalidatePath("/oficina/ordens");
+  revalidatePath(`/mecanico/${osId}`);
+  revalidatePath("/oficina");
+  return {};
+}
+
+// Exclui a OS e o que só existe por causa dela: os itens e a receita lançada
+// na entrega (que não tem como apagar pela tela do Financeiro, então ficaria
+// órfã). A baixa de estoque NÃO volta — as peças saíram de verdade; se foi
+// engano, dê entrada manual no estoque.
+export async function excluirOS(osId: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, select: { id: true } });
+  if (!os) return { error: "OS não encontrada." };
+
+  await prisma.$transaction([
+    prisma.transaction.deleteMany({ where: { serviceOrderId: osId } }),
+    prisma.serviceOrderItem.deleteMany({ where: { serviceOrderId: osId } }),
+    prisma.serviceOrder.delete({ where: { id: osId } }),
+  ]);
+
+  revalidatePath("/oficina/ordens");
+  revalidatePath("/oficina/financeiro");
+  revalidatePath("/mecanico");
+  revalidatePath("/oficina");
+  return {};
+}
+
 // Corrige um item já lançado (valor errado, descrição, quantidade, tipo) sem
 // precisar apagar e lançar de novo. Trocar para "Serviço" solta o vínculo com
 // o estoque, que só faz sentido em peça.

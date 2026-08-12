@@ -285,6 +285,13 @@ export async function getOrdemControle(id: string) {
       productId: i.productId,
     })),
     budgetStatus: budget?.status ?? null,
+    // Vínculos e efeitos colaterais já aplicados — a edição e a exclusão da OS
+    // precisam saber o que já mexeu em estoque e financeiro.
+    clientId: o.clientId,
+    vehicleId: o.vehicleId,
+    fuelLevelRaw: o.fuelLevel ?? "",
+    stockApplied: o.stockApplied,
+    financeApplied: o.financeApplied,
   };
 }
 

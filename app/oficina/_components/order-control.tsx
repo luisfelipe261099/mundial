@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Check,
@@ -15,6 +16,7 @@ import {
   ArrowRight,
   ClipboardList,
   Truck,
+  AlertTriangle,
 } from "lucide-react";
 import { brl, osBadgeClass, type StatusOS, type Produto } from "../_data/mock";
 import type { OsControle } from "@/lib/admin-data";
@@ -23,6 +25,8 @@ import {
   adicionarItemOS,
   editarItemOS,
   removerItemOS,
+  editarOS,
+  excluirOS,
   enviarParaAprovacao,
   entregarOS,
   atribuirMecanico,
@@ -38,21 +42,59 @@ const VISTORIA_LABEL: Record<string, string> = { ok: "OK", atencao: "Atenção",
 
 const inputCls =
   "w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2.5 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]";
+const labelCls = "mb-1 block text-xs font-medium adm-muted";
 
 export function OrderControl({
   os,
   estoque,
   mecanicos,
+  clientes,
+  veiculos,
 }: {
   os: OsControle;
   estoque: Produto[];
   mecanicos: { id: string; name: string }[];
+  clientes: { id: string; nome: string }[];
+  veiculos: { id: string; proprietario: string; modelo: string; placa: string }[];
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
   const [showEntrega, setShowEntrega] = useState(false);
   const [exitKm, setExitKm] = useState("");
   const [paid, setPaid] = useState(true);
+
+  // edição da ficha da OS
+  const [editandoOS, setEditandoOS] = useState(false);
+  const [fichaOS, setFichaOS] = useState({
+    clienteId: os.clientId ?? "",
+    veiculoId: os.vehicleId ?? "",
+    data: os.data,
+    km: String(os.km),
+    fuelLevel: os.fuelLevelRaw,
+    defeito: os.defeito === "—" ? "" : os.defeito,
+    observacoes: os.observacoes,
+  });
+  const [erroOS, setErroOS] = useState<string | null>(null);
+  const [confirmarExclusao, setConfirmarExclusao] = useState(false);
+
+  function salvarOS() {
+    setErroOS(null);
+    startTransition(async () => {
+      const r = await editarOS(os.id, fichaOS);
+      if (r.error) setErroOS(r.error);
+      else setEditandoOS(false);
+    });
+  }
+
+  function apagarOS() {
+    setErroOS(null);
+    startTransition(async () => {
+      const r = await excluirOS(os.id);
+      if (r.error) setErroOS(r.error);
+      else router.push("/oficina/ordens");
+    });
+  }
 
   // edição de um item já lançado
   const [editId, setEditId] = useState<string | null>(null);
@@ -216,28 +258,157 @@ export function OrderControl({
       </div>
 
       {/* Info + defeito */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="adm-card p-5 lg:col-span-2">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
-            {info.map((m) => (
-              <div key={m.label}>
-                <p className="text-xs adm-muted">{m.label}</p>
-                <p className="text-sm font-semibold adm-ink">{m.value}</p>
-              </div>
-            ))}
-            {os.exitKm != null && (
-              <div>
-                <p className="text-xs adm-muted">Km de saída</p>
-                <p className="text-sm font-semibold adm-ink">{os.exitKm.toLocaleString("pt-BR")} km</p>
-              </div>
-            )}
+      {editandoOS ? (
+        <div className="adm-card p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="adm-display font-bold adm-ink">Editar dados da OS</h3>
+              <p className="text-xs adm-muted">
+                Trocar cliente ou veículo também corrige o nome e a placa que saem no PDF.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditandoOS(false)}
+              className="rounded-lg border border-[var(--ad-line)] px-3.5 py-2 text-sm font-semibold adm-muted"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelCls} htmlFor="os-cliente">Cliente</label>
+              <select
+                id="os-cliente"
+                className={inputCls}
+                value={fichaOS.clienteId}
+                onChange={(e) => setFichaOS((f) => ({ ...f, clienteId: e.target.value }))}
+              >
+                <option value="">Sem cliente vinculado</option>
+                {clientes.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nome}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="os-veiculo">Veículo</label>
+              <select
+                id="os-veiculo"
+                className={inputCls}
+                value={fichaOS.veiculoId}
+                onChange={(e) => setFichaOS((f) => ({ ...f, veiculoId: e.target.value }))}
+              >
+                <option value="">Sem veículo vinculado</option>
+                {veiculos.map((v) => (
+                  <option key={v.id} value={v.id}>{v.modelo} · {v.placa}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="os-data">Data de entrada</label>
+              <input
+                id="os-data"
+                className={inputCls}
+                value={fichaOS.data}
+                onChange={(e) => setFichaOS((f) => ({ ...f, data: e.target.value }))}
+                placeholder="Ex.: 11/08/2026"
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="os-km">Km de entrada</label>
+              <input
+                id="os-km"
+                type="number"
+                min={0}
+                className={inputCls}
+                value={fichaOS.km}
+                onChange={(e) => setFichaOS((f) => ({ ...f, km: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="os-comb">Combustível na entrada</label>
+              <select
+                id="os-comb"
+                className={inputCls}
+                value={fichaOS.fuelLevel}
+                onChange={(e) => setFichaOS((f) => ({ ...f, fuelLevel: e.target.value }))}
+              >
+                <option value="">Não informado</option>
+                {["Reserva", "1/4", "1/2", "3/4", "Cheio"].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className={labelCls} htmlFor="os-defeito">Defeito relatado</label>
+              <textarea
+                id="os-defeito"
+                rows={2}
+                className={`${inputCls} resize-none`}
+                value={fichaOS.defeito}
+                onChange={(e) => setFichaOS((f) => ({ ...f, defeito: e.target.value }))}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={labelCls} htmlFor="os-obs">Observações</label>
+              <textarea
+                id="os-obs"
+                rows={2}
+                className={`${inputCls} resize-none`}
+                value={fichaOS.observacoes}
+                onChange={(e) => setFichaOS((f) => ({ ...f, observacoes: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          {erroOS && <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{erroOS}</p>}
+
+          <button
+            type="button"
+            onClick={salvarOS}
+            disabled={pending}
+            className="mt-4 flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-5 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
+          >
+            <Check className="size-4" />
+            {pending ? "Salvando…" : "Salvar alterações"}
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="adm-card p-5 lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="adm-display font-bold adm-ink">Dados da OS</h3>
+              <button
+                type="button"
+                onClick={() => setEditandoOS(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--ad-line)] px-3 py-1.5 text-xs font-semibold adm-ink hover:bg-[var(--ad-surface-2)]"
+              >
+                <Pencil className="size-3.5" />
+                Editar
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:grid-cols-3">
+              {info.map((m) => (
+                <div key={m.label}>
+                  <p className="text-xs adm-muted">{m.label}</p>
+                  <p className="text-sm font-semibold adm-ink">{m.value}</p>
+                </div>
+              ))}
+              {os.exitKm != null && (
+                <div>
+                  <p className="text-xs adm-muted">Km de saída</p>
+                  <p className="text-sm font-semibold adm-ink">{os.exitKm.toLocaleString("pt-BR")} km</p>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="adm-card p-5">
+            <p className="text-xs uppercase tracking-wide adm-muted">Defeito relatado</p>
+            <p className="mt-1.5 text-sm adm-ink">{os.defeito}</p>
           </div>
         </div>
-        <div className="adm-card p-5">
-          <p className="text-xs uppercase tracking-wide adm-muted">Defeito relatado</p>
-          <p className="mt-1.5 text-sm adm-ink">{os.defeito}</p>
-        </div>
-      </div>
+      )}
 
       {/* Vistoria de entrada */}
       {os.inspection && (
@@ -446,6 +617,61 @@ export function OrderControl({
           <FileDown className="size-4 adm-brand" />
           Gerar PDF
         </a>
+      </div>
+
+      {/* Excluir OS */}
+      <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-5">
+        <h3 className="adm-display mb-1 flex items-center gap-2 font-bold adm-ink">
+          <AlertTriangle className="size-4 text-red-400" />
+          Excluir ordem de serviço
+        </h3>
+        <p className="mb-4 text-sm adm-muted">
+          Apaga a <span className="font-semibold adm-ink">{os.id}</span>
+          {os.itens.length > 0 && (
+            <> e {os.itens.length === 1 ? "o item lançado" : `os ${os.itens.length} itens lançados`}</>
+          )}
+          . Não dá pra desfazer.
+          {os.financeApplied && (
+            <> A receita lançada no Financeiro por esta OS <strong className="adm-ink">também sai</strong>.</>
+          )}
+          {os.stockApplied && (
+            <>
+              {" "}As peças já baixadas <strong className="adm-ink">não voltam</strong> ao estoque — se foi engano,
+              dê entrada manual em Estoque.
+            </>
+          )}
+        </p>
+        {confirmarExclusao ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={apagarOS}
+              disabled={pending}
+              className="rounded-lg bg-red-500/90 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+            >
+              {pending ? "Excluindo…" : "Confirmar exclusão"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmarExclusao(false)}
+              className="rounded-lg border border-[var(--ad-line)] px-3.5 py-1.5 text-sm font-semibold adm-muted"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmarExclusao(true)}
+            className="flex items-center gap-2 rounded-lg border border-red-500/40 px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/10"
+          >
+            <Trash2 className="size-4" />
+            Excluir OS
+          </button>
+        )}
+        {erroOS && !editandoOS && (
+          <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{erroOS}</p>
+        )}
       </div>
     </div>
   );
