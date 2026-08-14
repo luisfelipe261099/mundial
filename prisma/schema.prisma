@@ -313,7 +313,7 @@ model FiscalConfig {
   opSimpNac          String    @default("3") // 1 não optante | 2 MEI | 3 ME/EPP Simples
   regApTribSN        String    @default("1") // só usado quando opSimpNac = 3
   regEspTrib         String    @default("0")
-  ambiente           String    @default("restrita") // restrita (testes) | producao
+  ambiente           String    @default("producao") // producao | restrita (testes)
   updatedAt          DateTime  @updatedAt
 
   @@map("fiscal_config")

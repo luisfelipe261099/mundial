@@ -106,7 +106,7 @@ export async function getFiscalConfigView(): Promise<FiscalConfigView> {
     opSimpNac: c?.opSimpNac ?? "3",
     regApTribSN: c?.regApTribSN ?? "1",
     regEspTrib: c?.regEspTrib ?? "0",
-    ambiente: c?.ambiente ?? "restrita",
+    ambiente: c?.ambiente ?? "producao",
   };
 }
 

@@ -37,7 +37,7 @@ const STATEMENTS = [
     "opSimpNac" TEXT NOT NULL DEFAULT '3',
     "regApTribSN" TEXT NOT NULL DEFAULT '1',
     "regEspTrib" TEXT NOT NULL DEFAULT '0',
-    "ambiente" TEXT NOT NULL DEFAULT 'restrita',
+    "ambiente" TEXT NOT NULL DEFAULT 'producao',
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "fiscal_config_pkey" PRIMARY KEY ("id")
   )`,
@@ -58,6 +58,10 @@ const STATEMENTS = [
     CONSTRAINT "fiscal_notas_pkey" PRIMARY KEY ("id")
   )`,
   `ALTER TABLE "fiscal_config" ADD COLUMN IF NOT EXISTS "totTribPerc" TEXT NOT NULL DEFAULT '6.00'`,
+  // Produção é o padrão. O UPDATE só alcança config ainda sem certificado —
+  // depois que o admin configurou, a escolha de ambiente é dele.
+  `ALTER TABLE "fiscal_config" ALTER COLUMN "ambiente" SET DEFAULT 'producao'`,
+  `UPDATE "fiscal_config" SET "ambiente" = 'producao' WHERE "id" = 'default' AND "certPfx" IS NULL AND "ambiente" = 'restrita'`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "fiscal_notas_chaveAcesso_key" ON "fiscal_notas"("chaveAcesso")`,
   `CREATE INDEX IF NOT EXISTS "fiscal_notas_serviceOrderId_idx" ON "fiscal_notas"("serviceOrderId")`,
 ];

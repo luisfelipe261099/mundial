@@ -131,7 +131,7 @@ export async function salvarEmitente(input: {
     totTribPerc: totTribPerc || "6.00",
     opSimpNac: input.opSimpNac,
     regApTribSN: ["1", "2", "3"].includes(input.regApTribSN) ? input.regApTribSN : "1",
-    ambiente: input.ambiente === "producao" ? "producao" : "restrita",
+    ambiente: input.ambiente === "restrita" ? "restrita" : "producao",
   };
   await prisma.fiscalConfig.upsert({
     where: { id: "default" },

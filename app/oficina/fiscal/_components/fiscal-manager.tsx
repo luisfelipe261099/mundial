@@ -303,11 +303,12 @@ export function FiscalManager({ config }: { config: FiscalConfigView }) {
               <span className="flex-1 text-sm adm-ink">
                 <span className="mb-1 block font-semibold">Ambiente</span>
                 <select className={inputCls} value={f.ambiente} onChange={(e) => set("ambiente", e.target.value)} aria-label="Ambiente de emissão">
-                  <option value="restrita">Produção restrita — testes, a nota NÃO vale</option>
                   <option value="producao">Produção — a nota vale de verdade</option>
+                  <option value="restrita">Produção restrita — testes, a nota NÃO vale</option>
                 </select>
                 <span className="mt-1 block text-xs adm-muted">
-                  Comece em testes: emita uma nota de mentira, confira tudo, e só então mude para produção.
+                  Em Produção cada emissão gera nota registrada de verdade. Se quiser experimentar sem
+                  valor fiscal, troque para Produção restrita e depois volte.
                 </span>
               </span>
             </label>

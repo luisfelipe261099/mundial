@@ -29,8 +29,8 @@ Emissão de NFS-e da mão de obra pela API oficial e gratuita do Sistema Naciona
   do tipo **Serviço** (peças são ICMS por força do item 14.01 da LC 116 e
   ficam fora; NF-e de peças não está implementada). XML autorizado fica em
   `fiscal_notas`, com download na própria OS.
-- **Ambientes:** começa em *produção restrita* (nota de teste); mudar para
-  *produção* na tela quando estiver validado.
+- **Ambientes:** o padrão é **produção** (nota registrada de verdade). Para
+  testar sem valor fiscal, trocar para *produção restrita* na tela e voltar.
 - **Biblioteca:** `@useinvio/nfse-sdk` (externa no bundle — `next.config.ts`).
   A emissão usa os blocos `buildDpsFromJson → signDps → transmitirNotaPreparada`
   em vez de `emitirNfse()` porque o atalho valida XSD via `xmllint`, que não
