@@ -661,12 +661,22 @@ export function OrderControl({
                     </span>
                   )}
                   {n.chaveAcesso && (
-                    <a
-                      href={`/oficina/ordens/${encodeURIComponent(os.id)}/nfse/${n.id}`}
-                      className="text-xs font-semibold adm-brand hover:underline"
-                    >
-                      Baixar XML
-                    </a>
+                    <span className="flex items-center gap-3">
+                      <a
+                        href={`/oficina/ordens/${encodeURIComponent(os.id)}/nfse/${n.id}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold adm-brand hover:underline"
+                      >
+                        Ver PDF
+                      </a>
+                      <a
+                        href={`/oficina/ordens/${encodeURIComponent(os.id)}/nfse/${n.id}`}
+                        className="text-xs font-semibold adm-muted hover:adm-brand hover:underline"
+                      >
+                        Baixar XML
+                      </a>
+                    </span>
                   )}
                   {n.erro && <span className="w-full text-xs text-rose-300">{n.erro}</span>}
                 </div>

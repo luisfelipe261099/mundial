@@ -191,7 +191,7 @@ export async function emitirNfseOS(osId: string): Promise<R & { chaveAcesso?: st
   await requireAdmin();
   const [cfg, os] = await Promise.all([
     getFiscalConfig(),
-    prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: true } }),
+    prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: true, client: true } }),
   ]);
   if (!os) return { ok: false, error: "OS não encontrada." };
   if (!cfg?.certPfx || !cfg.certPassword) {
@@ -208,8 +208,21 @@ export async function emitirNfseOS(osId: string): Promise<R & { chaveAcesso?: st
     return { ok: false, error: "Esta OS não tem itens do tipo Serviço — a NFS-e cobre só a mão de obra." };
   }
 
+  // O bloco formal de tomador exige endereço estruturado (CEP, código IBGE,
+  // logradouro, número, bairro) que o cadastro de clientes não tem — a SEFIN
+  // rejeita tomador sem endNac completo. Então a nota sai como consumidor não
+  // identificado (permitido) e o cliente entra NOMEADO na descrição, com CPF
+  // quando houver — aparece no PDF e identifica o serviço.
+  const doc = (os.client?.cpf ?? "").replace(/\D/g, "");
+  const linhaCliente = os.client
+    ? `Cliente: ${os.client.name}${doc.length === 11 ? ` — CPF ${doc}` : doc.length === 14 ? ` — CNPJ ${doc}` : ""}`
+    : os.clientName !== "—"
+      ? `Cliente: ${os.clientName}`
+      : "";
+
   const descricao = [
     `Serviços de manutenção veicular — OS ${os.id}`,
+    linhaCliente,
     os.vehicleName !== "—" ? `Veículo: ${os.vehicleName}${os.plate ? ` placa ${os.plate}` : ""}` : "",
     ...servicos.map((s) => `- ${s.description}${s.qty > 1 ? ` (x${s.qty})` : ""}`),
   ]
@@ -238,6 +251,7 @@ export async function emitirNfseOS(osId: string): Promise<R & { chaveAcesso?: st
     : cfg.opSimpNac === "2"
       ? { indTotTrib: "0" }
       : { pTotTribFed: "0.00", pTotTribEst: "0.00", pTotTribMun: perc };
+
 
   const nota = {
     ambiente,
