@@ -294,6 +294,51 @@ model User {
   @@map("users")
 }
 
+// Configuração fiscal (linha única, id fixo "default"): certificado digital
+// A1 e dados do emitente para a NFS-e Nacional. O .pfx e a senha ficam
+// CIFRADOS (AES-256-GCM com chave derivada do SESSION_SECRET) — nunca em claro.
+model FiscalConfig {
+  id                 String    @id @default("default")
+  certPfx            String? // .pfx cifrado, base64(iv:tag:dados)
+  certPassword       String? // senha do .pfx cifrada
+  certSubject        String? // CN do certificado, só para exibição
+  certExpiresAt      DateTime? // validade do certificado
+  cnpj               String?
+  inscricaoMunicipal String?
+  serie              String    @default("1601") // série da DPS via API
+  proximoNumero      Int       @default(1) // nDPS sequencial, incrementa a cada emissão
+  cTribNac           String    @default("140101") // 14.01 — manutenção de veículos
+  aliquotaIss        String? // vazio = SEFIN aplica a alíquota do município
+  totTribPerc        String    @default("6.00") // % aprox. de tributos (informativo, Lei 12.741)
+  opSimpNac          String    @default("3") // 1 não optante | 2 MEI | 3 ME/EPP Simples
+  regApTribSN        String    @default("1") // só usado quando opSimpNac = 3
+  regEspTrib         String    @default("0")
+  ambiente           String    @default("restrita") // restrita (testes) | producao
+  updatedAt          DateTime  @updatedAt
+
+  @@map("fiscal_config")
+}
+
+// NFS-e emitidas (uma OS pode ter mais de uma: rejeição seguida de sucesso,
+// substituição etc.). Guarda o XML autorizado — é o documento fiscal.
+model FiscalNota {
+  id             String   @id @default(cuid())
+  serviceOrderId String
+  chaveAcesso    String?  @unique
+  numero         Int // nDPS usado
+  serie          String
+  ambiente       String // restrita | producao
+  status         String // autorizada | rejeitada | erro | cancelada
+  valor          Int // valor do serviço em reais inteiros (convenção do sistema)
+  descricao      String?
+  nfseXml        String? // XML autorizado pela SEFIN
+  erro           String? // rejeições, quando houver
+  createdAt      DateTime @default(now())
+
+  @@index([serviceOrderId])
+  @@map("fiscal_notas")
+}
+
 // Tentativas de autenticação FALHAS, por IP, para rate limiting do login e do
 // primeiro acesso. Fail-open: erro de infra nunca bloqueia cliente legítimo.
 model AuthAttempt {

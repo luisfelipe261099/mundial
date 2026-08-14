@@ -275,7 +275,10 @@ export async function getOrdemControle(id: string) {
     inspection,
     mechanicId: o.mechanicId,
     techChecklist: (o.techChecklist ?? null) as { item: string; status: string }[] | null,
-    fotos: (o.photos ?? []) as string[],
+    // Fotos são URLs (upload do mecânico). Dados antigos de demonstração
+    // guardavam objetos {src, etapa} — ignora o que não for string, senão o
+    // <Image> derruba a página inteira da OS.
+    fotos: ((o.photos ?? []) as unknown[]).filter((f): f is string => typeof f === "string"),
     itens: o.items.map((i) => ({
       id: i.id,
       tipo: i.type,

@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { brl, osBadgeClass, type StatusOS, type Produto } from "../_data/mock";
 import type { OsControle } from "@/lib/admin-data";
+import type { NotaFiscalView } from "@/lib/fiscal";
+import { emitirNfseOS } from "../fiscal/actions";
 import {
   mudarStatus,
   adicionarItemOS,
@@ -50,12 +52,18 @@ export function OrderControl({
   mecanicos,
   clientes,
   veiculos,
+  notas,
+  fiscalPronto,
+  fiscalAmbiente,
 }: {
   os: OsControle;
   estoque: Produto[];
   mecanicos: { id: string; name: string }[];
   clientes: { id: string; nome: string }[];
   veiculos: { id: string; proprietario: string; modelo: string; placa: string }[];
+  notas: NotaFiscalView[];
+  fiscalPronto: boolean;
+  fiscalAmbiente: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -93,6 +101,28 @@ export function OrderControl({
       const r = await excluirOS(os.id);
       if (r.error) setErroOS(r.error);
       else router.push("/oficina/ordens");
+    });
+  }
+
+  // NFS-e
+  const [erroNota, setErroNota] = useState<string | null>(null);
+  const [notaOk, setNotaOk] = useState<string | null>(null);
+  const totalServicos = os.itens
+    .filter((i) => i.tipo === "Serviço")
+    .reduce((s, i) => s + i.valor * i.qtd, 0);
+
+  function emitirNota() {
+    setErroNota(null);
+    setNotaOk(null);
+    startTransition(async () => {
+      const r = await emitirNfseOS(os.id);
+      if (r.ok) {
+        setNotaOk(r.chaveAcesso ?? "");
+        router.refresh();
+      } else {
+        setErroNota(r.error ?? "Não foi possível emitir a nota.");
+        router.refresh();
+      }
     });
   }
 
@@ -578,6 +608,103 @@ export function OrderControl({
         <div className="flex items-center justify-between border-t border-[var(--ad-line)] px-5 py-3.5">
           <span className="text-sm adm-muted">Total da OS</span>
           <span className="adm-display text-xl font-bold adm-ink">{brl(os.total)}</span>
+        </div>
+      </div>
+
+      {/* NFS-e da mão de obra */}
+      <div className="adm-card overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--ad-line)] px-5 py-3.5">
+          <h3 className="adm-display flex items-center gap-2 font-bold adm-ink">
+            <FileDown className="size-5 adm-brand" />
+            Nota fiscal (NFS-e)
+          </h3>
+          {fiscalAmbiente !== "producao" && (
+            <span className="osb osb-aguardando">Ambiente de testes — a nota não vale</span>
+          )}
+        </div>
+
+        <div className="space-y-3 p-5">
+          <p className="text-sm adm-muted">
+            Emite a NFS-e da <strong className="adm-ink">mão de obra</strong> desta OS
+            {totalServicos > 0 && (
+              <>
+                {" "}
+                (<strong className="adm-ink">{brl(totalServicos)}</strong> em itens do tipo Serviço)
+              </>
+            )}
+            . Peças ficam de fora por lei — elas são ICMS, não ISS.
+          </p>
+
+          {notas.length > 0 && (
+            <div className="divide-y divide-[var(--ad-line)] rounded-lg border border-[var(--ad-line)]">
+              {notas.map((n) => (
+                <div key={n.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+                  <span
+                    className={
+                      n.status === "autorizada"
+                        ? "osb osb-finalizada"
+                        : n.status === "cancelada"
+                          ? "osb osb-aguardando"
+                          : "osb osb-aguardando"
+                    }
+                  >
+                    {n.status}
+                  </span>
+                  <span className="text-xs adm-muted">
+                    DPS {n.serie}/{n.numero} · {n.criadaEm}
+                    {n.ambiente !== "producao" && " · teste"}
+                  </span>
+                  <span className="text-sm font-semibold adm-ink">{brl(n.valor)}</span>
+                  {n.chaveAcesso && (
+                    <span className="w-full truncate font-mono text-[11px] adm-muted" title={n.chaveAcesso}>
+                      chave: {n.chaveAcesso}
+                    </span>
+                  )}
+                  {n.chaveAcesso && (
+                    <a
+                      href={`/oficina/ordens/${encodeURIComponent(os.id)}/nfse/${n.id}`}
+                      className="text-xs font-semibold adm-brand hover:underline"
+                    >
+                      Baixar XML
+                    </a>
+                  )}
+                  {n.erro && <span className="w-full text-xs text-rose-300">{n.erro}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {erroNota && <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{erroNota}</p>}
+          {notaOk && (
+            <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+              Nota autorizada! Chave: <span className="font-mono text-xs">{notaOk}</span>
+            </p>
+          )}
+
+          {fiscalPronto ? (
+            <button
+              type="button"
+              onClick={emitirNota}
+              disabled={pending || totalServicos <= 0}
+              className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-4 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
+            >
+              <FileDown className="size-4" />
+              {pending ? "Emitindo…" : "Emitir NFS-e da mão de obra"}
+            </button>
+          ) : (
+            <p className="text-sm adm-muted">
+              Para emitir, configure o certificado e o CNPJ em{" "}
+              <Link href="/oficina/fiscal" className="font-semibold adm-brand hover:underline">
+                Sistema → Nota fiscal
+              </Link>
+              .
+            </p>
+          )}
+          {fiscalPronto && totalServicos <= 0 && (
+            <p className="text-xs adm-muted">
+              Esta OS ainda não tem item do tipo <strong>Serviço</strong> — adicione a mão de obra acima.
+            </p>
+          )}
         </div>
       </div>
 

@@ -11,6 +11,7 @@ import {
   Settings,
   KeyRound,
   Wrench,
+  ReceiptText,
 } from "lucide-react";
 
 export interface AdminNavItem {
@@ -51,6 +52,7 @@ export const adminNavSections: AdminNavSection[] = [
   {
     title: "Sistema",
     items: [
+      { href: "/oficina/fiscal", label: "Nota fiscal", icon: ReceiptText },
       { href: "/oficina/acessos", label: "Acessos", icon: KeyRound },
       { href: "/oficina/configuracoes", label: "Configurações", icon: Settings },
     ],

@@ -15,6 +15,29 @@ ambiente setar** e **onde no código já está o ponto de encaixe**.
   respondem `REFUSED`. Enquanto não for resolvido no provedor do domínio, ele não
   atende — e os links absolutos de metadata/sitemap apontam pra lá.
 
+## Nota fiscal (NFS-e Nacional)
+
+Emissão de NFS-e da mão de obra pela API oficial e gratuita do Sistema Nacional
+(Sefin, nfse.gov.br) — Curitiba está 100% no padrão nacional desde 01/01/2026.
+
+- **Configuração:** painel → Sistema → **Nota fiscal**. O admin envia o e-CNPJ
+  A1 (.pfx + senha) pela própria tela; tudo fica **cifrado** no banco
+  (AES-256-GCM, chave derivada da `SESSION_SECRET` — se ela mudar, é preciso
+  reenviar o certificado). Dados do emitente (CNPJ, regime, código 140101,
+  série/número da DPS) na mesma tela, com **teste de conexão mTLS**.
+- **Emissão:** na página da OS, card "Nota fiscal (NFS-e)" — soma só os itens
+  do tipo **Serviço** (peças são ICMS por força do item 14.01 da LC 116 e
+  ficam fora; NF-e de peças não está implementada). XML autorizado fica em
+  `fiscal_notas`, com download na própria OS.
+- **Ambientes:** começa em *produção restrita* (nota de teste); mudar para
+  *produção* na tela quando estiver validado.
+- **Biblioteca:** `@useinvio/nfse-sdk` (externa no bundle — `next.config.ts`).
+  A emissão usa os blocos `buildDpsFromJson → signDps → transmitirNotaPreparada`
+  em vez de `emitirNfse()` porque o atalho valida XSD via `xmllint`, que não
+  existe na Vercel (a SEFIN valida o XSD do lado dela).
+- **Cancelamento:** ainda não implementado — cancelar pelo Emissor Web
+  (nfse.gov.br, login gov.br), que enxerga as notas emitidas pela API.
+
 ## Mudança de schema no banco
 
 O projeto não usa migrations. O schema é aplicado de duas formas:
