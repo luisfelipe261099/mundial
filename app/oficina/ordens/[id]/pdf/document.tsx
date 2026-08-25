@@ -125,8 +125,9 @@ const s = StyleSheet.create({
   rowZebra: { backgroundColor: C.surface },
   cType: { width: 66 },
   cDesc: { flex: 1, paddingRight: 8 },
-  cQty: { width: 44, textAlign: "center" },
-  cVal: { width: 82, textAlign: "right" },
+  cQty: { width: 40, textAlign: "center" },
+  cVal: { width: 74, textAlign: "right" },
+  cTot: { width: 80, textAlign: "right" },
   pill: {
     alignSelf: "flex-start",
     backgroundColor: C.brandSoft,
@@ -265,7 +266,8 @@ export function ServiceOrderPDF({
               <Text style={[s.th, s.cType]}>TIPO</Text>
               <Text style={[s.th, s.cDesc]}>DESCRIÇÃO</Text>
               <Text style={[s.th, s.cQty]}>QTD</Text>
-              <Text style={[s.th, s.cVal]}>VALOR</Text>
+              <Text style={[s.th, s.cVal]}>VALOR UNIT.</Text>
+              <Text style={[s.th, s.cTot]}>TOTAL</Text>
             </View>
             {os.itens.map((it, i) => (
               <View key={i} style={[s.row, i % 2 === 1 ? s.rowZebra : {}]} wrap={false}>
@@ -274,7 +276,8 @@ export function ServiceOrderPDF({
                 </View>
                 <Text style={[s.cellText, s.cDesc]}>{it.descricao}</Text>
                 <Text style={[s.cellText, s.cQty]}>{it.qtd}</Text>
-                <Text style={[s.cellVal, s.cVal]}>{brl(it.valor)}</Text>
+                <Text style={[s.cellText, s.cVal]}>{brl(it.valor)}</Text>
+                <Text style={[s.cellVal, s.cTot]}>{brl(it.valor * it.qtd)}</Text>
               </View>
             ))}
           </View>
