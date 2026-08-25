@@ -51,7 +51,9 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
   const [checkSalvo, setCheckSalvo] = useState(false);
 
   // itens
-  const [draft, setDraft] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
+  // Rascunhos separados: peça e serviço têm formulários próprios (sem seletor).
+  const [draftPeca, setDraftPeca] = useState({ descricao: "", qtd: 1, valor: 0, productId: "" });
+  const [draftServ, setDraftServ] = useState({ descricao: "", qtd: 1, valor: 0 });
 
   // fotos (Vercel Blob)
   const [fotos, setFotos] = useState<string[]>(os.fotos ?? []);
@@ -93,10 +95,17 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
   const [obs, setObs] = useState(os.observacoes);
   const [obsSalvo, setObsSalvo] = useState(false);
 
-  function addItem() {
-    if (!draft.descricao.trim() || draft.valor <= 0) return;
-    const payload = { ...draft, productId: draft.productId || undefined };
-    setDraft({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
+  function addPeca() {
+    if (!draftPeca.descricao.trim() || draftPeca.valor <= 0) return;
+    const payload = { tipo: "Peça", ...draftPeca, productId: draftPeca.productId || undefined };
+    setDraftPeca({ descricao: "", qtd: 1, valor: 0, productId: "" });
+    run(() => adicionarItemOS(os.id, payload));
+  }
+
+  function addServ() {
+    if (!draftServ.descricao.trim() || draftServ.valor <= 0) return;
+    const payload = { tipo: "Serviço", ...draftServ, productId: undefined };
+    setDraftServ({ descricao: "", qtd: 1, valor: 0 });
     run(() => adicionarItemOS(os.id, payload));
   }
 
@@ -118,6 +127,81 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
       if (r.error) setErroItem(r.error);
       else setEditId(null);
     });
+  }
+
+  // Linha de item (exibição/edição) — compartilhada pelas seções de peças e serviços.
+  function linhaItem(it: (typeof os.itens)[number]) {
+    if (editId === it.id) {
+      return (
+        <div key={it.id} className="space-y-2 py-2.5">
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={edit.tipo}
+              onChange={(e) => setEdit((d) => ({ ...d, tipo: e.target.value }))}
+              className={inputCls}
+              aria-label="Tipo do item"
+            >
+              <option value="Peça">Peça</option>
+              <option value="Serviço">Serviço</option>
+            </select>
+            <input
+              type="number"
+              min={0}
+              value={edit.valor || ""}
+              onChange={(e) => setEdit((d) => ({ ...d, valor: Number(e.target.value) }))}
+              placeholder="Valor R$"
+              className={inputCls}
+              aria-label="Valor unitário"
+            />
+          </div>
+          <input
+            value={edit.descricao}
+            onChange={(e) => setEdit((d) => ({ ...d, descricao: e.target.value }))}
+            className={inputCls}
+            aria-label="Descrição do item"
+          />
+          <div className="grid grid-cols-[4.5rem_1fr_1fr] gap-2">
+            <input
+              type="number"
+              min={1}
+              value={edit.qtd}
+              onChange={(e) => setEdit((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))}
+              className={inputCls}
+              aria-label="Quantidade"
+            />
+            <button
+              type="button"
+              disabled={pending || !edit.descricao.trim()}
+              onClick={() => salvarItem(it.id)}
+              className="rounded-lg bg-[var(--mec-brand)] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              Salvar
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditId(null)}
+              className="rounded-lg border border-[var(--mec-line)] px-3 py-2.5 text-sm font-semibold mec-muted"
+            >
+              Cancelar
+            </button>
+          </div>
+          {erroItem && <p className="text-xs text-rose-300">{erroItem}</p>}
+        </div>
+      );
+    }
+    return (
+      <div key={it.id} className="flex items-center gap-2 py-2.5">
+        <span className="min-w-0 flex-1 truncate text-sm mec-ink">{it.descricao}</span>
+        <span className="text-xs mec-muted">×{it.qtd}</span>
+        <span className="text-sm font-semibold mec-ink">{brl(it.valor * it.qtd)}</span>
+        <button type="button" onClick={() => abrirEdicao(it)} aria-label={`Editar ${it.descricao}`}>
+          <Pencil className="size-4 mec-muted" />
+        </button>
+        <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
+          <Trash2 className="size-4 text-rose-400" />
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -226,101 +310,31 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
         </button>
       </section>
 
-      {/* peças e serviços */}
+      {/* peças e serviços — seções separadas, cada uma com seu formulário */}
       <section>
-        <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Peças e serviços</h2>
+        <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Peças</h2>
         <div className="mec-card divide-y divide-[var(--mec-line)] px-4">
-          {os.itens.length === 0 && <p className="py-3 text-sm mec-muted">Nenhum item ainda.</p>}
-          {os.itens.map((it) =>
-            editId === it.id ? (
-              <div key={it.id} className="space-y-2 py-2.5">
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={edit.tipo}
-                    onChange={(e) => setEdit((d) => ({ ...d, tipo: e.target.value }))}
-                    className={inputCls}
-                    aria-label="Tipo do item"
-                  >
-                    <option value="Peça">Peça</option>
-                    <option value="Serviço">Serviço</option>
-                  </select>
-                  <input
-                    type="number"
-                    min={0}
-                    value={edit.valor || ""}
-                    onChange={(e) => setEdit((d) => ({ ...d, valor: Number(e.target.value) }))}
-                    placeholder="Valor R$"
-                    className={inputCls}
-                    aria-label="Valor unitário"
-                  />
-                </div>
-                <input
-                  value={edit.descricao}
-                  onChange={(e) => setEdit((d) => ({ ...d, descricao: e.target.value }))}
-                  className={inputCls}
-                  aria-label="Descrição do item"
-                />
-                <div className="grid grid-cols-[4.5rem_1fr_1fr] gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    value={edit.qtd}
-                    onChange={(e) => setEdit((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))}
-                    className={inputCls}
-                    aria-label="Quantidade"
-                  />
-                  <button
-                    type="button"
-                    disabled={pending || !edit.descricao.trim()}
-                    onClick={() => salvarItem(it.id)}
-                    className="rounded-lg bg-[var(--mec-brand)] px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-                  >
-                    Salvar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditId(null)}
-                    className="rounded-lg border border-[var(--mec-line)] px-3 py-2.5 text-sm font-semibold mec-muted"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-                {erroItem && <p className="text-xs text-rose-300">{erroItem}</p>}
-              </div>
-            ) : (
-              <div key={it.id} className="flex items-center gap-2 py-2.5">
-                <span className="rounded-md bg-[var(--mec-surface-2)] px-2 py-0.5 text-xs mec-muted">{it.tipo}</span>
-                <span className="min-w-0 flex-1 truncate text-sm mec-ink">{it.descricao}</span>
-                <span className="text-xs mec-muted">×{it.qtd}</span>
-                <span className="text-sm font-semibold mec-ink">{brl(it.valor * it.qtd)}</span>
-                <button type="button" onClick={() => abrirEdicao(it)} aria-label={`Editar ${it.descricao}`}>
-                  <Pencil className="size-4 mec-muted" />
-                </button>
-                <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
-                  <Trash2 className="size-4 text-rose-400" />
-                </button>
-              </div>
-            )
+          {os.itens.filter((i) => i.tipo === "Peça").length === 0 && (
+            <p className="py-3 text-sm mec-muted">Nenhuma peça ainda.</p>
           )}
+          {os.itens.filter((i) => i.tipo === "Peça").map((it) => linhaItem(it))}
         </div>
 
         <div className="mt-2 space-y-2 rounded-xl border border-[var(--mec-line)] p-3">
+          <input value={draftPeca.descricao} onChange={(e) => setDraftPeca((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Descrição da peça" className={inputCls} />
           <div className="grid grid-cols-2 gap-2">
-            <select value={draft.tipo} onChange={(e) => setDraft((d) => ({ ...d, tipo: e.target.value, productId: e.target.value === "Serviço" ? "" : d.productId }))} className={inputCls}>
-              <option value="Peça">Peça</option>
-              <option value="Serviço">Serviço</option>
-            </select>
-            <input type="number" min={0} value={draft.valor || ""} onChange={(e) => setDraft((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="Valor R$" className={inputCls} />
+            <input type="number" min={1} value={draftPeca.qtd} onChange={(e) => setDraftPeca((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Quantidade" />
+            <input type="number" min={0} value={draftPeca.valor || ""} onChange={(e) => setDraftPeca((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="Valor R$" className={inputCls} aria-label="Valor unitário" />
           </div>
-          <input value={draft.descricao} onChange={(e) => setDraft((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Descrição" className={inputCls} />
-          {draft.tipo === "Peça" && estoque.length > 0 && (
+          {estoque.length > 0 && (
             <select
-              value={draft.productId}
+              value={draftPeca.productId}
               onChange={(e) => {
                 const p = estoque.find((x) => x.id === e.target.value);
-                setDraft((d) => ({ ...d, productId: e.target.value, descricao: p ? p.produto : d.descricao }));
+                setDraftPeca((d) => ({ ...d, productId: e.target.value, descricao: p ? p.produto : d.descricao }));
               }}
               className={inputCls}
+              aria-label="Vincular ao estoque"
             >
               <option value="">Vincular ao estoque (opcional)…</option>
               {estoque.map((p) => (
@@ -330,9 +344,31 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
               ))}
             </select>
           )}
-          <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--mec-brand)] py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+          <button type="button" onClick={addPeca} disabled={pending || !draftPeca.descricao.trim() || draftPeca.valor <= 0} className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--mec-brand)] py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
             <Plus className="size-4" />
-            Adicionar item
+            Adicionar peça
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mec-display mb-2 text-[1.05rem] font-bold mec-ink">Serviços (mão de obra)</h2>
+        <div className="mec-card divide-y divide-[var(--mec-line)] px-4">
+          {os.itens.filter((i) => i.tipo !== "Peça").length === 0 && (
+            <p className="py-3 text-sm mec-muted">Nenhum serviço ainda.</p>
+          )}
+          {os.itens.filter((i) => i.tipo !== "Peça").map((it) => linhaItem(it))}
+        </div>
+
+        <div className="mt-2 space-y-2 rounded-xl border border-[var(--mec-line)] p-3">
+          <input value={draftServ.descricao} onChange={(e) => setDraftServ((d) => ({ ...d, descricao: e.target.value }))} placeholder="Descrição do serviço" className={inputCls} />
+          <div className="grid grid-cols-2 gap-2">
+            <input type="number" min={1} value={draftServ.qtd} onChange={(e) => setDraftServ((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Quantidade" />
+            <input type="number" min={0} value={draftServ.valor || ""} onChange={(e) => setDraftServ((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="Valor R$" className={inputCls} aria-label="Valor unitário" />
+          </div>
+          <button type="button" onClick={addServ} disabled={pending || !draftServ.descricao.trim() || draftServ.valor <= 0} className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--mec-brand)] py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1d4ed8] disabled:opacity-40">
+            <Plus className="size-4" />
+            Adicionar serviço
           </button>
         </div>
       </section>

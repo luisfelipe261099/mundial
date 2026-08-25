@@ -67,7 +67,10 @@ export function OrderControl({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [draft, setDraft] = useState({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
+  // Rascunhos separados: peça e serviço têm cada um a sua linha de adição —
+  // acabou o seletor de tipo que exigia um clique a mais a cada item.
+  const [draftPeca, setDraftPeca] = useState({ descricao: "", qtd: 1, valor: 0, productId: "" });
+  const [draftServ, setDraftServ] = useState({ descricao: "", qtd: 1, valor: 0 });
   const [showEntrega, setShowEntrega] = useState(false);
   const [exitKm, setExitKm] = useState("");
   const [paid, setPaid] = useState(true);
@@ -149,11 +152,105 @@ export function OrderControl({
     });
   }
 
-  function addItem() {
-    if (!draft.descricao.trim() || draft.valor <= 0) return;
-    const payload = { ...draft, productId: draft.productId || undefined };
-    setDraft({ tipo: "Peça", descricao: "", qtd: 1, valor: 0, productId: "" });
+  function addPeca() {
+    if (!draftPeca.descricao.trim() || draftPeca.valor <= 0) return;
+    const payload = { tipo: "Peça", ...draftPeca, productId: draftPeca.productId || undefined };
+    setDraftPeca({ descricao: "", qtd: 1, valor: 0, productId: "" });
     run(() => adicionarItemOS(os.id, payload));
+  }
+
+  function addServ() {
+    if (!draftServ.descricao.trim() || draftServ.valor <= 0) return;
+    const payload = { tipo: "Serviço", ...draftServ, productId: undefined };
+    setDraftServ({ descricao: "", qtd: 1, valor: 0 });
+    run(() => adicionarItemOS(os.id, payload));
+  }
+
+  // Linha de item (exibição ou edição inline) — usada nas duas seções.
+  // Na edição dá pra trocar o tipo, o que move o item de seção ao salvar.
+  function linhaItem(it: OsControle["itens"][number]) {
+    if (editId === it.id) {
+      return (
+        <div key={it.id} className="bg-[var(--ad-surface-2)]/40 px-5 py-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[6.5rem_1fr_3.5rem_5.5rem_auto_auto]">
+            <select
+              value={edit.tipo}
+              onChange={(e) => setEdit((d) => ({ ...d, tipo: e.target.value }))}
+              className={inputCls}
+              aria-label="Tipo do item"
+            >
+              <option value="Peça">Peça</option>
+              <option value="Serviço">Serviço</option>
+            </select>
+            <input
+              value={edit.descricao}
+              onChange={(e) => setEdit((d) => ({ ...d, descricao: e.target.value }))}
+              className={inputCls}
+              aria-label="Descrição do item"
+            />
+            <input
+              type="number"
+              min={1}
+              value={edit.qtd}
+              onChange={(e) => setEdit((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))}
+              className={inputCls}
+              aria-label="Quantidade"
+            />
+            <input
+              type="number"
+              min={0}
+              value={edit.valor || ""}
+              onChange={(e) => setEdit((d) => ({ ...d, valor: Number(e.target.value) }))}
+              placeholder="R$"
+              className={inputCls}
+              aria-label="Valor unitário"
+            />
+            <button
+              type="button"
+              disabled={pending || !edit.descricao.trim()}
+              onClick={() => salvarItem(it.id)}
+              className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
+            >
+              <Check className="size-4" />
+              Salvar
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditId(null)}
+              className="rounded-lg border border-[var(--ad-line)] px-3 py-2.5 text-sm font-semibold adm-muted"
+            >
+              Cancelar
+            </button>
+          </div>
+          {it.productId && edit.tipo === "Serviço" && (
+            <p className="mt-2 text-xs adm-muted">Virando serviço, o vínculo com o estoque sai.</p>
+          )}
+          {os.status === "Entregue" && (
+            <p className="mt-2 text-xs text-amber-300">
+              OS já entregue — mudar o valor aqui não corrige sozinho o lançamento no financeiro.
+            </p>
+          )}
+          {erroItem && <p className="mt-2 text-xs text-rose-300">{erroItem}</p>}
+        </div>
+      );
+    }
+    return (
+      <div key={it.id} className="flex items-center gap-3 px-5 py-3">
+        <span className="min-w-0 flex-1 truncate text-sm adm-ink">
+          {it.descricao}
+          {it.productId && <span className="ml-2 text-xs text-emerald-400">• estoque</span>}
+        </span>
+        <span className="text-xs adm-muted">×{it.qtd}</span>
+        <span className="w-14 text-right text-xs adm-muted">{brl(it.valor)}</span>
+        <span className="w-20 text-right text-sm font-semibold adm-ink">{brl(it.valor * it.qtd)}</span>
+        <button type="button" onClick={() => abrirEdicao(it)} aria-label={`Editar ${it.descricao}`}>
+          <Pencil className="size-4 adm-muted hover:adm-brand" />
+        </button>
+        <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
+          <Trash2 className="size-4 text-rose-400" />
+        </button>
+      </div>
+    );
   }
 
   const info = [
@@ -481,119 +578,45 @@ export function OrderControl({
         </div>
       )}
 
-      {/* Itens / orçamento */}
+      {/* Itens / orçamento — peças e serviços em seções separadas, cada uma
+          com sua própria linha de adição (sem seletor de tipo). */}
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
           <h3 className="adm-display font-bold adm-ink">Peças e serviços (orçamento)</h3>
         </div>
-        <div className="divide-y divide-[var(--ad-line)]">
-          {os.itens.length === 0 && <p className="px-5 py-4 text-sm adm-muted">Nenhum item ainda — adicione peças e serviços abaixo.</p>}
-          {os.itens.map((it) =>
-            editId === it.id ? (
-              <div key={it.id} className="bg-[var(--ad-surface-2)]/40 px-5 py-3">
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-[6.5rem_1fr_3.5rem_5.5rem_auto_auto]">
-                  <select
-                    value={edit.tipo}
-                    onChange={(e) => setEdit((d) => ({ ...d, tipo: e.target.value }))}
-                    className={inputCls}
-                    aria-label="Tipo do item"
-                  >
-                    <option value="Peça">Peça</option>
-                    <option value="Serviço">Serviço</option>
-                  </select>
-                  <input
-                    value={edit.descricao}
-                    onChange={(e) => setEdit((d) => ({ ...d, descricao: e.target.value }))}
-                    className={inputCls}
-                    aria-label="Descrição do item"
-                  />
-                  <input
-                    type="number"
-                    min={1}
-                    value={edit.qtd}
-                    onChange={(e) => setEdit((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))}
-                    className={inputCls}
-                    aria-label="Quantidade"
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    value={edit.valor || ""}
-                    onChange={(e) => setEdit((d) => ({ ...d, valor: Number(e.target.value) }))}
-                    placeholder="R$"
-                    className={inputCls}
-                    aria-label="Valor unitário"
-                  />
-                  <button
-                    type="button"
-                    disabled={pending || !edit.descricao.trim()}
-                    onClick={() => salvarItem(it.id)}
-                    className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
-                  >
-                    <Check className="size-4" />
-                    Salvar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditId(null)}
-                    className="rounded-lg border border-[var(--ad-line)] px-3 py-2.5 text-sm font-semibold adm-muted"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-                {it.productId && edit.tipo === "Serviço" && (
-                  <p className="mt-2 text-xs adm-muted">Virando serviço, o vínculo com o estoque sai.</p>
-                )}
-                {os.status === "Entregue" && (
-                  <p className="mt-2 text-xs text-amber-300">
-                    OS já entregue — mudar o valor aqui não corrige sozinho o lançamento no financeiro.
-                  </p>
-                )}
-                {erroItem && <p className="mt-2 text-xs text-rose-300">{erroItem}</p>}
-              </div>
-            ) : (
-              <div key={it.id} className="flex items-center gap-3 px-5 py-3">
-                <span className="rounded-md bg-[var(--ad-surface-2)] px-2 py-0.5 text-xs font-medium adm-muted">{it.tipo}</span>
-                <span className="min-w-0 flex-1 truncate text-sm adm-ink">
-                  {it.descricao}
-                  {it.productId && <span className="ml-2 text-xs text-emerald-400">• estoque</span>}
-                </span>
-                <span className="text-xs adm-muted">×{it.qtd}</span>
-                <span className="text-sm font-semibold adm-ink">{brl(it.valor * it.qtd)}</span>
-                <button type="button" onClick={() => abrirEdicao(it)} aria-label={`Editar ${it.descricao}`}>
-                  <Pencil className="size-4 adm-muted hover:adm-brand" />
-                </button>
-                <button type="button" disabled={pending} onClick={() => run(() => removerItemOS(it.id, os.id))} aria-label="Remover">
-                  <Trash2 className="size-4 text-rose-400" />
-                </button>
-              </div>
-            )
-          )}
-        </div>
 
-        {/* linha de adição */}
+        {/* ── PEÇAS ── */}
+        <div className="flex items-center justify-between bg-[var(--ad-surface-2)]/40 px-5 py-2">
+          <span className="adm-eyebrow">Peças</span>
+          <span className="text-xs font-semibold adm-muted">
+            {brl(os.itens.filter((i) => i.tipo === "Peça").reduce((t, i) => t + i.valor * i.qtd, 0))}
+          </span>
+        </div>
+        <div className="divide-y divide-[var(--ad-line)] border-t border-[var(--ad-line)]">
+          {os.itens.filter((i) => i.tipo === "Peça").length === 0 && (
+            <p className="px-5 py-3 text-sm adm-muted">Nenhuma peça lançada.</p>
+          )}
+          {os.itens.filter((i) => i.tipo === "Peça").map((it) => linhaItem(it))}
+        </div>
         <div className="border-t border-[var(--ad-line)] bg-[var(--ad-surface-2)]/50 p-4">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[6.5rem_1fr_3.5rem_5.5rem_auto]">
-            <select value={draft.tipo} onChange={(e) => setDraft((d) => ({ ...d, tipo: e.target.value, productId: e.target.value === "Serviço" ? "" : d.productId }))} className={inputCls}>
-              <option value="Peça">Peça</option>
-              <option value="Serviço">Serviço</option>
-            </select>
-            <input value={draft.descricao} onChange={(e) => setDraft((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Descrição" className={inputCls} />
-            <input type="number" min={1} value={draft.qtd} onChange={(e) => setDraft((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Qtd" />
-            <input type="number" min={0} value={draft.valor || ""} onChange={(e) => setDraft((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$" className={inputCls} aria-label="Valor" />
-            <button type="button" onClick={addItem} disabled={pending || !draft.descricao.trim() || draft.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_3.5rem_5.5rem_auto]">
+            <input value={draftPeca.descricao} onChange={(e) => setDraftPeca((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Nova peça — descrição" className={inputCls} />
+            <input type="number" min={1} value={draftPeca.qtd} onChange={(e) => setDraftPeca((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Quantidade da peça" />
+            <input type="number" min={0} value={draftPeca.valor || ""} onChange={(e) => setDraftPeca((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$ unit." className={inputCls} aria-label="Valor unitário da peça" />
+            <button type="button" onClick={addPeca} disabled={pending || !draftPeca.descricao.trim() || draftPeca.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40">
               <Plus className="size-4" />
-              <span className="sm:hidden">Adicionar</span>
+              Peça
             </button>
           </div>
-          {draft.tipo === "Peça" && estoque.length > 0 && (
+          {estoque.length > 0 && (
             <select
-              value={draft.productId}
+              value={draftPeca.productId}
               onChange={(e) => {
                 const p = estoque.find((x) => x.id === e.target.value);
-                setDraft((d) => ({ ...d, productId: e.target.value, descricao: p ? p.produto : d.descricao }));
+                setDraftPeca((d) => ({ ...d, productId: e.target.value, descricao: p ? p.produto : d.descricao }));
               }}
               className={`${inputCls} mt-2`}
+              aria-label="Vincular peça do estoque"
             >
               <option value="">Vincular peça do estoque (opcional — baixa ao finalizar)…</option>
               {estoque.map((p) => (
@@ -603,6 +626,29 @@ export function OrderControl({
               ))}
             </select>
           )}
+        </div>
+
+        {/* ── SERVIÇOS ── */}
+        <div className="flex items-center justify-between border-t border-[var(--ad-line)] bg-[var(--ad-surface-2)]/40 px-5 py-2">
+          <span className="adm-eyebrow">Serviços (mão de obra)</span>
+          <span className="text-xs font-semibold adm-muted">{brl(totalServicos)}</span>
+        </div>
+        <div className="divide-y divide-[var(--ad-line)] border-t border-[var(--ad-line)]">
+          {os.itens.filter((i) => i.tipo !== "Peça").length === 0 && (
+            <p className="px-5 py-3 text-sm adm-muted">Nenhum serviço lançado — é este valor que sai na NFS-e.</p>
+          )}
+          {os.itens.filter((i) => i.tipo !== "Peça").map((it) => linhaItem(it))}
+        </div>
+        <div className="border-t border-[var(--ad-line)] bg-[var(--ad-surface-2)]/50 p-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_3.5rem_5.5rem_auto]">
+            <input value={draftServ.descricao} onChange={(e) => setDraftServ((d) => ({ ...d, descricao: e.target.value }))} placeholder="Novo serviço — descrição da mão de obra" className={inputCls} />
+            <input type="number" min={1} value={draftServ.qtd} onChange={(e) => setDraftServ((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Quantidade do serviço" />
+            <input type="number" min={0} value={draftServ.valor || ""} onChange={(e) => setDraftServ((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$ unit." className={inputCls} aria-label="Valor unitário do serviço" />
+            <button type="button" onClick={addServ} disabled={pending || !draftServ.descricao.trim() || draftServ.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-brand)] px-3 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40">
+              <Plus className="size-4" />
+              Serviço
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between border-t border-[var(--ad-line)] px-5 py-3.5">

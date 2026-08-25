@@ -41,7 +41,9 @@ export function NewOrderForm({
   const [defeito, setDefeito] = useState("");
   const [obs, setObs] = useState("");
   const [itens, setItens] = useState<Item[]>([]);
-  const [draft, setDraft] = useState<Item>({ tipo: "Peça", descricao: "", qtd: 1, valor: 0 });
+  // Rascunhos separados por tipo — sem o seletor Peça/Serviço a cada item.
+  const [draftPeca, setDraftPeca] = useState({ descricao: "", qtd: 1, valor: 0 });
+  const [draftServ, setDraftServ] = useState({ descricao: "", qtd: 1, valor: 0 });
   const [criada, setCriada] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -50,15 +52,20 @@ export function NewOrderForm({
     ? veiculos.filter((v) => v.proprietario === clienteNome)
     : veiculos;
   const total = itens.reduce((s, i) => s + i.valor * i.qtd, 0);
-  const podeAdicionar = draft.descricao.trim() !== "" && draft.valor > 0;
   // Itens não entram na trava: OS de diagnóstico, garantia ou orçamento a
   // definir nasce sem peça nenhuma e ganha os itens depois.
   const podeCriar = clienteId !== "" && veiculoId !== "" && defeito.trim() !== "";
 
-  function addItem() {
-    if (!podeAdicionar) return;
-    setItens((x) => [...x, draft]);
-    setDraft({ tipo: "Peça", descricao: "", qtd: 1, valor: 0 });
+  function addPeca() {
+    if (!draftPeca.descricao.trim() || draftPeca.valor <= 0) return;
+    setItens((x) => [...x, { tipo: "Peça" as const, ...draftPeca }]);
+    setDraftPeca({ descricao: "", qtd: 1, valor: 0 });
+  }
+
+  function addServ() {
+    if (!draftServ.descricao.trim() || draftServ.valor <= 0) return;
+    setItens((x) => [...x, { tipo: "Serviço" as const, ...draftServ }]);
+    setDraftServ({ descricao: "", qtd: 1, valor: 0 });
   }
 
   function criar() {
@@ -175,18 +182,25 @@ export function NewOrderForm({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[7rem_1fr_4rem_6rem_auto]">
-          <select value={draft.tipo} onChange={(e) => setDraft((d) => ({ ...d, tipo: e.target.value as Item["tipo"] }))} className={inputCls}>
-            <option value="Peça">Peça</option>
-            <option value="Serviço">Serviço</option>
-          </select>
-          <input value={draft.descricao} onChange={(e) => setDraft((d) => ({ ...d, descricao: e.target.value }))} placeholder="Descrição" className={inputCls} />
-          <input type="number" min={1} value={draft.qtd} onChange={(e) => setDraft((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Quantidade" />
-          <input type="number" min={0} value={draft.valor || ""} onChange={(e) => setDraft((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$" className={inputCls} aria-label="Valor" />
-          <button type="button" onClick={addItem} disabled={!podeAdicionar} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-surface-2)] px-3 py-2.5 text-sm font-semibold adm-ink transition-colors enabled:hover:bg-[var(--ad-line)] disabled:opacity-40">
-            <Plus className="size-4" />
-            <span className="sm:hidden">Adicionar item</span>
-          </button>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_4rem_6rem_auto]">
+            <input value={draftPeca.descricao} onChange={(e) => setDraftPeca((d) => ({ ...d, descricao: e.target.value }))} placeholder="Peça — descrição" className={inputCls} />
+            <input type="number" min={1} value={draftPeca.qtd} onChange={(e) => setDraftPeca((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Quantidade da peça" />
+            <input type="number" min={0} value={draftPeca.valor || ""} onChange={(e) => setDraftPeca((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$" className={inputCls} aria-label="Valor da peça" />
+            <button type="button" onClick={addPeca} disabled={!draftPeca.descricao.trim() || draftPeca.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-surface-2)] px-3 py-2.5 text-sm font-semibold adm-ink transition-colors enabled:hover:bg-[var(--ad-line)] disabled:opacity-40">
+              <Plus className="size-4" />
+              Peça
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_4rem_6rem_auto]">
+            <input value={draftServ.descricao} onChange={(e) => setDraftServ((d) => ({ ...d, descricao: e.target.value }))} placeholder="Serviço — descrição da mão de obra" className={inputCls} />
+            <input type="number" min={1} value={draftServ.qtd} onChange={(e) => setDraftServ((d) => ({ ...d, qtd: Math.max(1, Number(e.target.value)) }))} className={inputCls} aria-label="Quantidade do serviço" />
+            <input type="number" min={0} value={draftServ.valor || ""} onChange={(e) => setDraftServ((d) => ({ ...d, valor: Number(e.target.value) }))} placeholder="R$" className={inputCls} aria-label="Valor do serviço" />
+            <button type="button" onClick={addServ} disabled={!draftServ.descricao.trim() || draftServ.valor <= 0} className="flex items-center justify-center gap-1 rounded-lg bg-[var(--ad-surface-2)] px-3 py-2.5 text-sm font-semibold adm-ink transition-colors enabled:hover:bg-[var(--ad-line)] disabled:opacity-40">
+              <Plus className="size-4" />
+              Serviço
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t border-[var(--ad-line)] pt-4">
