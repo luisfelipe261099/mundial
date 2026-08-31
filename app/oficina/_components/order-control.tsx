@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   Check,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
   Plus,
   Pencil,
   Trash2,
@@ -27,6 +29,7 @@ import {
   adicionarItemOS,
   editarItemOS,
   removerItemOS,
+  moverItemOS,
   editarOS,
   excluirOS,
   enviarParaAprovacao,
@@ -166,9 +169,9 @@ export function OrderControl({
     run(() => adicionarItemOS(os.id, payload));
   }
 
-  // Linha de item (exibição ou edição inline) — usada nas duas seções.
-  // Na edição dá pra trocar o tipo, o que move o item de seção ao salvar.
-  function linhaItem(it: OsControle["itens"][number]) {
+  // Linha de item (exibição ou edição inline) na lista única do orçamento.
+  // As setas trocam a posição — a ordem daqui é a que sai no PDF.
+  function linhaItem(it: OsControle["itens"][number], i: number, total: number) {
     if (editId === it.id) {
       return (
         <div key={it.id} className="bg-[var(--ad-surface-2)]/40 px-5 py-3">
@@ -235,13 +238,40 @@ export function OrderControl({
       );
     }
     return (
-      <div key={it.id} className="flex items-center gap-3 px-5 py-3">
+      <div key={it.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
+        <span className="flex flex-col">
+          <button
+            type="button"
+            disabled={pending || i === 0}
+            onClick={() => run(() => moverItemOS(it.id, os.id, "cima"))}
+            className="disabled:opacity-25"
+            aria-label={`Subir ${it.descricao}`}
+          >
+            <ChevronUp className="size-4 adm-muted hover:adm-brand" />
+          </button>
+          <button
+            type="button"
+            disabled={pending || i === total - 1}
+            onClick={() => run(() => moverItemOS(it.id, os.id, "baixo"))}
+            className="disabled:opacity-25"
+            aria-label={`Descer ${it.descricao}`}
+          >
+            <ChevronDown className="size-4 adm-muted hover:adm-brand" />
+          </button>
+        </span>
+        <span
+          className={`hidden rounded-md px-2 py-0.5 text-xs font-medium sm:inline ${
+            it.tipo === "Peça" ? "bg-[var(--ad-surface-2)] adm-muted" : "bg-[var(--ad-brand)]/10 adm-brand"
+          }`}
+        >
+          {it.tipo}
+        </span>
         <span className="min-w-0 flex-1 truncate text-sm adm-ink">
           {it.descricao}
           {it.productId && <span className="ml-2 text-xs text-emerald-400">• estoque</span>}
         </span>
         <span className="text-xs adm-muted">×{it.qtd}</span>
-        <span className="w-14 text-right text-xs adm-muted">{brl(it.valor)}</span>
+        <span className="hidden w-14 text-right text-xs adm-muted sm:inline">{brl(it.valor)}</span>
         <span className="w-20 text-right text-sm font-semibold adm-ink">{brl(it.valor * it.qtd)}</span>
         <button type="button" onClick={() => abrirEdicao(it)} aria-label={`Editar ${it.descricao}`}>
           <Pencil className="size-4 adm-muted hover:adm-brand" />
@@ -578,26 +608,24 @@ export function OrderControl({
         </div>
       )}
 
-      {/* Itens / orçamento — peças e serviços em seções separadas, cada uma
-          com sua própria linha de adição (sem seletor de tipo). */}
+      {/* Itens / orçamento — lista única na ordem que sai no PDF (setas para
+          reordenar), com uma linha de adição para peça e outra para serviço. */}
       <div className="adm-card overflow-hidden">
         <div className="border-b border-[var(--ad-line)] px-5 py-3.5">
           <h3 className="adm-display font-bold adm-ink">Peças e serviços (orçamento)</h3>
+          <p className="mt-0.5 text-xs adm-muted">
+            A ordem abaixo é a que sai no PDF — use as setas para deixar cada serviço embaixo da peça dele.
+          </p>
         </div>
 
-        {/* ── PEÇAS ── */}
-        <div className="flex items-center justify-between bg-[var(--ad-surface-2)]/40 px-5 py-2">
-          <span className="adm-eyebrow">Peças</span>
-          <span className="text-xs font-semibold adm-muted">
-            {brl(os.itens.filter((i) => i.tipo === "Peça").reduce((t, i) => t + i.valor * i.qtd, 0))}
-          </span>
-        </div>
-        <div className="divide-y divide-[var(--ad-line)] border-t border-[var(--ad-line)]">
-          {os.itens.filter((i) => i.tipo === "Peça").length === 0 && (
-            <p className="px-5 py-3 text-sm adm-muted">Nenhuma peça lançada.</p>
+        <div className="divide-y divide-[var(--ad-line)]">
+          {os.itens.length === 0 && (
+            <p className="px-5 py-3 text-sm adm-muted">Nenhum item lançado.</p>
           )}
-          {os.itens.filter((i) => i.tipo === "Peça").map((it) => linhaItem(it))}
+          {os.itens.map((it, i) => linhaItem(it, i, os.itens.length))}
         </div>
+
+        {/* ── Nova peça ── */}
         <div className="border-t border-[var(--ad-line)] bg-[var(--ad-surface-2)]/50 p-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_3.5rem_5.5rem_auto]">
             <input value={draftPeca.descricao} onChange={(e) => setDraftPeca((d) => ({ ...d, descricao: e.target.value, productId: "" }))} placeholder="Nova peça — descrição" className={inputCls} />
@@ -628,17 +656,7 @@ export function OrderControl({
           )}
         </div>
 
-        {/* ── SERVIÇOS ── */}
-        <div className="flex items-center justify-between border-t border-[var(--ad-line)] bg-[var(--ad-surface-2)]/40 px-5 py-2">
-          <span className="adm-eyebrow">Serviços (mão de obra)</span>
-          <span className="text-xs font-semibold adm-muted">{brl(totalServicos)}</span>
-        </div>
-        <div className="divide-y divide-[var(--ad-line)] border-t border-[var(--ad-line)]">
-          {os.itens.filter((i) => i.tipo !== "Peça").length === 0 && (
-            <p className="px-5 py-3 text-sm adm-muted">Nenhum serviço lançado — é este valor que sai na NFS-e.</p>
-          )}
-          {os.itens.filter((i) => i.tipo !== "Peça").map((it) => linhaItem(it))}
-        </div>
+        {/* ── Novo serviço ── */}
         <div className="border-t border-[var(--ad-line)] bg-[var(--ad-surface-2)]/50 p-4">
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_3.5rem_5.5rem_auto]">
             <input value={draftServ.descricao} onChange={(e) => setDraftServ((d) => ({ ...d, descricao: e.target.value }))} placeholder="Novo serviço — descrição da mão de obra" className={inputCls} />
@@ -651,9 +669,19 @@ export function OrderControl({
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-[var(--ad-line)] px-5 py-3.5">
-          <span className="text-sm adm-muted">Total da OS</span>
-          <span className="adm-display text-xl font-bold adm-ink">{brl(os.total)}</span>
+        <div className="space-y-1 border-t border-[var(--ad-line)] px-5 py-3.5">
+          <div className="flex items-center justify-between text-xs adm-muted">
+            <span>Peças</span>
+            <span>{brl(os.itens.filter((i) => i.tipo === "Peça").reduce((t, i) => t + i.valor * i.qtd, 0))}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs adm-muted">
+            <span>Serviços (mão de obra)</span>
+            <span>{brl(totalServicos)}</span>
+          </div>
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-sm adm-muted">Total da OS</span>
+            <span className="adm-display text-xl font-bold adm-ink">{brl(os.total)}</span>
+          </div>
         </div>
       </div>
 

@@ -64,6 +64,14 @@ const STATEMENTS = [
   `UPDATE "fiscal_config" SET "ambiente" = 'producao' WHERE "id" = 'default' AND "certPfx" IS NULL AND "ambiente" = 'restrita'`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "fiscal_notas_chaveAcesso_key" ON "fiscal_notas"("chaveAcesso")`,
   `CREATE INDEX IF NOT EXISTS "fiscal_notas_serviceOrderId_idx" ON "fiscal_notas"("serviceOrderId")`,
+  // Posição do item no orçamento (a ordem que sai no PDF). O backfill numera
+  // pela ordem de criação e só alcança linha ainda em 0 — item já reordenado
+  // pelo usuário (posição >= 1) nunca é tocado de novo.
+  `ALTER TABLE "service_order_items" ADD COLUMN IF NOT EXISTS "position" INTEGER NOT NULL DEFAULT 0`,
+  `UPDATE "service_order_items" i SET "position" = sub.rn
+   FROM (SELECT "id", ROW_NUMBER() OVER (PARTITION BY "serviceOrderId" ORDER BY "id") rn
+         FROM "service_order_items") sub
+   WHERE i."id" = sub."id" AND i."position" = 0`,
 ];
 
 let executando: Promise<void> | null = null;

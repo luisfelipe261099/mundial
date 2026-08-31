@@ -77,6 +77,10 @@ export async function adicionarItemOS(
   item: { tipo: string; descricao: string; qtd: number; valor: number; productId?: string }
 ) {
   await requireStaff();
+  const ultimo = await prisma.serviceOrderItem.aggregate({
+    where: { serviceOrderId: osId },
+    _max: { position: true },
+  });
   await prisma.serviceOrderItem.create({
     data: {
       serviceOrderId: osId,
@@ -85,10 +89,42 @@ export async function adicionarItemOS(
       qty: item.qtd,
       value: item.valor,
       productId: item.productId || null,
+      position: (ultimo._max.position ?? 0) + 1,
     },
   });
   await recomputeTotal(osId);
   revalidatePath(`/oficina/ordens/${osId}`);
+}
+
+// Sobe/desce um item na lista do orçamento — a ordem daqui é a que sai no PDF.
+// Antes de trocar, renumera a sequência inteira (1..n), o que corrige qualquer
+// posição duplicada ou zerada herdada de versões antigas.
+export async function moverItemOS(
+  itemId: string,
+  osId: string,
+  direcao: "cima" | "baixo"
+): Promise<{ error?: string }> {
+  await requireStaff();
+  const itens = await prisma.serviceOrderItem.findMany({
+    where: { serviceOrderId: osId },
+    orderBy: [{ position: "asc" }, { id: "asc" }],
+    select: { id: true },
+  });
+  const i = itens.findIndex((x) => x.id === itemId);
+  if (i < 0) return { error: "Item não encontrado nesta OS." };
+  const j = direcao === "cima" ? i - 1 : i + 1;
+  if (j < 0 || j >= itens.length) return {};
+
+  const ordem = itens.map((x) => x.id);
+  [ordem[i], ordem[j]] = [ordem[j], ordem[i]];
+  await prisma.$transaction(
+    ordem.map((id, idx) =>
+      prisma.serviceOrderItem.update({ where: { id }, data: { position: idx + 1 } })
+    )
+  );
+  revalidatePath(`/oficina/ordens/${osId}`);
+  revalidatePath(`/mecanico/${osId}`);
+  return {};
 }
 
 // Edita a ficha da OS: cliente, veículo, entrada, km, combustível, defeito e
@@ -206,7 +242,7 @@ export async function removerItemOS(itemId: string, osId: string) {
 // Avançar/voltar status. Ao FINALIZAR, baixa o estoque das peças vinculadas (1x).
 export async function mudarStatus(osId: string, novoStatus: string) {
   const staff = await requireStaff();
-  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: { id: "asc" } } } });
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: [{ position: "asc" }, { id: "asc" }] } } });
   if (!os) return;
 
   if (novoStatus === "Finalizada" && !os.stockApplied) {
@@ -250,7 +286,7 @@ export async function mudarStatus(osId: string, novoStatus: string) {
 // Gera/atualiza o orçamento do cliente a partir da OS e coloca em "Aguardando aprovação".
 export async function enviarParaAprovacao(osId: string) {
   await requireAdmin();
-  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: { id: "asc" } } } });
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: [{ position: "asc" }, { id: "asc" }] } } });
   if (!os) return;
   const total = os.items.reduce((s, i) => s + i.value * i.qty, 0);
   const itensBudget = os.items.map((i) => ({

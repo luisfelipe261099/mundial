@@ -110,6 +110,7 @@ model ServiceOrderItem {
   qty            Int          @default(1)
   value          Int          @default(0)
   productId      String? // vínculo com o estoque (para baixar ao finalizar)
+  position       Int          @default(0) // ordem no orçamento/PDF (setas na OS)
 
   @@index([serviceOrderId])
   @@map("service_order_items")

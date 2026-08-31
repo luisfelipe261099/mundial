@@ -42,7 +42,7 @@ export async function criarOS(input: {
       total,
       observations: input.observacoes,
       items: {
-        create: input.itens.map((i) => ({ type: i.tipo, description: i.descricao, qty: i.qtd, value: i.valor })),
+        create: input.itens.map((i, idx) => ({ type: i.tipo, description: i.descricao, qty: i.qtd, value: i.valor, position: idx + 1 })),
       },
     },
   });
