@@ -133,21 +133,21 @@ export async function getVeiculo(id: string, clientId: string): Promise<Veiculo 
 export async function getOrdens(clientId: string): Promise<OrdemServico[]> {
   const rows = await prisma.serviceOrder.findMany({
     where: { clientId },
-    include: { items: true },
+    include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } },
     orderBy: { createdAt: "desc" },
   });
   return rows.map(mapOrder);
 }
 
 export async function getOrdem(id: string, clientId: string): Promise<OrdemServico | null> {
-  const o = await prisma.serviceOrder.findFirst({ where: { id, clientId }, include: { items: true } });
+  const o = await prisma.serviceOrder.findFirst({ where: { id, clientId }, include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } } });
   return o ? mapOrder(o) : null;
 }
 
 export async function getOrdensVeiculo(vehicleId: string, clientId: string): Promise<OrdemServico[]> {
   const rows = await prisma.serviceOrder.findMany({
     where: { vehicleId, clientId },
-    include: { items: true },
+    include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } },
     orderBy: { createdAt: "desc" },
   });
   return rows.map(mapOrder);
@@ -156,7 +156,7 @@ export async function getOrdensVeiculo(vehicleId: string, clientId: string): Pro
 export async function getReparosRecentes(clientId: string): Promise<Reparo[]> {
   const rows = await prisma.serviceOrder.findMany({
     where: { clientId },
-    include: { items: true },
+    include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } },
     orderBy: { createdAt: "desc" },
     take: 3,
   });
@@ -172,14 +172,14 @@ export async function getReparosRecentes(clientId: string): Promise<Reparo[]> {
 export async function getOrcamentos(clientId: string): Promise<Orcamento[]> {
   const rows = await prisma.budget.findMany({
     where: { clientId },
-    include: { items: true },
+    include: { items: { orderBy: [{ kind: "asc" }, { id: "asc" }] } },
     orderBy: { date: "desc" },
   });
   return rows.map(mapBudget);
 }
 
 export async function getOrcamento(id: string, clientId: string): Promise<Orcamento | null> {
-  const b = await prisma.budget.findFirst({ where: { id, clientId }, include: { items: true } });
+  const b = await prisma.budget.findFirst({ where: { id, clientId }, include: { items: { orderBy: [{ kind: "asc" }, { id: "asc" }] } } });
   return b ? mapBudget(b) : null;
 }
 
