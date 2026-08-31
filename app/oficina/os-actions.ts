@@ -5,8 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin, requireStaff } from "@/lib/auth";
 
+// Data e hora no fuso da oficina — o servidor da Vercel roda em UTC, então sem
+// o timeZone a data virava "amanhã" a partir das 21h de Curitiba.
 function hoje() {
-  return new Date().toLocaleDateString("pt-BR");
+  return new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+function agora() {
+  return new Date().toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
+  });
 }
 
 // Notificação por evento para o cliente (aparece no app dele).
@@ -54,6 +64,7 @@ export async function darEntrada(input: EntradaInput): Promise<{ id: string }> {
       vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
       plate: veiculo?.plate ?? null,
       date: hoje(),
+      entryTime: agora(),
       km: input.km || 0,
       fuelLevel: input.fuelLevel || null,
       defect: input.defeito,
@@ -136,6 +147,9 @@ export async function editarOS(
     clienteId: string;
     veiculoId: string;
     data: string;
+    horaEntrada: string;
+    dataSaida: string;
+    horaSaida: string;
     km: string;
     fuelLevel: string;
     defeito: string;
@@ -162,6 +176,9 @@ export async function editarOS(
       vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
       plate: veiculo?.plate ?? null,
       date: input.data.trim() || hoje(),
+      entryTime: input.horaEntrada.trim() || null,
+      deliveredAt: input.dataSaida.trim() || null,
+      exitTime: input.horaSaida.trim() || null,
       km: Math.max(0, Math.trunc(Number(input.km)) || 0),
       fuelLevel: input.fuelLevel || null,
       defect: input.defeito.trim() || null,
@@ -274,7 +291,17 @@ export async function mudarStatus(osId: string, novoStatus: string) {
       }
     }
   } else {
-    await prisma.serviceOrder.update({ where: { id: osId }, data: { status: novoStatus } });
+    await prisma.serviceOrder.update({
+      where: { id: osId },
+      data: {
+        status: novoStatus,
+        // Entrega pelo fluxo de status (sem passar pelo check-out) também
+        // registra a saída do veículo — só na primeira vez.
+        ...(novoStatus === "Entregue" && !os.deliveredAt
+          ? { deliveredAt: hoje(), exitTime: agora() }
+          : {}),
+      },
+    });
   }
 
   revalidatePath(`/oficina/ordens/${osId}`);
@@ -345,12 +372,12 @@ export async function entregarOS(osId: string, exitKm: number, paid: boolean) {
     });
     await prisma.serviceOrder.update({
       where: { id: osId },
-      data: { status: "Entregue", exitKm: exitKm || null, paid: true, deliveredAt: hoje(), financeApplied: true },
+      data: { status: "Entregue", exitKm: exitKm || null, paid: true, deliveredAt: hoje(), exitTime: agora(), financeApplied: true },
     });
   } else {
     await prisma.serviceOrder.update({
       where: { id: osId },
-      data: { status: "Entregue", exitKm: exitKm || null, paid, deliveredAt: hoje() },
+      data: { status: "Entregue", exitKm: exitKm || null, paid, deliveredAt: hoje(), exitTime: agora() },
     });
   }
 

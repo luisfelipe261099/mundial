@@ -219,6 +219,9 @@ export async function getOrdem(id: string): Promise<OrdemServicoAdmin | null> {
 export type OrdemPdf = OrdemServicoAdmin & {
   clienteInfo: { cpf: string; telefone: string; cidade: string };
   veiculoInfo: { ano: string; cor: string; combustivel: string };
+  horaEntrada: string | null;
+  dataSaida: string | null;
+  horaSaida: string | null;
 };
 
 export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
@@ -239,6 +242,9 @@ export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
       cor: o.vehicle?.color ?? "—",
       combustivel: o.vehicle?.fuel ?? "—",
     },
+    horaEntrada: o.entryTime,
+    dataSaida: o.deliveredAt,
+    horaSaida: o.exitTime,
   };
 }
 
@@ -261,6 +267,8 @@ export async function getOrdemControle(id: string) {
     veiculo: o.vehicleName,
     placa: o.plate ?? "—",
     data: o.date,
+    horaEntrada: o.entryTime,
+    horaSaida: o.exitTime,
     km: o.km,
     exitKm: o.exitKm,
     fuelLevel: o.fuelLevel,

@@ -251,6 +251,17 @@ export function ServiceOrderPDF({
               <Meta k="Ano / Cor" v={`${os.veiculoInfo.ano} · ${os.veiculoInfo.cor}`} />
               <Meta k="Combustível" v={os.veiculoInfo.combustivel} />
               <Meta k="KM" v={`${os.km.toLocaleString("pt-BR")} km`} />
+              <Meta k="Entrada" v={os.horaEntrada ? `${os.data} às ${os.horaEntrada}` : os.data} />
+              <Meta
+                k="Saída"
+                v={
+                  os.dataSaida
+                    ? os.horaSaida
+                      ? `${os.dataSaida} às ${os.horaSaida}`
+                      : os.dataSaida
+                    : "—"
+                }
+              />
             </View>
           </View>
 

@@ -84,6 +84,9 @@ export function OrderControl({
     clienteId: os.clientId ?? "",
     veiculoId: os.vehicleId ?? "",
     data: os.data,
+    horaEntrada: os.horaEntrada ?? "",
+    dataSaida: os.deliveredAt ?? "",
+    horaSaida: os.horaSaida ?? "",
     km: String(os.km),
     fuelLevel: os.fuelLevelRaw,
     defeito: os.defeito === "—" ? "" : os.defeito,
@@ -286,7 +289,15 @@ export function OrderControl({
   const info = [
     { label: "Cliente", value: os.cliente },
     { label: "Veículo", value: `${os.veiculo} · ${os.placa}` },
-    { label: "Entrada", value: os.data },
+    { label: "Entrada", value: os.horaEntrada ? `${os.data} às ${os.horaEntrada}` : os.data },
+    {
+      label: "Saída",
+      value: os.deliveredAt
+        ? os.horaSaida
+          ? `${os.deliveredAt} às ${os.horaSaida}`
+          : os.deliveredAt
+        : "Na oficina",
+    },
     { label: "Km de entrada", value: `${os.km.toLocaleString("pt-BR")} km` },
     { label: "Combustível", value: os.fuelLevel ?? "—" },
     { label: "Mecânico", value: os.mecanico },
@@ -470,6 +481,36 @@ export function OrderControl({
                 value={fichaOS.data}
                 onChange={(e) => setFichaOS((f) => ({ ...f, data: e.target.value }))}
                 placeholder="Ex.: 11/08/2026"
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="os-hora-entrada">Horário de entrada</label>
+              <input
+                id="os-hora-entrada"
+                type="time"
+                className={inputCls}
+                value={fichaOS.horaEntrada}
+                onChange={(e) => setFichaOS((f) => ({ ...f, horaEntrada: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="os-data-saida">Data de saída</label>
+              <input
+                id="os-data-saida"
+                className={inputCls}
+                value={fichaOS.dataSaida}
+                onChange={(e) => setFichaOS((f) => ({ ...f, dataSaida: e.target.value }))}
+                placeholder="Vazio = ainda na oficina"
+              />
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="os-hora-saida">Horário de saída</label>
+              <input
+                id="os-hora-saida"
+                type="time"
+                className={inputCls}
+                value={fichaOS.horaSaida}
+                onChange={(e) => setFichaOS((f) => ({ ...f, horaSaida: e.target.value }))}
               />
             </div>
             <div>

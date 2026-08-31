@@ -36,6 +36,12 @@ export async function criarOS(input: {
       vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
       plate: veiculo?.plate ?? null,
       date: input.data || "Hoje",
+      // Horário de entrada só quando a OS é de hoje — data retroativa fica sem.
+      entryTime:
+        !input.data ||
+        input.data === new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
+          ? new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
+          : null,
       km: input.km || 0,
       defect: input.defeito,
       status: "Aberta",

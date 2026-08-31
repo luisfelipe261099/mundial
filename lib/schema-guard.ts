@@ -68,6 +68,9 @@ const STATEMENTS = [
   // pela ordem de criação e só alcança linha ainda em 0 — item já reordenado
   // pelo usuário (posição >= 1) nunca é tocado de novo.
   `ALTER TABLE "service_order_items" ADD COLUMN IF NOT EXISTS "position" INTEGER NOT NULL DEFAULT 0`,
+  // horário de entrada e de saída do veículo (a data de saída é o deliveredAt)
+  `ALTER TABLE "service_orders" ADD COLUMN IF NOT EXISTS "entryTime" TEXT`,
+  `ALTER TABLE "service_orders" ADD COLUMN IF NOT EXISTS "exitTime" TEXT`,
   `UPDATE "service_order_items" i SET "position" = sub.rn
    FROM (SELECT "id", ROW_NUMBER() OVER (PARTITION BY "serviceOrderId" ORDER BY "id") rn
          FROM "service_order_items") sub

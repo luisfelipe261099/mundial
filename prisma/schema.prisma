@@ -85,6 +85,8 @@ model ServiceOrder {
   responsible  String?
   photos       Json?
   fuelLevel      String? // combustível na entrada
+  entryTime      String? // horário de entrada do veículo (HH:mm)
+  exitTime       String? // horário de saída/entrega (HH:mm)
   exitKm         Int? // km na saída/entrega
   inspection     Json? // vistoria de entrada: { checklist: [{item,status}], avarias, objetos }
   authorized     Boolean            @default(false) // autorização do cliente na entrada
