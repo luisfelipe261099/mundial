@@ -47,6 +47,7 @@ function mapOrdem(o: {
   mechanic: string | null;
   total: number;
   observations: string | null;
+  paid?: boolean;
   items?: { type: string; description: string; qty: number; value: number }[];
 }): OrdemServicoAdmin {
   return {
@@ -55,6 +56,8 @@ function mapOrdem(o: {
     veiculo: o.vehicleName,
     placa: o.plate ?? "—",
     data: o.date,
+    iso: agendaISO(o.date, hojeISO()),
+    paga: o.paid ?? false,
     km: o.km,
     defeito: o.defect ?? "—",
     status: o.status as OrdemServicoAdmin["status"],

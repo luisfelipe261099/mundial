@@ -91,6 +91,9 @@ export interface OrdemServicoAdmin {
   veiculo: string;
   placa: string;
   data: string;
+  /** Data de entrada normalizada AAAA-MM-DD (vazio quando não interpretável). */
+  iso?: string;
+  paga?: boolean;
   km: number;
   defeito: string;
   status: StatusOS;

@@ -19,12 +19,17 @@ const STATUS: StatusOS[] = [
 const EM_ANDAMENTO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execução"];
 
 const TODOS = "Todos os mecânicos";
+const PAGAMENTO = ["Pagas e em aberto", "Pagas", "Em aberto"] as const;
 
 export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
   // Vazio = todas. Cada status é um toggle, dá pra combinar quantos quiser.
   const [selecionados, setSelecionados] = useState<StatusOS[]>([]);
   const [busca, setBusca] = useState("");
   const [mecanico, setMecanico] = useState(TODOS);
+  // Período pela data de entrada (AAAA-MM-DD, direto do input date).
+  const [de, setDe] = useState("");
+  const [ate, setAte] = useState("");
+  const [pagamento, setPagamento] = useState<(typeof PAGAMENTO)[number]>(PAGAMENTO[0]);
 
   const mecanicos = [TODOS, ...Array.from(new Set(ordens.map((o) => o.mecanico).filter((m) => m !== "—"))).sort()];
 
@@ -40,14 +45,25 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
   const lista = ordens.filter((o) => {
     if (selecionados.length > 0 && !selecionados.includes(o.status)) return false;
     if (mecanico !== TODOS && o.mecanico !== mecanico) return false;
+    // Período: compara pela data de entrada normalizada. OS com data que não
+    // dá pra interpretar só some quando um período está ativo.
+    if ((de || ate) && !o.iso) return false;
+    if (de && (o.iso ?? "") < de) return false;
+    if (ate && (o.iso ?? "") > ate) return false;
+    if (pagamento === "Pagas" && !o.paga) return false;
+    if (pagamento === "Em aberto" && o.paga) return false;
     return matches([o.id, o.cliente, o.placa, o.veiculo], busca);
   });
-  const filtroAtivo = busca !== "" || mecanico !== TODOS || selecionados.length > 0;
+  const filtroAtivo =
+    busca !== "" || mecanico !== TODOS || selecionados.length > 0 || de !== "" || ate !== "" || pagamento !== PAGAMENTO[0];
 
   function limpar() {
     setBusca("");
     setMecanico(TODOS);
     setSelecionados([]);
+    setDe("");
+    setAte("");
+    setPagamento(PAGAMENTO[0]);
   }
 
   return (
@@ -107,6 +123,32 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <SearchInput value={busca} onChange={setBusca} placeholder="Buscar OS, cliente, placa…" />
         <FilterSelect value={mecanico} onChange={setMecanico} options={mecanicos} ariaLabel="Filtrar por mecânico" />
+        <FilterSelect
+          value={pagamento}
+          onChange={(v) => setPagamento(v as (typeof PAGAMENTO)[number])}
+          options={[...PAGAMENTO]}
+          ariaLabel="Filtrar por pagamento"
+        />
+        <label className="flex items-center gap-1.5 text-xs adm-muted">
+          De
+          <input
+            type="date"
+            value={de}
+            onChange={(e) => setDe(e.target.value)}
+            aria-label="Entrada a partir de"
+            className="rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-2.5 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
+          />
+        </label>
+        <label className="flex items-center gap-1.5 text-xs adm-muted">
+          Até
+          <input
+            type="date"
+            value={ate}
+            onChange={(e) => setAte(e.target.value)}
+            aria-label="Entrada até"
+            className="rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-2.5 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
+          />
+        </label>
         <ResultBar shown={lista.length} total={ordens.length} active={filtroAtivo} onClear={limpar} />
       </div>
 
