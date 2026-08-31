@@ -150,7 +150,7 @@ export async function getClienteDetalhe(id: string) {
   if (!c) return null;
   const [veiculos, ordens, gasto] = await Promise.all([
     prisma.vehicle.findMany({ where: { clientId: id }, include: { client: true } }),
-    prisma.serviceOrder.findMany({ where: { clientId: id }, include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } }, orderBy: { createdAt: "desc" } }),
+    prisma.serviceOrder.findMany({ where: { clientId: id }, include: { items: { orderBy: { id: "asc" } } }, orderBy: { createdAt: "desc" } }),
     prisma.serviceOrder.aggregate({ where: { clientId: id }, _sum: { total: true } }),
   ]);
   return {
@@ -176,7 +176,7 @@ export async function getVeiculos(): Promise<VeiculoAdmin[]> {
 export async function getVeiculoDetalhe(id: string) {
   const v = await prisma.vehicle.findUnique({ where: { id }, include: { client: true } });
   if (!v) return null;
-  const ordens = await prisma.serviceOrder.findMany({ where: { vehicleId: id }, include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } }, orderBy: { createdAt: "desc" } });
+  const ordens = await prisma.serviceOrder.findMany({ where: { vehicleId: id }, include: { items: { orderBy: { id: "asc" } } }, orderBy: { createdAt: "desc" } });
   const s = await prisma.settings.findUnique({ where: { id: "default" } });
   const manutencoes = maintList(
     computeMaintenance(
@@ -205,12 +205,12 @@ export async function getVeiculoDetalhe(id: string) {
 }
 
 export async function getOrdens(): Promise<OrdemServicoAdmin[]> {
-  const rows = await prisma.serviceOrder.findMany({ include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } }, orderBy: { createdAt: "desc" } });
+  const rows = await prisma.serviceOrder.findMany({ include: { items: { orderBy: { id: "asc" } } }, orderBy: { createdAt: "desc" } });
   return rows.map(mapOrdem);
 }
 
 export async function getOrdem(id: string): Promise<OrdemServicoAdmin | null> {
-  const o = await prisma.serviceOrder.findUnique({ where: { id }, include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } } });
+  const o = await prisma.serviceOrder.findUnique({ where: { id }, include: { items: { orderBy: { id: "asc" } } } });
   return o ? mapOrdem(o) : null;
 }
 
@@ -224,7 +224,7 @@ export type OrdemPdf = OrdemServicoAdmin & {
 export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
   const o = await prisma.serviceOrder.findUnique({
     where: { id },
-    include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] }, client: true, vehicle: true },
+    include: { items: { orderBy: { id: "asc" } }, client: true, vehicle: true },
   });
   if (!o) return null;
   return {
@@ -244,7 +244,7 @@ export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
 
 // OS completa para o "centro de controle" (vistoria + itens com id + status do orçamento).
 export async function getOrdemControle(id: string) {
-  const o = await prisma.serviceOrder.findUnique({ where: { id }, include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } } });
+  const o = await prisma.serviceOrder.findUnique({ where: { id }, include: { items: { orderBy: { id: "asc" } } } });
   if (!o) return null;
   const budget = await prisma.budget.findFirst({
     where: { serviceOrderId: id },
@@ -394,7 +394,7 @@ export async function getMecanicosPainel(): Promise<{
 export async function getOrdensMecanico(mechanicId: string): Promise<OrdemServicoAdmin[]> {
   const rows = await prisma.serviceOrder.findMany({
     where: { mechanicId },
-    include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } },
+    include: { items: { orderBy: { id: "asc" } } },
     orderBy: { createdAt: "desc" },
   });
   return rows.map(mapOrdem);

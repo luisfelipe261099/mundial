@@ -206,7 +206,7 @@ export async function removerItemOS(itemId: string, osId: string) {
 // Avançar/voltar status. Ao FINALIZAR, baixa o estoque das peças vinculadas (1x).
 export async function mudarStatus(osId: string, novoStatus: string) {
   const staff = await requireStaff();
-  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } } });
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: { id: "asc" } } } });
   if (!os) return;
 
   if (novoStatus === "Finalizada" && !os.stockApplied) {
@@ -250,7 +250,7 @@ export async function mudarStatus(osId: string, novoStatus: string) {
 // Gera/atualiza o orçamento do cliente a partir da OS e coloca em "Aguardando aprovação".
 export async function enviarParaAprovacao(osId: string) {
   await requireAdmin();
-  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: [{ type: "asc" }, { id: "asc" }] } } });
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: { id: "asc" } } } });
   if (!os) return;
   const total = os.items.reduce((s, i) => s + i.value * i.qty, 0);
   const itensBudget = os.items.map((i) => ({
