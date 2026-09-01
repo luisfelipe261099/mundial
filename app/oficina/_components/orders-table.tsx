@@ -57,6 +57,9 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
   const filtroAtivo =
     busca !== "" || mecanico !== TODOS || selecionados.length > 0 || de !== "" || ate !== "" || pagamento !== PAGAMENTO[0];
 
+  const faturamento = lista.reduce((s, o) => s + o.total, 0);
+  const recebido = lista.reduce((s, o) => s + (o.paga ? o.total : 0), 0);
+
   function limpar() {
     setBusca("");
     setMecanico(TODOS);
@@ -151,6 +154,26 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
         </label>
         <ResultBar shown={lista.length} total={ordens.length} active={filtroAtivo} onClear={limpar} />
       </div>
+
+      {/* Faturamento do que está filtrado — a soma acompanha os filtros. */}
+      {lista.length > 0 && (
+        <div className="adm-card mb-5 flex flex-wrap items-center gap-x-8 gap-y-2 px-5 py-3.5">
+          <div>
+            <p className="text-xs adm-muted">
+              Faturamento {filtroAtivo ? `(${lista.length} OS filtradas)` : `(todas as ${lista.length} OS)`}
+            </p>
+            <p className="adm-display text-xl font-bold adm-ink">{brl(faturamento)}</p>
+          </div>
+          <div>
+            <p className="text-xs adm-muted">Recebido (pagas)</p>
+            <p className="adm-display text-xl font-bold text-emerald-400">{brl(recebido)}</p>
+          </div>
+          <div>
+            <p className="text-xs adm-muted">Em aberto</p>
+            <p className="adm-display text-xl font-bold text-amber-400">{brl(faturamento - recebido)}</p>
+          </div>
+        </div>
+      )}
 
       <div className="adm-card overflow-hidden">
         <div className="overflow-x-auto">
