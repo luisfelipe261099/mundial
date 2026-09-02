@@ -1,12 +1,12 @@
-import { ArrowUpRight, MessageCircle, Phone } from "lucide-react";
+import { MessageCircle, Phone } from "lucide-react";
 import { business, whatsappUrl } from "../../_data/business";
 
-/* Primitivos da Opção B. Botões SHARP (cantos retos), caps + mono — o
-   oposto das pílulas arredondadas da Opção A. Sem hooks: servem tanto em
-   server quanto em client components. */
+/* Primitivos do site. Caixa de frase, cantos suaves, sem uppercase e sem
+   tracking — botão de gente, não de instrumento. Sem hooks: servem em
+   server e client components. */
 
 export function WhatsAppCta({
-  label = "Orçamento no WhatsApp",
+  label = "Chamar no WhatsApp",
   message,
   className = "",
   onClick,
@@ -22,35 +22,22 @@ export function WhatsAppCta({
       target="_blank"
       rel="noopener noreferrer"
       onClick={onClick}
-      className={`group inline-flex items-center justify-center gap-2.5 rounded-[3px] bg-[var(--signal)] px-7 py-4 text-sm font-bold uppercase tracking-[0.08em] text-white transition-all duration-200 hover:bg-[var(--signal-2)] hover:shadow-[0_0_0_1px_var(--signal),0_18px_40px_-18px_var(--signal)] ${className}`}
+      className={`inline-flex items-center justify-center gap-2.5 rounded-md bg-[var(--zap)] px-6 py-3.5 text-[1.0625rem] font-bold text-white transition-colors hover:bg-[var(--zap-2)] ${className}`}
     >
-      <MessageCircle size={18} className="transition-transform duration-200 group-hover:-rotate-12" />
+      <MessageCircle size={19} />
       {label}
     </a>
   );
 }
 
-export function AgendarCta({
-  label = "Agendar horário",
-  message = "Olá! Quero agendar um horário para o meu carro na Auto Mecânica Mundial.",
-  className = "",
-  onClick,
-}: {
-  label?: string;
-  message?: string;
-  className?: string;
-  onClick?: () => void;
-}) {
+export function LigarCta({ className = "" }: { className?: string }) {
   return (
     <a
-      href={whatsappUrl(message)}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={onClick}
-      className={`group inline-flex items-center justify-center gap-2 rounded-[3px] border border-[var(--line-2)] bg-transparent px-7 py-4 text-sm font-bold uppercase tracking-[0.08em] text-[var(--paper)] transition-all duration-200 hover:border-[var(--paper)] hover:bg-[var(--paper)] hover:text-[var(--ink)] ${className}`}
+      href={business.phoneHref}
+      className={`inline-flex items-center justify-center gap-2.5 rounded-md border border-[var(--linha-2)] bg-[var(--cartao)] px-6 py-3.5 text-[1.0625rem] font-bold text-[var(--tinta)] transition-colors hover:border-[var(--tinta-2)] ${className}`}
     >
-      {label}
-      <ArrowUpRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      <Phone size={18} className="text-[var(--azul-link)]" />
+      Ligar {business.phoneDisplay}
     </a>
   );
 }
@@ -59,10 +46,10 @@ export function PhoneCta({ className = "" }: { className?: string }) {
   return (
     <a
       href={business.phoneHref}
-      className={`inline-flex items-center gap-2 text-sm font-semibold text-[var(--paper)] transition-colors hover:text-[var(--signal)] ${className}`}
+      className={`inline-flex items-center gap-2 font-semibold text-[var(--tinta)] transition-colors hover:text-[var(--azul-link)] ${className}`}
     >
-      <Phone size={16} className="text-[var(--signal)]" />
-      {business.phoneDisplay}
+      <Phone size={16} className="text-[var(--azul-link)]" />
+      <span className="whitespace-nowrap">{business.phoneDisplay}</span>
     </a>
   );
 }
@@ -89,40 +76,7 @@ export function InstagramIcon({ size = 18, className = "" }: { size?: number; cl
   );
 }
 
-/** Micro-rótulo "instrumento": ponto sinal + texto mono. */
-export function MonoTag({
-  children,
-  className = "",
-  dot = true,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  dot?: boolean;
-}) {
-  return (
-    <span
-      className={`v2-mono inline-flex items-center gap-2 text-[11px] text-[var(--paper-2)] ${className}`}
-    >
-      {dot && <span className="h-1.5 w-1.5 rounded-full bg-[var(--signal)]" />}
-      {children}
-    </span>
-  );
-}
-
-/** Índice de seção tipo "Nº 01 — RÓTULO" com régua. */
-export function SectionIndex({ n, label }: { n: string; label: string }) {
-  return (
-    <div className="flex items-center gap-4">
-      <span className="v2-display text-[var(--signal)] text-lg leading-none">
-        {n}
-      </span>
-      <span className="h-px w-10 bg-[var(--line-2)]" />
-      <span className="v2-mono text-[11px] text-[var(--paper-2)]">{label}</span>
-    </div>
-  );
-}
-
-/** Estrelas (preenchidas em sinal) com nota fracionária. */
+/** Estrelas com nota fracionária — âmbar como no Google, estáticas. */
 export function Stars({
   value,
   size = 16,
@@ -144,14 +98,14 @@ export function Stars({
     >
       <span className="absolute inset-0 flex gap-1">
         {[0, 1, 2, 3, 4].map((i) => (
-          <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="text-[var(--line-2)]">
+          <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="text-[var(--linha-2)]">
             <path d={star} fill="currentColor" />
           </svg>
         ))}
       </span>
       <span className="absolute inset-0 flex gap-1 overflow-hidden" style={{ width: `${pct}%` }}>
         {[0, 1, 2, 3, 4].map((i) => (
-          <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="shrink-0 text-[var(--signal)]">
+          <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="shrink-0 text-[#f59e0b]">
             <path d={star} fill="currentColor" />
           </svg>
         ))}

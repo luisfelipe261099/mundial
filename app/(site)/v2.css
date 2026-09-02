@@ -1,53 +1,62 @@
 /* ════════════════════════════════════════════════════════════════════
-   OPÇÃO B — "OFICINA NOTURNA"
-   Editorial industrial / motorsport. Tema escuro cinematográfico, um único
-   acento vermelho-sinal (puxado do scanner LAUNCH da própria oficina),
-   tipografia-pôster e textura de grão. Tudo escopado em .v2-root para não
-   vazar pro tema da Opção A (raiz). Sem @theme global — tokens via CSS vars
-   + valores arbitrários do Tailwind, que sempre resolvem.
+   "O PRÉDIO AZUL AO MEIO-DIA"
+   Direção definida em mesa de design (4 revisores): o site é a extensão
+   digital da fachada real — azul-celeste da parede como cor de marca em
+   SUPERFÍCIES (nunca dentro de frases), papel claro, fotos reais em cor
+   integral, tipografia de trabalho e zero teatro (sem gauge, marquee,
+   count-up, grão, duotone, mono-caps, seções numeradas).
+
+   Regras permanentes deste site:
+   1. Nunca duas cores na mesma frase (nenhum span colorido em título).
+   2. Nunca animar prova social — nota e contagem impressas, estáticas.
+   3. Nunca mono/caps/tracking como decoração técnica.
+   4. Nunca filtro sobre foto real, nunca banco de imagem.
+   5. No máximo um movimento por tela; texto no papel, foto no card.
    ════════════════════════════════════════════════════════════════════ */
 
 .v2-root {
-  /* Tons de tinta (quase-preto → superfícies elevadas) */
-  --ink: #0a0a0c;
-  --ink-2: #121217;
-  --ink-3: #17171d;
-  --ink-4: #1e1e25;
+  /* Papel e cimento (fundos) */
+  --papel: #f7f6f2;
+  --cartao: #ffffff;
+  --cimento: #eceae4;
 
-  /* Papel quente (texto) */
-  --paper: #ece8df;
-  --paper-2: #b4afa4;
-  --muted: #807b72;
+  /* Tinta (texto) */
+  --tinta: #1b2733;
+  --tinta-2: #4a5766;
+  --tinta-3: #74808d;
 
-  /* Linhas/hairlines */
-  --line: #26262e;
-  --line-2: #34343e;
+  /* Hairlines */
+  --linha: #dcd9d1;
+  --linha-2: #c9c5bb;
 
-  /* Acento único — azul elétrico (pop em fundo escuro) */
-  --signal: #2f7bff;
-  --signal-2: #1b5fe0;
-  --signal-soft: rgba(47, 123, 255, 0.16);
+  /* Azul da fachada (amostrado da foto real do prédio) */
+  --azul: #0284c7; /* superfícies grandes */
+  --azul-btn: #0369a1; /* botões preenchidos (AA sobre branco) */
+  --azul-link: #075985; /* links e apoio sobre papel (AAA) */
+  --azul-nevoa: #e3f1fa; /* destaque suave */
 
-  /* Latão discreto só pra detalhes de instrumento */
-  --brass: #c9a24a;
+  /* Verde WhatsApp — só no botão de WhatsApp */
+  --zap: #128c7e;
+  --zap-2: #0d7568;
 
-  --shadow-deep: 0 30px 80px -30px rgba(0, 0, 0, 0.85);
+  /* Amarelo da faixa de segurança pintada na baia — um único detalhe */
+  --faixa: #eab308;
 
   font-family: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
-  color: var(--paper);
-  background-color: var(--ink);
+  font-size: 1.0625rem; /* corpo 17px — legível pra quem tem 60 anos */
+  line-height: 1.6;
+  color: var(--tinta);
+  background-color: var(--papel);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* O body global da raiz é claro (#f5f8fd). Quando a rota /v2 está montada,
-   forçamos a tela inteira pro escuro (inclusive overscroll e scrollbar). */
 html:has(.v2-root) {
-  color-scheme: dark;
+  color-scheme: light;
   scroll-behavior: smooth;
 }
 body:has(.v2-root) {
-  background-color: var(--ink);
+  background-color: var(--papel);
 }
 @media (prefers-reduced-motion: reduce) {
   html:has(.v2-root) {
@@ -55,115 +64,77 @@ body:has(.v2-root) {
   }
 }
 
-/* ── Tipografia utilitária ─────────────────────────────────────────── */
-.v2-display {
-  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 0.94;
+/* ── Tipografia ────────────────────────────────────────────────────── */
+/* Títulos: Work Sans, contidos, caixa de frase, uma cor só. */
+.t-display {
+  font-family: var(--font-work), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(2.125rem, 1.4rem + 3.4vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+  hyphens: none;
 }
-.v2-mono {
-  font-family: var(--font-spacemono), ui-monospace, monospace;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.t-h2 {
+  font-family: var(--font-work), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 650;
+  font-size: clamp(1.625rem, 1.3rem + 1.5vw, 2.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  hyphens: none;
+}
+.t-h3 {
+  font-family: var(--font-work), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 630;
+  font-size: 1.3125rem;
+  line-height: 1.35;
+  letter-spacing: -0.008em;
+}
+.t-lede {
+  font-size: 1.1875rem;
+  line-height: 1.55;
+  color: var(--tinta-2);
+}
+.t-small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+/* Rótulo pequeno: caixa de frase, sem tracking — nada de HUD. */
+.t-label {
+  font-family: var(--font-work), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  color: var(--azul-link);
+}
+/* Dados tabulares (horário, telefone): mono discreto, caixa normal. */
+.t-data {
+  font-family: var(--font-mono-site), ui-monospace, monospace;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.v2-root p {
+  text-wrap: pretty;
 }
 
 .v2-root ::selection {
-  background: var(--signal);
+  background: var(--azul);
   color: #fff;
 }
 .v2-root :focus-visible {
-  outline: 2px solid var(--signal);
+  outline: 2px solid var(--azul-btn);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
-/* ── Texturas / atmosfera ──────────────────────────────────────────── */
-/* Grão de filme — coloque <div class="grain"/> dentro de um pai relative */
-.grain {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.45;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-}
-/* Grão fixo de página inteira, bem sutil */
-.grain-fixed {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 60;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
-}
-.vignette {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  background: radial-gradient(
-    120% 90% at 50% 38%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.55) 100%
-  );
-}
-/* Tratamento "duotone" pras fotos reais ficarem cinematográficas no escuro */
-.duotone {
-  filter: grayscale(0.35) contrast(1.08) brightness(0.72) saturate(0.85);
-}
-.signal-tint {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: var(--signal);
-  mix-blend-mode: color;
-  opacity: 0.12;
-}
-
-/* Régua técnica (ticks tipo escala de instrumento) */
-.ruler {
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--line) 0 1px,
-    transparent 1px 28px
-  );
-}
-
-/* ── Marquee / ticker (pit-lane) ───────────────────────────────────── */
-.marquee {
-  display: flex;
-  width: max-content;
-  animation: v2-marquee 38s linear infinite;
-}
-.marquee:hover {
-  animation-play-state: paused;
-}
-@keyframes v2-marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .marquee {
-    animation: none;
-  }
-}
-
-/* ── Linha animada do hero (sublinhado-régua) ─────────────────────── */
-.grow-line {
-  transform-origin: left;
-}
-
-/* Cursor de seção / detalhe diagonal */
-.diag {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    var(--line) 0 1px,
-    transparent 1px 8px
-  );
+/* Foto como foto impressa: card branco com borda, legenda factual fora. */
+.foto-card {
+  background: var(--cartao);
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06);
 }

@@ -1,119 +1,102 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Menu, X } from "lucide-react";
 import { business } from "../../_data/business";
-import { WhatsAppCta } from "./ui";
+import { PhoneCta, WhatsAppCta } from "./ui";
 
-const links = [
+const LINKS = [
   { href: "#servicos", label: "Serviços" },
-  { href: "#confianca", label: "Confiança" },
+  { href: "#como-funciona", label: "Como funciona" },
   { href: "#avaliacoes", label: "Avaliações" },
-  { href: "#oficina", label: "Oficina" },
+  { href: "#onde-estamos", label: "Onde estamos" },
 ];
 
 export function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [aberto, setAberto] = useState(false);
+  const [rolou, setRolou] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const fn = () => setRolou(window.scrollY > 8);
+    fn();
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled
-          ? "border-b border-[var(--line)] bg-[var(--ink)]/85 backdrop-blur-md"
-          : "border-b border-transparent"
+      className={`sticky top-0 z-50 border-b bg-[var(--papel)] transition-shadow ${
+        rolou ? "border-[var(--linha)] shadow-[0_1px_2px_rgb(0_0_0_/_0.05)]" : "border-transparent"
       }`}
     >
-      <nav className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8">
-        <Link href="#topo" className="flex items-center gap-3">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
+        <a href="#topo" className="flex min-w-0 items-center gap-2.5">
           <Image
             src="/images/logo.png"
-            alt={business.name}
-            width={38}
-            height={38}
-            priority
-            className="h-9 w-9 rounded-full ring-1 ring-[var(--line-2)]"
+            alt=""
+            width={34}
+            height={34}
+            className="size-[34px] shrink-0 rounded-full"
           />
-          <span className="v2-display text-[1.15rem] uppercase leading-none tracking-tight text-[var(--paper)]">
-            Mundial<span className="text-[var(--signal)]">.</span>
+          <span className="truncate font-[var(--font-work)] text-[1.0625rem] font-bold leading-tight text-[var(--tinta)]">
+            Auto Mecânica Mundial
           </span>
-        </Link>
+        </a>
 
-        <div className="hidden items-center gap-9 lg:flex">
-          {links.map((l) => (
+        <nav className="hidden items-center gap-6 lg:flex" aria-label="Seções do site">
+          {LINKS.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="v2-mono text-[11px] text-[var(--paper-2)] transition-colors hover:text-[var(--paper)]"
+              className="t-small font-semibold text-[var(--tinta-2)] transition-colors hover:text-[var(--tinta)]"
             >
               {l.label}
             </a>
           ))}
-        </div>
+        </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            href="/login"
-            className="v2-mono rounded-[3px] border border-[var(--line-2)] px-4 py-2.5 text-[11px] text-[var(--paper)] transition-colors hover:border-[var(--signal)] hover:text-[var(--signal)]"
-          >
-            Entrar
-          </Link>
-          <WhatsAppCta label="WhatsApp" className="px-5 py-2.5 text-xs" />
+        <div className="hidden items-center gap-5 md:flex">
+          <PhoneCta className="t-small" />
+          <WhatsAppCta label="WhatsApp" className="!px-4 !py-2.5 !text-[0.9375rem]" />
         </div>
 
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Fechar menu" : "Abrir menu"}
-          aria-expanded={open}
-          className="grid h-10 w-10 place-items-center rounded-[3px] border border-[var(--line-2)] text-[var(--paper)] lg:hidden"
+          onClick={() => setAberto((v) => !v)}
+          className="grid size-10 place-items-center rounded-md border border-[var(--linha)] md:hidden"
+          aria-expanded={aberto}
+          aria-label={aberto ? "Fechar menu" : "Abrir menu"}
         >
-          {open ? <X size={20} /> : <Menu size={20} />}
+          {aberto ? <X size={20} /> : <Menu size={20} />}
         </button>
-      </nav>
+      </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden border-b border-[var(--line)] bg-[var(--ink)] lg:hidden"
-          >
-            <div className="flex flex-col gap-1 px-5 py-5">
-              {links.map((l) => (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="v2-mono border-b border-[var(--line)] py-3.5 text-xs text-[var(--paper-2)] hover:text-[var(--signal)]"
-                >
-                  {l.label}
-                </a>
-              ))}
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="v2-mono mt-3 rounded-[3px] border border-[var(--line-2)] py-3 text-center text-xs text-[var(--paper)] transition-colors hover:border-[var(--signal)] hover:text-[var(--signal)]"
+      {aberto && (
+        <div className="border-t border-[var(--linha)] bg-[var(--cartao)] px-5 py-4 md:hidden">
+          <nav className="flex flex-col" aria-label="Seções do site">
+            {LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setAberto(false)}
+                className="border-b border-[var(--linha)] py-3 font-semibold text-[var(--tinta)] last:border-0"
               >
-                Entrar
-              </Link>
-              <WhatsAppCta className="mt-3" onClick={() => setOpen(false)} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {l.label}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-4 flex flex-col gap-3">
+            <WhatsAppCta onClick={() => setAberto(false)} />
+            <a
+              href={business.phoneHref}
+              className="text-center font-semibold text-[var(--azul-link)] underline underline-offset-4"
+            >
+              Ligar {business.phoneDisplay}
+            </a>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
