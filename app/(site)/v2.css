@@ -35,9 +35,10 @@
   --azul-link: #0b3560; /* links e apoio sobre papel */
   --azul-nevoa: #e9eef6; /* destaque suave */
 
-  /* Verde WhatsApp — só no botão de WhatsApp */
-  --zap: #128c7e;
-  --zap-2: #0d7568;
+  /* Botão de WhatsApp na cor da marca (o ícone identifica o app; o
+     verde-azulado destoava do azul-marinho da logo) */
+  --zap: #0d3a6b;
+  --zap-2: #092c53;
 
   /* Amarelo da faixa de segurança pintada na baia — um único detalhe */
   --faixa: #eab308;
