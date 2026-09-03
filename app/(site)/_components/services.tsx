@@ -48,7 +48,7 @@ export function Services() {
       <div className="bg-[var(--azul)]">
         <div className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-12">
           <h2 className="t-h2 text-white">O que fazemos</h2>
-          <p className="mt-2 max-w-[54ch] text-[1.0625rem] text-sky-50">
+          <p className="mt-2 max-w-[54ch] text-[1.0625rem] text-[#cdd9ea]">
             De troca de óleo a câmbio automático e híbridos. E também:
             alinhamento, balanceamento, injeção eletrônica, embreagem, motor e
             elétrica.

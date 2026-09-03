@@ -20,20 +20,20 @@
   --cartao: #ffffff;
   --cimento: #eceae4;
 
-  /* Tinta (texto) */
-  --tinta: #1b2733;
-  --tinta-2: #4a5766;
-  --tinta-3: #74808d;
+  /* Tinta (texto) — puxada pro azul-marinho da logo */
+  --tinta: #14213a;
+  --tinta-2: #44526b;
+  --tinta-3: #6e7a90;
 
   /* Hairlines */
-  --linha: #dcd9d1;
-  --linha-2: #c9c5bb;
+  --linha: #d9d8d2;
+  --linha-2: #c6c5bd;
 
-  /* Azul da fachada (amostrado da foto real do prédio) */
-  --azul: #0284c7; /* superfícies grandes */
-  --azul-btn: #0369a1; /* botões preenchidos (AA sobre branco) */
-  --azul-link: #075985; /* links e apoio sobre papel (AAA) */
-  --azul-nevoa: #e3f1fa; /* destaque suave */
+  /* Azul-marinho da logo (amostrado do logo.png: #002050–#005080) */
+  --azul: #0d3a6b; /* superfícies grandes (faixa de marca) */
+  --azul-btn: #0d3a6b; /* botões preenchidos (contraste ~10:1) */
+  --azul-link: #0b3560; /* links e apoio sobre papel */
+  --azul-nevoa: #e9eef6; /* destaque suave */
 
   /* Verde WhatsApp — só no botão de WhatsApp */
   --zap: #128c7e;
