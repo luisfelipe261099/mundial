@@ -265,6 +265,43 @@ export async function criarCliente(values: Record<string, string>): Promise<{ er
   return {};
 }
 
+// Edita o cadastro do cliente. Trocar o nome também regrava o clientName
+// denormalizado das OS vinculadas — é ele que aparece na lista e no PDF.
+export async function editarCliente(
+  id: string,
+  values: Record<string, string>
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const atual = await prisma.client.findUnique({ where: { id }, select: { id: true, name: true } });
+  if (!atual) return { error: "Cliente não encontrado." };
+
+  const nome = (values.nome ?? "").trim();
+  if (!nome) return { error: "Informe o nome do cliente." };
+
+  await prisma.client.update({
+    where: { id },
+    data: {
+      name: nome,
+      cpf: values.cpf?.trim() || null,
+      phone: values.telefone?.trim() || null,
+      whatsapp: values.whatsapp?.trim() || null,
+      email: values.email?.trim() || null,
+      city: values.cidade?.trim() || null,
+      address: values.endereco?.trim() || null,
+    },
+  });
+
+  if (nome !== atual.name) {
+    await prisma.serviceOrder.updateMany({ where: { clientId: id }, data: { clientName: nome } });
+    revalidatePath("/oficina/ordens");
+  }
+
+  revalidatePath(`/oficina/clientes/${id}`);
+  revalidatePath("/oficina/clientes");
+  revalidatePath("/oficina");
+  return {};
+}
+
 // Exclui um cliente com tudo que é exclusivamente dele (veículos, lembretes,
 // inscrições de push). O histórico financeiro NÃO some: OS, orçamentos,
 // agendamentos, documentos e notificações ficam, só perdem o vínculo — os

@@ -168,6 +168,16 @@ export async function getClienteDetalhe(id: string) {
     veiculos: veiculos.map(mapVeiculo),
     ordens: ordens.map(mapOrdem),
     temAcesso: !!c.password,
+    // Campos crus para o formulário de edição (sem os "—" de exibição).
+    ficha: {
+      nome: c.name,
+      cpf: c.cpf ?? "",
+      telefone: c.phone ?? "",
+      whatsapp: c.whatsapp ?? "",
+      email: c.email ?? "",
+      cidade: c.city ?? "",
+      endereco: c.address ?? "",
+    },
   };
 }
 

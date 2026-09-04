@@ -15,17 +15,20 @@ import {
 import { brl, osBadgeClass } from "../../_data/mock";
 import { getClienteDetalhe } from "@/lib/admin-data";
 import { AccessPanel } from "./access-panel";
+import { EditClienteCard } from "./edit-client-form";
 import { VeiculosDoCliente, ExcluirClienteCard } from "../../_components/delete-controls";
 
 export default async function ClienteDetalhe({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ editar?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, { editar }] = await Promise.all([params, searchParams]);
   const data = await getClienteDetalhe(id);
   if (!data) notFound();
-  const { cliente, veiculos, ordens, temAcesso } = data;
+  const { cliente, veiculos, ordens, temAcesso, ficha } = data;
 
   const contato = [
     { icon: Hash, label: "CPF", value: cliente.cpf },
@@ -71,8 +74,7 @@ export default async function ClienteDetalhe({
         })}
       </div>
 
-      <div className="adm-card p-5">
-        <h3 className="adm-display mb-4 font-bold adm-ink">Contato</h3>
+      <EditClienteCard clienteId={id} ficha={ficha} abrirEdicao={editar === "1"}>
         <div className="grid gap-4 sm:grid-cols-2">
           {contato.map((c) => {
             const Icon = c.icon;
@@ -87,7 +89,7 @@ export default async function ClienteDetalhe({
             );
           })}
         </div>
-      </div>
+      </EditClienteCard>
 
       <AccessPanel clientId={id} temAcesso={temAcesso} temVeiculo={veiculos.length > 0} />
 

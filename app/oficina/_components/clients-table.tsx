@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronRight, ChevronDown, Car, Trash2, AlertTriangle } from "lucide-react";
+import { ChevronRight, ChevronDown, Car, Trash2, Pencil, AlertTriangle } from "lucide-react";
 import { brl, type Cliente } from "../_data/mock";
 import { excluirCliente, excluirVeiculo } from "../actions";
 import { matches } from "./filter-utils";
@@ -184,6 +184,13 @@ function ClientRow({
         <td className="px-5 py-3.5 text-right font-semibold adm-ink">{brl(c.gastoTotal)}</td>
         <td className="px-5 py-3.5">
           <div className="flex items-center justify-end gap-1.5">
+            <Link
+              href={`/oficina/clientes/${c.id}?editar=1`}
+              aria-label={`Editar ${c.nome}`}
+              className={btnCls}
+            >
+              <Pencil className="size-3.5" />
+            </Link>
             <button
               type="button"
               onClick={onToggleDel}
