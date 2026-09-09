@@ -301,11 +301,13 @@ export function ServiceOrderPDF({
             </View>
           </View>
 
-          {/* Observações */}
-          <View style={s.block}>
-            <Text style={s.blockLabel}>Observações</Text>
-            <Text style={s.blockText}>{os.observacoes}</Text>
-          </View>
+          {/* Observações — só imprime quando existe algo escrito. */}
+          {os.observacoes && os.observacoes !== "—" && (
+            <View style={s.block}>
+              <Text style={s.blockLabel}>Observações</Text>
+              <Text style={s.blockText}>{os.observacoes}</Text>
+            </View>
+          )}
 
           {/* Assinaturas */}
           <View style={s.signRow} wrap={false}>

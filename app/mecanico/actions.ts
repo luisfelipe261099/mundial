@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { salvarObservacoesOS } from "@/app/oficina/os-actions";
 
 async function requireStaff() {
   const s = await getSession();
@@ -20,8 +21,8 @@ export async function avancarStatus(id: string, novoStatus: string) {
   revalidatePath("/oficina");
 }
 
+// Mesma implementação do painel: a anotação é a mesma nas duas telas, e
+// salvar aqui precisa atualizar a OS no painel da oficina também.
 export async function salvarObservacoes(id: string, texto: string) {
-  await requireStaff();
-  await prisma.serviceOrder.update({ where: { id }, data: { observations: texto } });
-  revalidatePath(`/mecanico/${id}`);
+  await salvarObservacoesOS(id, texto);
 }

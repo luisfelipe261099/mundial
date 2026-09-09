@@ -249,6 +249,27 @@ export async function editarItemOS(
   return {};
 }
 
+// Observações da OS — o bloco de recados que a oficina e o mecânico dividem.
+// Revalida as duas telas: antes, salvar pelo app do mecânico não atualizava a
+// página da OS no painel (e vice-versa), e parecia que a anotação tinha sumido.
+export async function salvarObservacoesOS(
+  osId: string,
+  texto: string
+): Promise<{ error?: string }> {
+  await requireStaff();
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, select: { id: true } });
+  if (!os) return { error: "OS não encontrada." };
+
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: { observations: texto.trim() || null },
+  });
+
+  revalidatePath(`/oficina/ordens/${osId}`);
+  revalidatePath(`/mecanico/${osId}`);
+  return {};
+}
+
 export async function removerItemOS(itemId: string, osId: string) {
   await requireStaff();
   await prisma.serviceOrderItem.delete({ where: { id: itemId } });

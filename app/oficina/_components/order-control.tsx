@@ -32,6 +32,7 @@ import {
   moverItemOS,
   editarOS,
   excluirOS,
+  salvarObservacoesOS,
   enviarParaAprovacao,
   entregarOS,
   atribuirMecanico,
@@ -98,7 +99,8 @@ export function OrderControl({
   function salvarOS() {
     setErroOS(null);
     startTransition(async () => {
-      const r = await editarOS(os.id, fichaOS);
+      // As observações vêm do card dedicado, não desta ficha.
+      const r = await editarOS(os.id, { ...fichaOS, observacoes: obs });
       if (r.error) setErroOS(r.error);
       else setEditandoOS(false);
     });
@@ -110,6 +112,20 @@ export function OrderControl({
       const r = await excluirOS(os.id);
       if (r.error) setErroOS(r.error);
       else router.push("/oficina/ordens");
+    });
+  }
+
+  // Observações (cantinho de recados da OS)
+  const [obs, setObs] = useState(os.observacoes ?? "");
+  const [obsSalvo, setObsSalvo] = useState(false);
+
+  function salvarObs() {
+    startTransition(async () => {
+      const r = await salvarObservacoesOS(os.id, obs);
+      if (!r.error) {
+        setObsSalvo(true);
+        router.refresh();
+      }
     });
   }
 
@@ -548,16 +564,9 @@ export function OrderControl({
                 onChange={(e) => setFichaOS((f) => ({ ...f, defeito: e.target.value }))}
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className={labelCls} htmlFor="os-obs">Observações</label>
-              <textarea
-                id="os-obs"
-                rows={2}
-                className={`${inputCls} resize-none`}
-                value={fichaOS.observacoes}
-                onChange={(e) => setFichaOS((f) => ({ ...f, observacoes: e.target.value }))}
-              />
-            </div>
+            {/* As observações têm card próprio na página (sempre visível). Ter
+                o mesmo campo aqui criava dois donos do texto: salvar esta ficha
+                com um valor antigo apagava a anotação feita no card. */}
           </div>
 
           {erroOS && <p className="mt-3 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{erroOS}</p>}
@@ -833,12 +842,56 @@ export function OrderControl({
         </div>
       </div>
 
-      {os.observacoes && (
-        <div className="adm-card p-5">
-          <p className="text-xs uppercase tracking-wide adm-muted">Observações</p>
-          <p className="mt-1.5 text-sm adm-ink">{os.observacoes}</p>
+      {/* Cantinho de observações: bloco de recados da OS, sempre visível e
+          editável aqui mesmo — é o mesmo texto que o mecânico vê no app. */}
+      <div className="adm-card p-5">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="adm-display font-bold adm-ink">Observações</h3>
+          {obsSalvo && (
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+              <Check className="size-3.5" />
+              Salvo
+            </span>
+          )}
         </div>
-      )}
+        <p className="mb-3 text-xs adm-muted">
+          Anotações da oficina sobre esta OS — combinados com o cliente, peça
+          que falta, recado para o mecânico. Aparece no app do mecânico e no PDF.
+        </p>
+        <textarea
+          rows={4}
+          value={obs}
+          onChange={(e) => {
+            setObs(e.target.value);
+            setObsSalvo(false);
+          }}
+          placeholder="Ex.: cliente pediu para avisar antes de trocar o amortecedor. Peça encomendada, chega quinta."
+          className={`${inputCls} resize-y`}
+        />
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            disabled={pending || obs === (os.observacoes ?? "")}
+            onClick={salvarObs}
+            className="flex items-center gap-2 rounded-lg bg-[var(--ad-brand)] px-5 py-2.5 text-sm font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
+          >
+            <Check className="size-4" />
+            {pending ? "Salvando…" : "Salvar observações"}
+          </button>
+          {obs !== (os.observacoes ?? "") && (
+            <button
+              type="button"
+              onClick={() => {
+                setObs(os.observacoes ?? "");
+                setObsSalvo(false);
+              }}
+              className="text-xs font-semibold adm-muted hover:adm-ink"
+            >
+              Desfazer
+            </button>
+          )}
+        </div>
+      </div>
 
       {os.fotos.length > 0 && (
         <div className="adm-card p-5">
