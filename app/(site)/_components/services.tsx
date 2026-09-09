@@ -18,12 +18,12 @@ const SERVICOS = [
   },
   {
     nome: "Diagnóstico eletrônico",
-    desc: "Scanner LAUNCH para ler a injeção e achar a causa, não o sintoma.",
+    desc: "Scanners Bosch, LAUNCH, Delphi e Doutor-IE para ler a injeção e achar a causa, não o sintoma.",
     msg: "Olá! Vim pelo site e preciso de um diagnóstico eletrônico.",
   },
   {
     nome: "Câmbio automático e CVT",
-    desc: "Troca de fluido com máquina Tecnomotor, do jeito que o câmbio pede.",
+    desc: "Troca de fluido com máquina Tecnomotor e aquecimento do fluido — atende também os carros com válvula termostática, que exigem a troca na temperatura certa.",
     msg: "Olá! Vim pelo site e quero um orçamento para câmbio automático.",
   },
   {
@@ -39,6 +39,9 @@ const SERVICOS = [
 ];
 
 const MARCAS = ["volkswagen", "fiat", "chevrolet", "toyota", "honda", "hyundai"];
+
+// Equipamentos de diagnóstico usados na oficina — nomes verificáveis nas fotos.
+const SCANNERS = ["Bosch", "LAUNCH", "Tecnomotor", "Delphi", "Doutor-IE Connect"];
 
 export function Services() {
   return (
@@ -78,21 +81,38 @@ export function Services() {
             ))}
           </ul>
 
-          <div className="mt-10 border-t border-[var(--linha)] pt-7">
-            <p className="t-small font-semibold text-[var(--tinta-2)]">
-              Atendemos as principais marcas
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-4">
-              {MARCAS.map((m) => (
-                <Image
-                  key={m}
-                  src={`/images/brands/${m}.png`}
-                  alt={m.charAt(0).toUpperCase() + m.slice(1)}
-                  width={64}
-                  height={28}
-                  className="h-7 w-auto opacity-60 grayscale"
-                />
-              ))}
+          <div className="mt-10 grid gap-7 border-t border-[var(--linha)] pt-7 sm:grid-cols-2">
+            <div>
+              <p className="t-small font-semibold text-[var(--tinta-2)]">
+                Atendemos as principais marcas
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-4">
+                {MARCAS.map((m) => (
+                  <Image
+                    key={m}
+                    src={`/images/brands/${m}.png`}
+                    alt={m.charAt(0).toUpperCase() + m.slice(1)}
+                    width={64}
+                    height={28}
+                    className="h-7 w-auto opacity-60 grayscale"
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="t-small font-semibold text-[var(--tinta-2)]">
+                Scanners e equipamentos que usamos
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {SCANNERS.map((s) => (
+                  <span
+                    key={s}
+                    className="rounded-md border border-[var(--linha)] bg-[var(--cartao)] px-3 py-1.5 text-[0.9375rem] font-semibold text-[var(--tinta)]"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>

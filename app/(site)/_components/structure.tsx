@@ -13,8 +13,8 @@ export function Structure() {
         <h2 className="t-h2 text-[var(--tinta)]">A oficina</h2>
         <p className="t-lede mt-3 max-w-[58ch]">
           Prédio azul na Rua Eduardo Victor Piechnik, no Uberaba. Baias com
-          elevador, scanner LAUNCH e máquina Tecnomotor — e oficina limpa, que
-          é sinal de cuidado com o seu carro.
+          elevador, scanners Bosch, LAUNCH, Delphi e Doutor-IE Connect e máquina
+          Tecnomotor — e oficina limpa, que é sinal de cuidado com o seu carro.
         </p>
 
         <div className="mt-8 grid gap-5 sm:grid-cols-2">
