@@ -176,18 +176,98 @@ export async function excluirAgendamento(id: string) {
   revalidatePath("/oficina");
 }
 
-export async function criarLancamento(input: {
+// Data do lançamento: o input manda AAAA-MM-DD; guardamos ao meio-dia UTC para
+// que o fuso de Curitiba (-03) nunca jogue o registro para o dia anterior.
+function dataLancamento(iso?: string): Date {
+  const s = (iso ?? "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(`${s}T12:00:00.000Z`);
+  return new Date();
+}
+
+function dataBR(d: Date): string {
+  return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+}
+
+export interface LancamentoInput {
   tipo: "receita" | "despesa";
   descricao: string;
   categoria: string;
   valor: number;
-}) {
+  data?: string; // AAAA-MM-DD
+  forma?: string;
+  observacoes?: string;
+}
+
+export async function criarLancamento(input: LancamentoInput): Promise<{ error?: string }> {
   await requireAdmin();
+  const descricao = input.descricao.trim();
+  if (!descricao) return { error: "Informe a descrição do lançamento." };
+  const valor = Math.max(0, Math.trunc(input.valor) || 0);
+  if (valor <= 0) return { error: "Informe um valor maior que zero." };
+
+  const quando = dataLancamento(input.data);
   await prisma.transaction.create({
-    data: { type: input.tipo, description: input.descricao, category: input.categoria, value: input.valor, date: "Hoje" },
+    data: {
+      type: input.tipo,
+      description: descricao,
+      category: input.categoria,
+      value: valor,
+      date: dataBR(quando),
+      occurredAt: quando,
+      method: input.forma?.trim() || null,
+      notes: input.observacoes?.trim() || null,
+    },
   });
   revalidatePath("/oficina/financeiro");
+  revalidatePath("/oficina/relatorios");
   revalidatePath("/oficina");
+  return {};
+}
+
+export async function editarLancamento(
+  id: string,
+  input: LancamentoInput
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const atual = await prisma.transaction.findUnique({ where: { id }, select: { id: true } });
+  if (!atual) return { error: "Lançamento não encontrado." };
+
+  const descricao = input.descricao.trim();
+  if (!descricao) return { error: "Informe a descrição do lançamento." };
+  const valor = Math.max(0, Math.trunc(input.valor) || 0);
+  if (valor <= 0) return { error: "Informe um valor maior que zero." };
+
+  const quando = dataLancamento(input.data);
+  await prisma.transaction.update({
+    where: { id },
+    data: {
+      type: input.tipo,
+      description: descricao,
+      category: input.categoria,
+      value: valor,
+      date: dataBR(quando),
+      occurredAt: quando,
+      method: input.forma?.trim() || null,
+      notes: input.observacoes?.trim() || null,
+    },
+  });
+  revalidatePath("/oficina/financeiro");
+  revalidatePath("/oficina/relatorios");
+  revalidatePath("/oficina");
+  return {};
+}
+
+// Excluir só apaga o lançamento. Receita que veio de OS entregue continua
+// podendo ser removida — o aviso na tela explica que a OS segue como está.
+export async function excluirLancamento(id: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const atual = await prisma.transaction.findUnique({ where: { id }, select: { id: true } });
+  if (!atual) return { error: "Lançamento não encontrado." };
+  await prisma.transaction.delete({ where: { id } });
+  revalidatePath("/oficina/financeiro");
+  revalidatePath("/oficina/relatorios");
+  revalidatePath("/oficina");
+  return {};
 }
 
 export async function salvarConfiguracoes(input: {

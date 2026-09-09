@@ -9,14 +9,33 @@ import type {
 import { computeMaintenance, maintList } from "@/lib/maintenance";
 
 // Trend de 6 meses é ilustrativo (o banco não guarda histórico mensal).
-export const faturamentoMensal = [
-  { mes: "Jan", valor: 52300 },
-  { mes: "Fev", valor: 47800 },
-  { mes: "Mar", valor: 61200 },
-  { mes: "Abr", valor: 58900 },
-  { mes: "Mai", valor: 69400 },
-  { mes: "Jun", valor: 78450 },
-];
+const MESES_CURTOS = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+/** Faturamento real dos últimos 6 meses (receitas lançadas no financeiro). */
+export async function getFaturamentoMensal(): Promise<{ mes: string; valor: number }[]> {
+  const hoje = new Date();
+  const inicio = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() - 5, 1));
+  const rows = await prisma.transaction.findMany({
+    where: { type: "receita", occurredAt: { gte: inicio } },
+    select: { value: true, occurredAt: true },
+  });
+
+  const buckets: { mes: string; valor: number }[] = [];
+  const indice = new Map<string, number>();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth() - 5 + i, 1));
+    const chave = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
+    indice.set(chave, buckets.length);
+    buckets.push({ mes: MESES_CURTOS[d.getUTCMonth()], valor: 0 });
+  }
+  for (const t of rows) {
+    if (!t.occurredAt) continue;
+    const chave = `${t.occurredAt.getUTCFullYear()}-${t.occurredAt.getUTCMonth()}`;
+    const i = indice.get(chave);
+    if (i !== undefined) buckets[i].valor += t.value;
+  }
+  return buckets;
+}
 
 type ClientRow = { id: string; name: string; phone: string | null; cpf: string | null; whatsapp: string | null; email: string | null; city: string | null; address: string | null; since: string | null };
 
@@ -563,16 +582,32 @@ export async function getFinanceiroResumo() {
 }
 
 export async function getLancamentos() {
-  const rows = await prisma.transaction.findMany({ orderBy: { createdAt: "desc" } });
-  return rows.map((t) => ({
-    id: t.id,
-    tipo: t.type as "receita" | "despesa",
-    descricao: t.description,
-    categoria: t.category ?? "Outros",
-    valor: t.value,
-    data: t.date ?? "Hoje",
-    iso: t.createdAt.toISOString(), // p/ filtro por período no cliente
-  }));
+  const rows = await prisma.transaction.findMany({
+    orderBy: [{ occurredAt: "desc" }, { createdAt: "desc" }],
+  });
+  return rows.map((t) => {
+    const quando = t.occurredAt ?? t.createdAt;
+    return {
+      id: t.id,
+      tipo: t.type as "receita" | "despesa",
+      descricao: t.description,
+      categoria: t.category ?? "Outros",
+      valor: t.value,
+      data: quando.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+      /** AAAA-MM-DD — usado nos filtros de período e no campo de data. */
+      dia: new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(quando),
+      iso: quando.toISOString(),
+      forma: t.method ?? "",
+      observacoes: t.notes ?? "",
+      /** Receita gerada pela entrega de uma OS (não foi digitada à mão). */
+      osId: t.serviceOrderId,
+    };
+  });
 }
 
 export async function getSettings() {
@@ -588,28 +623,130 @@ export async function getEquipe() {
   }));
 }
 
-export async function getRelatorios() {
-  const [servicos, gastos, vencidas] = await Promise.all([
-    prisma.serviceOrderItem.groupBy({
-      by: ["description"],
-      where: { type: "Serviço" },
-      _count: { description: true },
-      _sum: { value: true },
-      orderBy: { _count: { description: "desc" } },
-      take: 5,
+/** Converte AAAA-MM-DD em instante UTC; fim de dia quando `fim` é true. */
+function limiteData(dia: string | undefined, fim = false): Date | undefined {
+  if (!dia || !/^\d{4}-\d{2}-\d{2}$/.test(dia)) return undefined;
+  return new Date(`${dia}T${fim ? "23:59:59.999" : "00:00:00.000"}Z`);
+}
+
+export async function getRelatorios(de?: string, ate?: string) {
+  const gte = limiteData(de);
+  const lte = limiteData(ate, true);
+  const janela = gte || lte ? { ...(gte ? { gte } : {}), ...(lte ? { lte } : {}) } : undefined;
+  const ondeOS = janela ? { createdAt: janela } : {};
+  const ondeTx = janela ? { occurredAt: janela } : {};
+
+  const [itens, ordens, vencidas, transacoes] = await Promise.all([
+    // Agrega em JS porque o total do item é value × qty — o groupBy do Prisma
+    // não multiplica colunas e somava só o valor unitário (contava errado).
+    prisma.serviceOrderItem.findMany({
+      where: janela ? { serviceOrder: { createdAt: janela } } : {},
+      select: { type: true, description: true, qty: true, value: true },
     }),
-    prisma.serviceOrder.groupBy({ by: ["clientId", "clientName"], _count: true, _sum: { total: true }, orderBy: { _sum: { total: "desc" } }, take: 4 }),
+    prisma.serviceOrder.findMany({
+      where: ondeOS,
+      select: { clientName: true, status: true, total: true, mechanic: true },
+    }),
     prisma.vehicle.findMany({ where: { revisionOverdue: true }, include: { client: true } }),
+    prisma.transaction.findMany({
+      where: ondeTx,
+      select: { type: true, value: true, category: true, method: true },
+    }),
   ]);
+
+  // ── Rankings de itens (peça e serviço separados) ──
+  type Acc = { qtd: number; receita: number };
+  const rank = (tipo: string) => {
+    const mapa = new Map<string, Acc>();
+    for (const i of itens) {
+      if (i.type !== tipo) continue;
+      const chave = i.description.trim();
+      const a = mapa.get(chave) ?? { qtd: 0, receita: 0 };
+      a.qtd += i.qty;
+      a.receita += i.value * i.qty;
+      mapa.set(chave, a);
+    }
+    return [...mapa.entries()]
+      .map(([nome, a]) => ({ servico: nome, qtd: a.qtd, receita: a.receita }))
+      .sort((x, y) => y.receita - x.receita)
+      .slice(0, 6);
+  };
+
+  // ── Clientes ──
+  const porCliente = new Map<string, { os: number; gasto: number }>();
+  for (const o of ordens) {
+    const a = porCliente.get(o.clientName) ?? { os: 0, gasto: 0 };
+    a.os += 1;
+    a.gasto += o.total;
+    porCliente.set(o.clientName, a);
+  }
+  const clientesMaisAtivos = [...porCliente.entries()]
+    .map(([nome, a]) => ({ nome, os: a.os, gasto: a.gasto }))
+    .sort((x, y) => y.gasto - x.gasto)
+    .slice(0, 6);
+
+  // ── OS por status e por mecânico ──
+  const porStatus = new Map<string, number>();
+  const porMecanico = new Map<string, { os: number; valor: number }>();
+  for (const o of ordens) {
+    porStatus.set(o.status, (porStatus.get(o.status) ?? 0) + 1);
+    const nome = o.mechanic?.trim() || "Sem mecânico";
+    const a = porMecanico.get(nome) ?? { os: 0, valor: 0 };
+    a.os += 1;
+    a.valor += o.total;
+    porMecanico.set(nome, a);
+  }
+
+  // ── Financeiro do período ──
+  const receitas = transacoes.filter((t) => t.type === "receita").reduce((s, t) => s + t.value, 0);
+  const despesas = transacoes.filter((t) => t.type === "despesa").reduce((s, t) => s + t.value, 0);
+  const porCategoria = new Map<string, { receita: number; despesa: number }>();
+  for (const t of transacoes) {
+    const chave = t.category?.trim() || "Outros";
+    const a = porCategoria.get(chave) ?? { receita: 0, despesa: 0 };
+    if (t.type === "receita") a.receita += t.value;
+    else a.despesa += t.value;
+    porCategoria.set(chave, a);
+  }
+  const porForma = new Map<string, number>();
+  for (const t of transacoes) {
+    if (t.type !== "receita") continue;
+    porForma.set(t.method?.trim() || "Não informado", (porForma.get(t.method?.trim() || "Não informado") ?? 0) + t.value);
+  }
+
+  const totalOS = ordens.length;
+  const faturadoOS = ordens.reduce((s, o) => s + o.total, 0);
+
   return {
-    servicosMaisVendidos: servicos.map((s) => ({ servico: s.description, qtd: s._count.description, receita: s._sum.value ?? 0 })),
-    clientesMaisAtivos: gastos.map((g) => ({ nome: g.clientName, os: g._count, gasto: g._sum.total ?? 0 })),
+    servicosMaisVendidos: rank("Serviço"),
+    pecasMaisUsadas: rank("Peça"),
+    clientesMaisAtivos,
     revisoesPendentes: vencidas.map((v) => ({
       modelo: `${v.brand} ${v.model}`,
       placa: v.plate,
       proprietario: v.client?.name ?? "—",
       quando: `Revisão vencida · ${v.nextRevisionDate ?? ""}`,
     })),
+    resumo: {
+      receitas,
+      despesas,
+      lucro: receitas - despesas,
+      totalOS,
+      faturadoOS,
+      ticketMedio: totalOS > 0 ? Math.round(faturadoOS / totalOS) : 0,
+    },
+    ordensPorStatus: [...porStatus.entries()]
+      .map(([status, qtd]) => ({ status, qtd }))
+      .sort((a, b) => b.qtd - a.qtd),
+    porMecanico: [...porMecanico.entries()]
+      .map(([nome, a]) => ({ nome, os: a.os, valor: a.valor }))
+      .sort((x, y) => y.valor - x.valor),
+    porCategoria: [...porCategoria.entries()]
+      .map(([nome, a]) => ({ nome, receita: a.receita, despesa: a.despesa }))
+      .sort((x, y) => y.receita + y.despesa - (x.receita + x.despesa)),
+    formasPagamento: [...porForma.entries()]
+      .map(([nome, valor]) => ({ nome, valor }))
+      .sort((x, y) => y.valor - x.valor),
   };
 }
 

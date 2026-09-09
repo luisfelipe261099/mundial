@@ -13,16 +13,17 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { brl, osBadgeClass } from "./_data/mock";
-import { getKpis, getOrdens, getEstoque, getAgendaHoje, faturamentoMensal } from "@/lib/admin-data";
+import { getKpis, getOrdens, getEstoque, getAgendaHoje, getFaturamentoMensal } from "@/lib/admin-data";
 import { business } from "../_data/business";
 import { StatCard, Sparkline, Delta, BarChart, Panel } from "./_components/ui";
 
 export default async function DashboardPage() {
-  const [kpis, ordens, estoque, agenda] = await Promise.all([
+  const [kpis, ordens, estoque, agenda, faturamentoMensal] = await Promise.all([
     getKpis(),
     getOrdens(),
     getEstoque(),
     getAgendaHoje(),
+    getFaturamentoMensal(),
   ]);
 
   const baixoEstoque = estoque.filter((p) => p.qtd < p.minimo);
@@ -47,11 +48,11 @@ export default async function DashboardPage() {
     ) % 24;
   const saudacao = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
-  // Trend real (série 6m, ilustrativa no protótipo) → sparkline + variação MoM.
+  // Faturamento real dos últimos 6 meses → sparkline + variação mês a mês.
   const serie = faturamentoMensal.map((m) => m.valor);
   const ult = serie[serie.length - 1];
   const pen = serie[serie.length - 2];
-  const momPct = Math.round(((ult - pen) / pen) * 100);
+  const momPct = pen > 0 ? Math.round(((ult - pen) / pen) * 100) : 0;
   const momDir = momPct > 0 ? "up" : momPct < 0 ? "down" : "flat";
 
   // Pulso operacional de hoje/agora (ações que pedem atenção).

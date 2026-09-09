@@ -71,6 +71,13 @@ const STATEMENTS = [
   // horário de entrada e de saída do veículo (a data de saída é o deliveredAt)
   `ALTER TABLE "service_orders" ADD COLUMN IF NOT EXISTS "entryTime" TEXT`,
   `ALTER TABLE "service_orders" ADD COLUMN IF NOT EXISTS "exitTime" TEXT`,
+  // Financeiro: data real do lançamento, forma de pagamento e observação.
+  // O backfill usa o createdAt e só alcança linha ainda sem data.
+  `ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "occurredAt" TIMESTAMP(3)`,
+  `ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "method" TEXT`,
+  `ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "notes" TEXT`,
+  `UPDATE "transactions" SET "occurredAt" = "createdAt" WHERE "occurredAt" IS NULL`,
+  `CREATE INDEX IF NOT EXISTS "transactions_occurredAt_idx" ON "transactions"("occurredAt")`,
   `UPDATE "service_order_items" i SET "position" = sub.rn
    FROM (SELECT "id", ROW_NUMBER() OVER (PARTITION BY "serviceOrderId" ORDER BY "id") rn
          FROM "service_order_items") sub

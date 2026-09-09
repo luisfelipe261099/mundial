@@ -106,7 +106,8 @@ export function StatCard({
 // Barras em CSS puro — refinado: trilho de fundo, mês corrente em destaque,
 // valor no topo. Mesma assinatura de antes.
 export function BarChart({ data }: { data: { mes: string; valor: number }[] }) {
-  const max = Math.max(...data.map((d) => d.valor));
+  // Guarda o zero: mês sem movimento não pode gerar divisão por zero (NaN).
+  const max = Math.max(1, ...data.map((d) => d.valor));
   return (
     <div className="flex h-52 items-end justify-between gap-2.5 px-1 sm:gap-3">
       {data.map((d, i) => {

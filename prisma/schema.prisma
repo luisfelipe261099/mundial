@@ -270,9 +270,13 @@ model Transaction {
   category       String?
   value          Int      @default(0)
   date           String?
+  occurredAt     DateTime? // data real do lançamento (o `date` é só texto de exibição)
+  method         String? // forma de pagamento: Dinheiro | PIX | Cartão | Boleto | Transferência
+  notes          String?
   serviceOrderId String? // receita originada de uma OS finalizada
   createdAt      DateTime @default(now())
 
+  @@index([occurredAt])
   @@map("transactions")
 }
 
