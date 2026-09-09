@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { business, fullAddress, mapsLink, siteUrl } from "./_data/business";
+import { PERGUNTAS } from "./(site)/_components/faq";
 
 // Fontes hospedadas no próprio projeto (app/_fonts, subset latino).
 // Antes vinham do next/font/google, que baixa do Google durante o build — uma
@@ -48,22 +49,60 @@ const spaceMono = localFont({
   display: "swap",
 });
 
+const nota = business.rating.toString().replace(".", ",");
+const descricaoSEO = `Oficina mecânica no Uberaba, em Curitiba/PR. Diagnóstico com scanner, troca de óleo, freios, suspensão, câmbio automático e revisão — orçamento por escrito no WhatsApp antes de qualquer serviço. Nota ${nota} no Google com ${business.reviewCount} avaliações.`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: `${business.name} — Oficina mecânica de confiança em Curitiba`,
-  description: `Manutenção e reparo automotivo com transparência em Curitiba/PR. Nota ${business.rating.toString().replace(".", ",")} no Google (${business.reviewCount} avaliações). Oficina limpa, preço justo e serviço de primeira. Orçamento pelo WhatsApp.`,
+  // O título começa pelo que as pessoas digitam ("oficina mecânica em
+  // Curitiba"), e não pelo nome da empresa — quem já sabe o nome acha de
+  // qualquer jeito; quem não sabe procura pelo serviço e pela cidade.
+  title: {
+    default: `Oficina Mecânica em Curitiba — ${business.name} (Uberaba)`,
+    template: `%s — ${business.name}`,
+  },
+  description: descricaoSEO,
+  applicationName: business.name,
+  authors: [{ name: business.name }],
+  creator: business.name,
+  publisher: business.name,
+  category: "automotive",
   keywords: [
-    "mecânica Curitiba",
     "oficina mecânica Curitiba",
-    "Auto Mecânica Mundial",
+    "mecânica em Curitiba",
+    "oficina mecânica Uberaba Curitiba",
+    "oficina mecânica perto de mim Curitiba",
     "troca de óleo Curitiba",
-    "revisão automotiva Uberaba Curitiba",
+    "diagnóstico eletrônico automotivo Curitiba",
+    "troca de fluido câmbio automático Curitiba",
+    "manutenção carro híbrido Curitiba",
+    "freios e suspensão Curitiba",
+    "revisão automotiva Curitiba",
+    "mecânico Boqueirão Curitiba",
+    business.name,
   ],
   alternates: { canonical: "/" },
+  // Libera o preview grande de imagem e texto nos resultados — sem isso o
+  // Google encurta o snippet e não usa a foto em rich results.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  // Preenche NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION na Vercel com o código do
+  // Google Search Console para validar a propriedade do site.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
   openGraph: {
-    title: `${business.name} — Oficina de confiança em Curitiba`,
-    description:
-      "Oficina limpa, preço justo e serviço de primeira. Orçamento sem compromisso pelo WhatsApp.",
+    title: `Oficina Mecânica em Curitiba — ${business.name}`,
+    description: descricaoSEO,
     url: siteUrl,
     siteName: business.name,
     locale: "pt_BR",
@@ -72,61 +111,124 @@ export const metadata: Metadata = {
   // O card de imagem vem de app/opengraph-image.tsx (og:image + twitter:image).
   twitter: {
     card: "summary_large_image",
-    title: `${business.name} — Oficina de confiança em Curitiba`,
-    description:
-      "Oficina limpa, preço justo e serviço de primeira. Orçamento sem compromisso pelo WhatsApp.",
+    title: `Oficina Mecânica em Curitiba — ${business.name}`,
+    description: descricaoSEO,
+  },
+  other: {
+    // Sinais geográficos clássicos, ainda lidos por buscadores e agregadores.
+    "geo.region": "BR-PR",
+    "geo.placename": `${business.address.district}, ${business.address.city}`,
   },
 };
 
-// Dados estruturados (schema.org AutoRepair) — ajuda SEO local e rich results.
+// Serviços oferecidos — viram o catálogo do JSON-LD e ajudam o Google a
+// entender para que buscas a oficina é resposta.
+const SERVICOS_SEO = [
+  "Troca de óleo e filtros",
+  "Freios e suspensão",
+  "Diagnóstico eletrônico com scanner",
+  "Câmbio automático e CVT",
+  "Manutenção de veículos híbridos",
+  "Revisão completa",
+  "Alinhamento e balanceamento",
+  "Injeção eletrônica",
+  "Embreagem",
+  "Motor e elétrica",
+];
+
+// Dados estruturados (schema.org) em @graph: a oficina, o site e as perguntas
+// frequentes. Alimenta o painel do Google, o rich result de FAQ e a busca local.
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "AutoRepair",
-  "@id": `${siteUrl}/#oficina`,
-  name: business.name,
-  url: siteUrl,
-  telephone: business.phoneHref.replace("tel:", ""),
-  priceRange: "$$",
-  image: [
-    `${siteUrl}/images/real-garage.jpg`,
-    `${siteUrl}/images/real-diagnostic.jpg`,
-  ],
-  sameAs: [business.instagram, business.googleReviewsUrl],
-  hasMap: mapsLink,
-  areaServed: {
-    "@type": "City",
-    name: `${business.address.city}, ${business.address.state}`,
-  },
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: business.address.street,
-    addressLocality: business.address.city,
-    addressRegion: business.address.state,
-    postalCode: business.address.zip,
-    addressCountry: "BR",
-  },
-  // Horários reais da oficina (espelham business.hours).
-  openingHoursSpecification: [
+  "@graph": [
     {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-      opens: "08:00",
-      closes: "18:00",
+      "@type": "AutoRepair",
+      "@id": `${siteUrl}/#oficina`,
+      name: business.name,
+      alternateName: "Mecânica Mundial Curitiba",
+      url: siteUrl,
+      telephone: business.phoneHref.replace("tel:", ""),
+      email: undefined,
+      priceRange: "$$",
+      currenciesAccepted: "BRL",
+      paymentAccepted: business.formasPagamento.join(", "),
+      logo: `${siteUrl}/images/logo.png`,
+      image: [
+        `${siteUrl}/images/fachada.jpg`,
+        `${siteUrl}/images/real-garage.jpg`,
+        `${siteUrl}/images/real-diagnostic.jpg`,
+      ],
+      sameAs: [business.instagram, business.googleReviewsUrl],
+      hasMap: mapsLink,
+      areaServed: [
+        {
+          "@type": "City",
+          name: `${business.address.city}, ${business.address.state}`,
+        },
+        ...business.bairrosAtendidos.map((b) => ({
+          "@type": "Place" as const,
+          name: `${b}, ${business.address.city}/${business.address.state}`,
+        })),
+      ],
+      knowsAbout: SERVICOS_SEO,
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Serviços da oficina",
+        itemListElement: SERVICOS_SEO.map((s) => ({
+          "@type": "Offer",
+          itemOffered: { "@type": "Service", name: s, areaServed: business.address.city },
+        })),
+      },
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: business.address.street,
+        addressLocality: business.address.city,
+        addressRegion: business.address.state,
+        postalCode: business.address.zip,
+        addressCountry: "BR",
+      },
+      // Horários reais da oficina (espelham business.hours).
+      openingHoursSpecification: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          opens: "08:00",
+          closes: "18:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: "Saturday",
+          opens: "08:00",
+          closes: "12:00",
+        },
+      ],
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: business.rating,
+        reviewCount: business.reviewCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      description: `Oficina mecânica no Uberaba, em Curitiba/PR. ${fullAddress}.`,
     },
     {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: "Saturday",
-      opens: "08:00",
-      closes: "12:00",
+      "@type": "WebSite",
+      "@id": `${siteUrl}/#site`,
+      url: siteUrl,
+      name: business.name,
+      inLanguage: "pt-BR",
+      publisher: { "@id": `${siteUrl}/#oficina` },
+    },
+    {
+      "@type": "FAQPage",
+      "@id": `${siteUrl}/#duvidas`,
+      mainEntity: PERGUNTAS.map((f) => ({
+        "@type": "Question",
+        name: f.p,
+        acceptedAnswer: { "@type": "Answer", text: f.r },
+      })),
     },
   ],
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: business.rating,
-    reviewCount: business.reviewCount,
-    bestRating: 5,
-  },
-  description: `Oficina mecânica em Curitiba. ${fullAddress}.`,
 };
 
 export default function RootLayout({

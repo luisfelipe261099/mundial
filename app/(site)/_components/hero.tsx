@@ -14,14 +14,16 @@ export function Hero() {
         <div>
           <p className="t-label">Oficina mecânica · Uberaba, Curitiba/PR</p>
 
+          {/* O H1 carrega a busca principal ("oficina mecânica em Curitiba")
+              junto do diferencial — é o texto que o Google mais pesa. */}
           <h1 className="t-display mt-4 max-w-[21ch] text-[var(--tinta)]">
-            Mecânica sem susto: orçamento por escrito antes de qualquer serviço.
+            Oficina mecânica em Curitiba com orçamento por escrito.
           </h1>
 
           <p className="t-lede mt-5 max-w-[54ch]">
-            Diagnóstico com scanner, elevador e mecânico que explica cada peça
-            antes de trocar. Você aprova o orçamento no WhatsApp — a gente
-            executa pelo preço combinado.
+            Mecânica sem susto no Uberaba: diagnóstico com scanner, elevador e
+            mecânico que explica cada peça antes de trocar. Você aprova o
+            orçamento no WhatsApp — a gente executa pelo preço combinado.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">

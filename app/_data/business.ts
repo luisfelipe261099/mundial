@@ -36,13 +36,33 @@ export const business = {
 
   googleReviewsUrl:
     "https://www.google.com/search?q=Auto+Mec%C3%A2nica+Mundial+Curitiba",
+
+  // Bairros vizinhos que a oficina atende — entram no texto do site e no
+  // areaServed do JSON-LD (busca do tipo "oficina mecânica no Boqueirão").
+  bairrosAtendidos: [
+    "Uberaba",
+    "Boqueirão",
+    "Hauer",
+    "Cajuru",
+    "Jardim das Américas",
+    "Capão da Imbuia",
+    "Prado Velho",
+    "Guabirotuba",
+  ],
+
+  formasPagamento: ["Dinheiro", "PIX", "Cartão de débito", "Cartão de crédito"],
 } as const;
 
-// ⚠️ Domínio de produção. Troque pelo domínio real antes do deploy — ou
-// defina NEXT_PUBLIC_SITE_URL no ambiente (Vercel). Usado em metadataBase,
-// OG image, sitemap, robots e dados estruturados (JSON-LD).
+// Endereço do site em produção.
+//
+// ⚠️ O padrão é o domínio da Vercel, que RESPONDE hoje. O antigo padrão
+// (automecanicamundial.com.br) não resolve DNS: como esta URL vira o canonical,
+// o sitemap e o metadataBase, apontar para um domínio morto faz o Google não
+// conseguir indexar o site. Quando o domínio .com.br definitivo estiver
+// registrado e apontado, basta definir NEXT_PUBLIC_SITE_URL na Vercel — o site
+// inteiro (canonical, sitemap, robots, OG e JSON-LD) acompanha sozinho.
 export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://automecanicamundial.com.br";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://mundial-sepia.vercel.app";
 
 export const fullAddress = `${business.address.street} — ${business.address.district}, ${business.address.city}/${business.address.state}, ${business.address.zip}`;
 

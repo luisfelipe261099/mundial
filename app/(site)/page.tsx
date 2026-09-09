@@ -1,4 +1,5 @@
 import { Closing } from "./_components/closing";
+import { Faq } from "./_components/faq";
 import { MobileBar } from "./_components/floating";
 import { Footer } from "./_components/footer";
 import { Hero } from "./_components/hero";
@@ -20,6 +21,7 @@ export default function Home() {
         <Reviews />
         <Structure />
         <Location />
+        <Faq />
         <Closing />
       </main>
       <Footer />

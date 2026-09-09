@@ -13,6 +13,10 @@ export function Location() {
       <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 lg:py-16">
         <h2 className="t-h2 text-[var(--tinta)]">Onde estamos</h2>
         <p className="t-lede mt-3 max-w-[46ch]">{fullAddress}</p>
+        <p className="t-small mt-2 max-w-[62ch] text-[var(--tinta-2)]">
+          Atendemos clientes de {business.bairrosAtendidos.slice(0, -1).join(", ")} e{" "}
+          {business.bairrosAtendidos.at(-1)} — e de toda Curitiba e região metropolitana.
+        </p>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           {/* Ficha de contato e horário */}
