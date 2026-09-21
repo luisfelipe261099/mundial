@@ -331,6 +331,19 @@ export async function mudarStatus(osId: string, novoStatus: string) {
   revalidatePath("/oficina");
 }
 
+// Número do orçamento: sequência simples e curta (ORC-1, ORC-2, ORC-3…).
+// Antes era sorteado entre 300 e 998 — número grande, sem ordem nenhuma e
+// com risco de repetir. Pega o menor número livre, então a numeração antiga
+// continua valendo e a nova já começa pequena.
+async function novoNumeroOrcamento(): Promise<string> {
+  const usados = new Set(
+    (await prisma.budget.findMany({ select: { id: true } })).map((b) => b.id)
+  );
+  let n = 1;
+  while (usados.has(`ORC-${n}`)) n++;
+  return `ORC-${n}`;
+}
+
 // Gera/atualiza o orçamento do cliente a partir da OS e coloca em "Aguardando aprovação".
 export async function enviarParaAprovacao(osId: string) {
   await requireAdmin();
@@ -352,20 +365,29 @@ export async function enviarParaAprovacao(osId: string) {
       data: { status: "pendente", subtotal: total, total, date: hoje(), items: { create: itensBudget } },
     });
   } else {
-    await prisma.budget.create({
-      data: {
-        id: `ORC-${300 + Math.floor(Math.random() * 699)}`,
-        clientId: os.clientId,
-        vehicleName: os.vehicleName,
-        date: hoje(),
-        status: "pendente",
-        subtotal: total,
-        discount: 0,
-        total,
-        serviceOrderId: osId,
-        items: { create: itensBudget },
-      },
-    });
+    const dados = {
+      clientId: os.clientId,
+      vehicleName: os.vehicleName,
+      date: hoje(),
+      status: "pendente",
+      subtotal: total,
+      discount: 0,
+      total,
+      serviceOrderId: osId,
+      items: { create: itensBudget },
+    };
+    // Duas OS enviadas ao mesmo tempo podem pegar o mesmo número livre; nesse
+    // caso o banco recusa a chave duplicada e a gente tenta o próximo.
+    for (let tentativa = 0; ; tentativa++) {
+      try {
+        await prisma.budget.create({ data: { id: await novoNumeroOrcamento(), ...dados } });
+        break;
+      } catch (e) {
+        const duplicado =
+          e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
+        if (!duplicado || tentativa >= 4) throw e;
+      }
+    }
   }
 
   await prisma.serviceOrder.update({ where: { id: osId }, data: { status: "Aguardando aprovação", total } });
