@@ -303,8 +303,18 @@ export async function criarCliente(values: Record<string, string>): Promise<{ er
     return { error: "Para cadastrar o veículo junto, informe modelo e placa." };
   }
   if (placa) {
-    const jaExiste = await prisma.vehicle.findUnique({ where: { plate: placa } });
-    if (jaExiste) return { error: `Já existe um veículo com a placa ${placa}.` };
+    const jaExiste = await prisma.vehicle.findUnique({
+      where: { plate: placa },
+      include: { client: { select: { name: true } } },
+    });
+    // Carro que trocou de dono: cadastre o cliente sem o veículo e transfira
+    // o carro depois — o caminho fica explicado aqui para não virar beco sem saída.
+    if (jaExiste) {
+      const de = jaExiste.client?.name ? ` (de ${jaExiste.client.name})` : "";
+      return {
+        error: `A placa ${placa} já está cadastrada no ${jaExiste.brand} ${jaExiste.model}${de}. Se o carro foi vendido para este cliente, cadastre-o sem o veículo e depois use Veículos → Cadastrar veículo com a mesma placa para transferir.`,
+      };
+    }
   }
 
   // Sem senha: o cliente ativa a conta por Primeiro acesso (placa + telefone) ou
@@ -451,13 +461,22 @@ export async function gerarAcessoCliente(clientId: string): Promise<{ senha?: st
   return { senha };
 }
 
+/** Placa já cadastrada: o painel oferece transferir em vez de só barrar. */
+export interface ConflitoPlaca {
+  veiculoId: string;
+  veiculoNome: string;
+  donoAtual: string;
+  novoDonoId: string;
+  novoDonoNome: string;
+}
+
 // Cadastro de veículo pelo painel. Valida antes de gravar e devolve mensagem:
 // a placa é única no sistema e, sem esta checagem, repetir uma placa já
 // cadastrada estourava o erro do banco e derrubava a página inteira ("ocorreu
 // um erro no servidor") em vez de avisar o que estava errado.
 export async function criarVeiculo(
   values: Record<string, string>
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; conflito?: ConflitoPlaca }> {
   await requireAdmin();
 
   const modelo = (values.modelo ?? "").trim();
@@ -470,12 +489,28 @@ export async function criarVeiculo(
 
   const jaExiste = await prisma.vehicle.findUnique({
     where: { plate: placa },
-    include: { client: { select: { name: true } } },
+    include: { client: { select: { id: true, name: true } } },
   });
   if (jaExiste) {
-    const de = jaExiste.client?.name ? ` (de ${jaExiste.client.name})` : "";
+    // Carro vendido: o veículo é o mesmo, muda o dono. Em vez de barrar, o
+    // formulário propõe a transferência com um clique.
+    const donoAtual = jaExiste.client?.name ?? "sem proprietário";
+    const mesmoDono = jaExiste.client?.id === dono.id;
     return {
-      error: `A placa ${placa} já está cadastrada no ${jaExiste.brand} ${jaExiste.model}${de}.`,
+      error: mesmoDono
+        ? `A placa ${placa} já está cadastrada para ${dono.name}.`
+        : `A placa ${placa} já está cadastrada no ${jaExiste.brand} ${jaExiste.model}, de ${donoAtual}.`,
+      ...(mesmoDono
+        ? {}
+        : {
+            conflito: {
+              veiculoId: jaExiste.id,
+              veiculoNome: `${jaExiste.brand} ${jaExiste.model}`,
+              donoAtual,
+              novoDonoId: dono.id,
+              novoDonoNome: dono.name,
+            },
+          }),
     };
   }
 
@@ -503,6 +538,33 @@ export async function criarVeiculo(
   }
 
   revalidatePath("/oficina/veiculos");
+  revalidatePath("/oficina");
+  return {};
+}
+
+// Troca o dono do veículo — o caso de "vendeu o carro". O veículo continua o
+// mesmo registro (mesma placa, mesmo histórico de manutenção); só o
+// proprietário muda. As OS antigas guardam o nome de quem era dono na época,
+// então o histórico financeiro de cada cliente continua correto, e no app cada
+// cliente só enxerga as próprias ordens.
+export async function transferirVeiculo(
+  veiculoId: string,
+  novoClienteId: string
+): Promise<{ error?: string }> {
+  await requireAdmin();
+  const [veiculo, novoDono] = await Promise.all([
+    prisma.vehicle.findUnique({ where: { id: veiculoId }, select: { id: true, clientId: true } }),
+    prisma.client.findUnique({ where: { id: novoClienteId }, select: { id: true } }),
+  ]);
+  if (!veiculo) return { error: "Veículo não encontrado." };
+  if (!novoDono) return { error: "Novo proprietário não encontrado." };
+  if (veiculo.clientId === novoDono.id) return { error: "O veículo já é deste proprietário." };
+
+  await prisma.vehicle.update({ where: { id: veiculoId }, data: { clientId: novoDono.id } });
+
+  revalidatePath("/oficina/veiculos");
+  revalidatePath(`/oficina/veiculos/${veiculoId}`);
+  revalidatePath("/oficina/clientes");
   revalidatePath("/oficina");
   return {};
 }
