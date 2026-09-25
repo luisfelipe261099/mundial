@@ -33,10 +33,11 @@ export function CadastroForm({
   campos: Campo[];
   sucessoTitulo: string;
   criarLabel: string;
-  onSubmit?: (values: Record<string, string>) => Promise<void>;
+  onSubmit?: (values: Record<string, string>) => Promise<{ error?: string } | void>;
 }) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [criado, setCriado] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const set = (name: string, v: string) => setValues((x) => ({ ...x, [name]: v }));
@@ -110,13 +111,31 @@ export function CadastroForm({
         </div>
       </div>
 
+      {erro && (
+        <p className="rounded-lg bg-rose-500/10 px-4 py-3 text-sm text-rose-300">{erro}</p>
+      )}
+
       <button
         type="button"
         disabled={!pode || pending}
         onClick={() =>
           startTransition(async () => {
-            if (onSubmit) await onSubmit(values);
-            setCriado(true);
+            setErro(null);
+            try {
+              // Sem este tratamento, qualquer recusa do servidor (placa
+              // repetida, por exemplo) virava tela de erro — e, quando não
+              // quebrava, o formulário anunciava sucesso sem ter salvado.
+              const r = onSubmit ? await onSubmit(values) : undefined;
+              if (r && "error" in r && r.error) {
+                setErro(r.error);
+                return;
+              }
+              setCriado(true);
+            } catch {
+              setErro(
+                "Não foi possível salvar agora. Confira os dados e tente de novo — se continuar, avise o suporte."
+              );
+            }
           })
         }
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--ad-brand)] py-3.5 text-sm font-semibold text-white transition-colors enabled:hover:bg-[#1b5fe0] disabled:opacity-40"

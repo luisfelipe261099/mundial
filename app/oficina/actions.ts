@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth";
 import { gerarSenhaTemporaria } from "@/lib/identity";
 
@@ -450,25 +451,60 @@ export async function gerarAcessoCliente(clientId: string): Promise<{ senha?: st
   return { senha };
 }
 
-export async function criarVeiculo(values: Record<string, string>) {
+// Cadastro de veículo pelo painel. Valida antes de gravar e devolve mensagem:
+// a placa é única no sistema e, sem esta checagem, repetir uma placa já
+// cadastrada estourava o erro do banco e derrubava a página inteira ("ocorreu
+// um erro no servidor") em vez de avisar o que estava errado.
+export async function criarVeiculo(
+  values: Record<string, string>
+): Promise<{ error?: string }> {
   await requireAdmin();
+
+  const modelo = (values.modelo ?? "").trim();
+  const placa = (values.placa ?? "").trim().toUpperCase();
+  if (!modelo) return { error: "Informe a marca e o modelo do veículo." };
+  if (!placa) return { error: "Informe a placa do veículo." };
+
   const dono = await prisma.client.findFirst({ where: { name: values.proprietario } });
-  if (!dono) return;
-  const { brand, model } = split(values.modelo);
-  await prisma.vehicle.create({
-    data: {
-      clientId: dono.id,
-      brand,
-      model,
-      year: Number(values.ano) || new Date().getFullYear(),
-      plate: values.placa,
-      km: Number(values.km) || 0,
-      engine: values.motor?.trim() || null,
-      fuel: values.combustivel || null,
-      color: values.cor || null,
-    },
+  if (!dono) return { error: "Selecione o proprietário do veículo." };
+
+  const jaExiste = await prisma.vehicle.findUnique({
+    where: { plate: placa },
+    include: { client: { select: { name: true } } },
   });
+  if (jaExiste) {
+    const de = jaExiste.client?.name ? ` (de ${jaExiste.client.name})` : "";
+    return {
+      error: `A placa ${placa} já está cadastrada no ${jaExiste.brand} ${jaExiste.model}${de}.`,
+    };
+  }
+
+  const { brand, model } = split(modelo);
+  try {
+    await prisma.vehicle.create({
+      data: {
+        clientId: dono.id,
+        brand,
+        model,
+        year: Number(values.ano) || new Date().getFullYear(),
+        plate: placa,
+        km: Number(values.km) || 0,
+        engine: values.motor?.trim() || null,
+        fuel: values.combustivel || null,
+        color: values.cor || null,
+      },
+    });
+  } catch (e) {
+    // Rede de segurança: dois cadastros simultâneos com a mesma placa.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      return { error: `A placa ${placa} já está cadastrada.` };
+    }
+    throw e;
+  }
+
   revalidatePath("/oficina/veiculos");
+  revalidatePath("/oficina");
+  return {};
 }
 
 // Edita a ficha do veículo. Placa é única no sistema, então checa antes de
