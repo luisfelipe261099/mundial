@@ -3,23 +3,39 @@ import { Prisma } from "@/lib/generated/prisma/client";
 
 /* Numeração das ordens de serviço.
  *
- * Antes cada OS recebia um número sorteado entre 2100 e 11099: a oficina via
- * OS-9432 seguida de OS-2761, sem ordem nenhuma, e dois sorteios iguais
- * derrubavam a abertura da OS com erro de chave duplicada.
+ * Histórico: cada OS recebia um número sorteado entre 2100 e 11099 — a lista
+ * pulava de OS-9432 para OS-2761, e dois sorteios iguais derrubavam a abertura
+ * da OS com erro de chave duplicada.
  *
- * Agora a numeração é sequencial, continuando do maior número já usado — quem
- * tem OS-2098 hoje recebe OS-2099 na próxima, sem "voltar no tempo" e sem
- * conflitar com o que já foi impresso e entregue ao cliente. */
+ * Agora a numeração é sequencial e curta, no formato OS-0020: conta quantas
+ * ordens já existem e segue dali, com quatro dígitos e zero à esquerda. As OS
+ * antigas (OS-1975, OS-2098…) ficam como estão — elas já foram impressas e
+ * entregues ao cliente. */
 
-/** Próximo número livre na sequência de OS. */
+const PREFIXO = "OS-";
+const DIGITOS = 4;
+
+const formatar = (n: number) => `${PREFIXO}${String(n).padStart(DIGITOS, "0")}`;
+
+/** Próximo número livre da sequência, no formato OS-0020. */
 export async function proximoNumeroOS(): Promise<string> {
   const ordens = await prisma.serviceOrder.findMany({ select: { id: true } });
-  let maior = 0;
+  const ocupados = new Set(ordens.map((o) => o.id));
+
+  // Marca d'água do formato novo: o zero à esquerda distingue "0020" (novo) de
+  // "1975" (antigo). Assim, apagar uma OS não faz o número dela ser reusado.
+  let maiorNovo = 0;
   for (const o of ordens) {
-    const n = Number(o.id.replace(/^OS-/i, ""));
-    if (Number.isInteger(n) && n > maior) maior = n;
+    const sufixo = o.id.replace(/^OS-/i, "");
+    if (/^0\d+$/.test(sufixo)) {
+      const n = Number(sufixo);
+      if (Number.isInteger(n) && n > maiorNovo) maiorNovo = n;
+    }
   }
-  return `OS-${maior + 1}`;
+
+  let n = Math.max(ordens.length + 1, maiorNovo + 1);
+  while (ocupados.has(formatar(n))) n++;
+  return formatar(n);
 }
 
 /**
