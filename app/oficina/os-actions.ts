@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin, requireStaff } from "@/lib/auth";
+import { criarComNumeroOS } from "@/lib/numeracao";
 
 // Data e hora no fuso da oficina — o servidor da Vercel roda em UTC, então sem
 // o timeZone a data virava "amanhã" a partir das 21h de Curitiba.
@@ -54,29 +55,31 @@ export async function darEntrada(input: EntradaInput): Promise<{ id: string }> {
     prisma.client.findUnique({ where: { id: input.clienteId } }),
     prisma.vehicle.findUnique({ where: { id: input.veiculoId } }),
   ]);
-  const id = `OS-${2100 + Math.floor(Math.random() * 8999)}`;
-  await prisma.serviceOrder.create({
-    data: {
-      id,
-      clientId: input.clienteId || null,
-      vehicleId: input.veiculoId || null,
-      clientName: cliente?.name ?? "—",
-      vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
-      plate: veiculo?.plate ?? null,
-      date: hoje(),
-      entryTime: agora(),
-      km: input.km || 0,
-      fuelLevel: input.fuelLevel || null,
-      defect: input.defeito,
-      status: "Aberta",
-      authorized: input.authorized,
-      inspection: {
-        checklist: input.checklist,
-        avarias: input.avarias,
-        objetos: input.objetos,
-      } as Prisma.InputJsonValue,
-      total: 0,
-    },
+  const id = await criarComNumeroOS(async (numero) => {
+    await prisma.serviceOrder.create({
+      data: {
+        id: numero,
+        clientId: input.clienteId || null,
+        vehicleId: input.veiculoId || null,
+        clientName: cliente?.name ?? "—",
+        vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
+        plate: veiculo?.plate ?? null,
+        date: hoje(),
+        entryTime: agora(),
+        km: input.km || 0,
+        fuelLevel: input.fuelLevel || null,
+        defect: input.defeito,
+        status: "Aberta",
+        authorized: input.authorized,
+        inspection: {
+          checklist: input.checklist,
+          avarias: input.avarias,
+          objetos: input.objetos,
+        } as Prisma.InputJsonValue,
+        total: 0,
+      },
+    });
+    return numero;
   });
   revalidatePath("/oficina/ordens");
   revalidatePath("/oficina");

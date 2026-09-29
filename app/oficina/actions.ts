@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin } from "@/lib/auth";
 import { gerarSenhaTemporaria } from "@/lib/identity";
+import { criarComNumeroOS } from "@/lib/numeracao";
 
 function split(full: string) {
   const [brand, ...rest] = full.trim().split(" ");
@@ -27,31 +28,33 @@ export async function criarOS(input: {
     prisma.vehicle.findUnique({ where: { id: input.veiculoId } }),
   ]);
   const total = input.itens.reduce((s, i) => s + i.valor * i.qtd, 0);
-  const id = `OS-${2100 + Math.floor(Math.random() * 8999)}`;
-  await prisma.serviceOrder.create({
-    data: {
-      id,
-      clientId: input.clienteId || null,
-      vehicleId: input.veiculoId || null,
-      clientName: cliente?.name ?? "—",
-      vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
-      plate: veiculo?.plate ?? null,
-      date: input.data || "Hoje",
-      // Horário de entrada só quando a OS é de hoje — data retroativa fica sem.
-      entryTime:
-        !input.data ||
-        input.data === new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
-          ? new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
-          : null,
-      km: input.km || 0,
-      defect: input.defeito,
-      status: "Aberta",
-      total,
-      observations: input.observacoes,
-      items: {
-        create: input.itens.map((i, idx) => ({ type: i.tipo, description: i.descricao, qty: i.qtd, value: i.valor, position: idx + 1 })),
+  const id = await criarComNumeroOS(async (numero) => {
+    await prisma.serviceOrder.create({
+      data: {
+        id: numero,
+        clientId: input.clienteId || null,
+        vehicleId: input.veiculoId || null,
+        clientName: cliente?.name ?? "—",
+        vehicleName: veiculo ? `${veiculo.brand} ${veiculo.model}` : "—",
+        plate: veiculo?.plate ?? null,
+        date: input.data || "Hoje",
+        // Horário de entrada só quando a OS é de hoje — data retroativa fica sem.
+        entryTime:
+          !input.data ||
+          input.data === new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" })
+            ? new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
+            : null,
+        km: input.km || 0,
+        defect: input.defeito,
+        status: "Aberta",
+        total,
+        observations: input.observacoes,
+        items: {
+          create: input.itens.map((i, idx) => ({ type: i.tipo, description: i.descricao, qty: i.qtd, value: i.valor, position: idx + 1 })),
+        },
       },
-    },
+    });
+    return numero;
   });
   revalidatePath("/oficina/ordens");
   revalidatePath("/oficina");
