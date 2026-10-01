@@ -93,6 +93,10 @@ export interface OrdemServicoAdmin {
   data: string;
   /** Data de entrada normalizada AAAA-MM-DD (vazio quando não interpretável). */
   iso?: string;
+  /** Data de entrega como foi digitada (vazio enquanto o carro não saiu). */
+  dataEntrega?: string;
+  /** Data de entrega normalizada AAAA-MM-DD. */
+  isoEntrega?: string;
   paga?: boolean;
   km: number;
   defeito: string;

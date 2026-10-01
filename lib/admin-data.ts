@@ -67,6 +67,7 @@ function mapOrdem(o: {
   total: number;
   observations: string | null;
   paid?: boolean;
+  deliveredAt?: string | null;
   items?: { type: string; description: string; qty: number; value: number }[];
 }): OrdemServicoAdmin {
   return {
@@ -76,6 +77,10 @@ function mapOrdem(o: {
     placa: o.plate ?? "—",
     data: o.date,
     iso: agendaISO(o.date, hojeISO()),
+    // Data de entrega — é por ela que o fechamento do mês se orienta: uma OS
+    // que entrou em setembro e saiu em outubro conta no mês de outubro.
+    dataEntrega: o.deliveredAt ?? "",
+    isoEntrega: o.deliveredAt ? agendaISO(o.deliveredAt, hojeISO()) : "",
     paga: o.paid ?? false,
     km: o.km,
     defeito: o.defect ?? "—",

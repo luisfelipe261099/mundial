@@ -21,14 +21,23 @@ const EM_ANDAMENTO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execu�
 const TODOS = "Todos os mecânicos";
 const PAGAMENTO = ["Pagas e em aberto", "Pagas", "Em aberto"] as const;
 
+// Por qual data o período filtra. "Entrega" é o que vale no fechamento do mês:
+// uma OS que entrou em setembro e foi entregue em outubro conta em outubro.
+const BASES = [
+  { key: "entrada", label: "Data de entrada" },
+  { key: "entrega", label: "Data de entrega" },
+] as const;
+type Base = (typeof BASES)[number]["key"];
+
 export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
   // Vazio = todas. Cada status é um toggle, dá pra combinar quantos quiser.
   const [selecionados, setSelecionados] = useState<StatusOS[]>([]);
   const [busca, setBusca] = useState("");
   const [mecanico, setMecanico] = useState(TODOS);
-  // Período pela data de entrada (AAAA-MM-DD, direto do input date).
+  // Período (AAAA-MM-DD, direto do input date) e a data que ele considera.
   const [de, setDe] = useState("");
   const [ate, setAte] = useState("");
+  const [base, setBase] = useState<Base>("entrada");
   const [pagamento, setPagamento] = useState<(typeof PAGAMENTO)[number]>(PAGAMENTO[0]);
 
   const mecanicos = [TODOS, ...Array.from(new Set(ordens.map((o) => o.mecanico).filter((m) => m !== "—"))).sort()];
@@ -45,17 +54,25 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
   const lista = ordens.filter((o) => {
     if (selecionados.length > 0 && !selecionados.includes(o.status)) return false;
     if (mecanico !== TODOS && o.mecanico !== mecanico) return false;
-    // Período: compara pela data de entrada normalizada. OS com data que não
-    // dá pra interpretar só some quando um período está ativo.
-    if ((de || ate) && !o.iso) return false;
-    if (de && (o.iso ?? "") < de) return false;
-    if (ate && (o.iso ?? "") > ate) return false;
+    // Período: compara pela data escolhida (entrada ou entrega), normalizada.
+    // Filtrando por entrega, OS que ainda não saíram ficam de fora — é o que
+    // o fechamento do mês espera.
+    const dia = base === "entrega" ? o.isoEntrega ?? "" : o.iso ?? "";
+    if ((de || ate) && !dia) return false;
+    if (de && dia < de) return false;
+    if (ate && dia > ate) return false;
     if (pagamento === "Pagas" && !o.paga) return false;
     if (pagamento === "Em aberto" && o.paga) return false;
     return matches([o.id, o.cliente, o.placa, o.veiculo], busca);
   });
   const filtroAtivo =
-    busca !== "" || mecanico !== TODOS || selecionados.length > 0 || de !== "" || ate !== "" || pagamento !== PAGAMENTO[0];
+    busca !== "" ||
+    mecanico !== TODOS ||
+    selecionados.length > 0 ||
+    de !== "" ||
+    ate !== "" ||
+    base !== "entrada" ||
+    pagamento !== PAGAMENTO[0];
 
   const faturamento = lista.reduce((s, o) => s + o.total, 0);
   const recebido = lista.reduce((s, o) => s + (o.paga ? o.total : 0), 0);
@@ -66,6 +83,7 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
     setSelecionados([]);
     setDe("");
     setAte("");
+    setBase("entrada");
     setPagamento(PAGAMENTO[0]);
   }
 
@@ -132,13 +150,19 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
           options={[...PAGAMENTO]}
           ariaLabel="Filtrar por pagamento"
         />
+        <FilterSelect
+          value={BASES.find((b) => b.key === base)!.label}
+          onChange={(v) => setBase(BASES.find((b) => b.label === v)!.key)}
+          options={BASES.map((b) => b.label)}
+          ariaLabel="Filtrar período por data de entrada ou de entrega"
+        />
         <label className="flex items-center gap-1.5 text-xs adm-muted">
           De
           <input
             type="date"
             value={de}
             onChange={(e) => setDe(e.target.value)}
-            aria-label="Entrada a partir de"
+            aria-label="Período a partir de"
             className="rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-2.5 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
           />
         </label>
@@ -148,7 +172,7 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
             type="date"
             value={ate}
             onChange={(e) => setAte(e.target.value)}
-            aria-label="Entrada até"
+            aria-label="Período até"
             className="rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-2.5 py-2 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
           />
         </label>
@@ -183,7 +207,9 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
                 <th className="px-5 py-3 font-semibold">OS</th>
                 <th className="px-5 py-3 font-semibold">Cliente</th>
                 <th className="px-5 py-3 font-semibold">Veículo</th>
-                <th className="px-5 py-3 font-semibold">Data</th>
+                <th className="px-5 py-3 font-semibold">
+                  {base === "entrega" ? "Entrega" : "Entrada"}
+                </th>
                 <th className="px-5 py-3 font-semibold">Status</th>
                 <th className="px-5 py-3 text-right font-semibold">Total</th>
                 <th className="px-5 py-3" />
@@ -205,7 +231,9 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
                   <td className="px-5 py-3.5 adm-muted">
                     {o.veiculo} · <span className="font-mono">{o.placa}</span>
                   </td>
-                  <td className="px-5 py-3.5 adm-muted">{o.data}</td>
+                  <td className="px-5 py-3.5 adm-muted">
+                    {base === "entrega" ? o.dataEntrega || "—" : o.data}
+                  </td>
                   <td className="px-5 py-3.5">
                     <span className={osBadgeClass[o.status]}>{o.status}</span>
                   </td>
