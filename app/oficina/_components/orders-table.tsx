@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Printer } from "lucide-react";
 import { brl, osBadgeClass, type OrdemServicoAdmin, type StatusOS } from "../_data/mock";
 import { matches } from "./filter-utils";
 import { SearchInput, FilterSelect, ResultBar, EmptyRow } from "./table-filters";
@@ -76,6 +76,27 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
 
   const faturamento = lista.reduce((s, o) => s + o.total, 0);
   const recebido = lista.reduce((s, o) => s + (o.paga ? o.total : 0), 0);
+
+  // Quanto do faturamento é peça e quanto é mão de obra — a oficina fecha o mês
+  // olhando os dois separados (peça é revenda, serviço é o trabalho).
+  const somaPorTipo = (o: OrdemServicoAdmin, tipo: "Peça" | "Serviço") =>
+    (o.itens ?? []).reduce((s, i) => s + (i.tipo === tipo ? i.valor * i.qtd : 0), 0);
+  const totalPecas = lista.reduce((s, o) => s + somaPorTipo(o, "Peça"), 0);
+  const totalServicos = lista.reduce((s, o) => s + somaPorTipo(o, "Serviço"), 0);
+
+  // Resumo do que está filtrado, em texto, para o cabeçalho da impressão.
+  const descricaoFiltros = [
+    busca.trim() && `Busca: “${busca.trim()}”`,
+    selecionados.length > 0 && `Status: ${selecionados.join(", ")}`,
+    mecanico !== TODOS && `Mecânico: ${mecanico}`,
+    pagamento !== PAGAMENTO[0] && pagamento,
+    (de || ate) &&
+      `${base === "entrega" ? "Entrega" : "Entrada"} de ${de ? de.split("-").reverse().join("/") : "início"} até ${
+        ate ? ate.split("-").reverse().join("/") : "hoje"
+      }`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   function limpar() {
     setBusca("");
@@ -181,20 +202,38 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
 
       {/* Faturamento do que está filtrado — a soma acompanha os filtros. */}
       {lista.length > 0 && (
-        <div className="adm-card mb-5 flex flex-wrap items-center gap-x-8 gap-y-2 px-5 py-3.5">
-          <div>
-            <p className="text-xs adm-muted">
-              Faturamento {filtroAtivo ? `(${lista.length} OS filtradas)` : `(todas as ${lista.length} OS)`}
-            </p>
-            <p className="adm-display text-xl font-bold adm-ink">{brl(faturamento)}</p>
-          </div>
-          <div>
-            <p className="text-xs adm-muted">Recebido (pagas)</p>
-            <p className="adm-display text-xl font-bold text-emerald-400">{brl(recebido)}</p>
-          </div>
-          <div>
-            <p className="text-xs adm-muted">Em aberto</p>
-            <p className="adm-display text-xl font-bold text-amber-400">{brl(faturamento - recebido)}</p>
+        <div className="adm-card mb-5 px-5 py-3.5">
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <div>
+              <p className="text-xs adm-muted">
+                Faturamento {filtroAtivo ? `(${lista.length} OS filtradas)` : `(todas as ${lista.length} OS)`}
+              </p>
+              <p className="adm-display text-xl font-bold adm-ink">{brl(faturamento)}</p>
+            </div>
+            <div>
+              <p className="text-xs adm-muted">Peças</p>
+              <p className="adm-display text-xl font-bold adm-ink">{brl(totalPecas)}</p>
+            </div>
+            <div>
+              <p className="text-xs adm-muted">Mão de obra</p>
+              <p className="adm-display text-xl font-bold adm-ink">{brl(totalServicos)}</p>
+            </div>
+            <div>
+              <p className="text-xs adm-muted">Recebido (pagas)</p>
+              <p className="adm-display text-xl font-bold text-emerald-400">{brl(recebido)}</p>
+            </div>
+            <div>
+              <p className="text-xs adm-muted">Em aberto</p>
+              <p className="adm-display text-xl font-bold text-amber-400">{brl(faturamento - recebido)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="ml-auto flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-3.5 py-2 text-sm font-semibold adm-ink transition-colors hover:bg-[var(--ad-surface-2)]"
+            >
+              <Printer className="size-4" />
+              Imprimir resumo
+            </button>
           </div>
         </div>
       )}
@@ -248,6 +287,79 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Resumo para impressão: fica fora da tela e só existe no papel, com os
+          mesmos números que estão filtrados aqui. */}
+      <div className="area-impressao" aria-hidden>
+        <h1>Resumo de ordens de serviço</h1>
+        <p className="sub">
+          Auto Mecânica Mundial · emitido em{" "}
+          {new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+        </p>
+        <p className="sub">{descricaoFiltros || "Todas as ordens, sem filtro."}</p>
+
+        <table className="totais">
+          <tbody>
+            <tr>
+              <th>Ordens no resumo</th>
+              <td>{lista.length}</td>
+              <th>Peças</th>
+              <td>{brl(totalPecas)}</td>
+            </tr>
+            <tr>
+              <th>Recebido (pagas)</th>
+              <td>{brl(recebido)}</td>
+              <th>Mão de obra</th>
+              <td>{brl(totalServicos)}</td>
+            </tr>
+            <tr>
+              <th>Em aberto</th>
+              <td>{brl(faturamento - recebido)}</td>
+              <th>Faturamento total</th>
+              <td className="destaque">{brl(faturamento)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="itens">
+          <thead>
+            <tr>
+              <th>OS</th>
+              <th>Cliente</th>
+              <th>Veículo</th>
+              <th>{base === "entrega" ? "Entrega" : "Entrada"}</th>
+              <th>Status</th>
+              <th className="num">Peças</th>
+              <th className="num">Mão de obra</th>
+              <th className="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lista.map((o) => (
+              <tr key={o.id}>
+                <td>{o.id}</td>
+                <td>{o.cliente}</td>
+                <td>
+                  {o.veiculo} · {o.placa}
+                </td>
+                <td>{base === "entrega" ? o.dataEntrega || "—" : o.data}</td>
+                <td>{o.status}</td>
+                <td className="num">{brl(somaPorTipo(o, "Peça"))}</td>
+                <td className="num">{brl(somaPorTipo(o, "Serviço"))}</td>
+                <td className="num">{brl(o.total)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={5}>Total — {lista.length} ordens</td>
+              <td className="num">{brl(totalPecas)}</td>
+              <td className="num">{brl(totalServicos)}</td>
+              <td className="num">{brl(faturamento)}</td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </div>
   );

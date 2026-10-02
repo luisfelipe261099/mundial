@@ -146,3 +146,107 @@ section {
   border-bottom: 2px solid;
   border-right: 2px solid;
 }
+
+/* ── Impressão de resumos ────────────────────────────────────────────
+   O bloco .area-impressao fica fora da tela e só aparece no papel. Ao
+   imprimir, some com o painel (menu, filtros, botões) e imprime em preto
+   no branco, que é o que a oficina leva para o arquivo e para o cliente. */
+.area-impressao {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .area-impressao,
+  .area-impressao * {
+    visibility: visible;
+  }
+  .area-impressao {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    padding: 0;
+    color: #000;
+    background: #fff;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 10pt;
+  }
+  .area-impressao h1 {
+    font-size: 15pt;
+    font-weight: 700;
+    margin: 0 0 2mm;
+  }
+  .area-impressao .sub {
+    margin: 0 0 1.5mm;
+    font-size: 9pt;
+    color: #333;
+  }
+  .area-impressao table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4mm;
+  }
+  .area-impressao .totais th,
+  .area-impressao .totais td {
+    border: 1px solid #999;
+    padding: 1.6mm 2.5mm;
+    text-align: left;
+    font-size: 9.5pt;
+  }
+  .area-impressao .totais th {
+    background: #f0f0f0;
+    font-weight: 600;
+    width: 18%;
+  }
+  .area-impressao .totais .destaque {
+    font-weight: 700;
+    font-size: 11pt;
+  }
+  .area-impressao .itens th,
+  .area-impressao .itens td {
+    border-bottom: 1px solid #ccc;
+    padding: 1.4mm 2mm;
+    text-align: left;
+    font-size: 9pt;
+  }
+  .area-impressao .itens thead th {
+    border-bottom: 1.5px solid #000;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 8pt;
+  }
+  .area-impressao .itens .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+  /* Número da OS e datas não podem quebrar em duas linhas no papel. */
+  .area-impressao .itens td:first-child,
+  .area-impressao .itens td:nth-child(4) {
+    white-space: nowrap;
+  }
+  .area-impressao .itens td:nth-child(2) {
+    max-width: 38mm;
+  }
+  .area-impressao .itens tfoot td {
+    border-top: 1.5px solid #000;
+    border-bottom: none;
+    font-weight: 700;
+    padding-top: 2mm;
+  }
+  .area-impressao .itens tr {
+    break-inside: avoid;
+  }
+  @page {
+    margin: 12mm;
+  }
+}
