@@ -68,8 +68,20 @@ em todos os ambientes, senão as sessões existentes caem no próximo deploy.
 
 ## 1. Fotos das OS — Vercel Blob  ✅ código pronto
 
-O mecânico tira/anexa fotos na tela da OS; elas sobem pro Blob e a URL é salva
-na OS (`ServiceOrder.photos`). Aparecem pro mecânico e no controle da OS do admin.
+São dois conjuntos de fotos, nos dois pontos em que elas importam:
+
+- **Vistoria de entrada** — fotos de como o carro chegou. Tiradas no
+  "Dar entrada" ([entrada-form.tsx](../app/oficina/_components/entrada-form.tsx))
+  ou depois, na própria OS ([vistoria-card.tsx](../app/oficina/_components/vistoria-card.tsx)).
+  Ficam em `ServiceOrder.inspection.fotos` e **saem no PDF da OS**, abaixo do
+  checklist — é o que vale numa discussão sobre risco/amassado.
+- **Fotos do serviço** — peça velha, defeito encontrado, serviço pronto. Enviadas
+  pelo mecânico ou pelo balcão, guardadas em `ServiceOrder.photos`, visíveis pro
+  cliente no app (junto com as da entrada, marcadas "Antes").
+
+Antes de subir, a foto é reduzida pra 1600px no próprio celular e a rotação do
+EXIF é aplicada ([lib/imagem.ts](../lib/imagem.ts)) — upload rápido no 4G e
+nenhuma foto deitada.
 
 **Falta só criar o store e o token:**
 
@@ -81,13 +93,14 @@ na OS (`ServiceOrder.photos`). Aparecem pro mecânico e no controle da OS do adm
    ```
    BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxx
    ```
-4. Redeploy. Pronto — o botão **Adicionar** na aba Fotos passa a subir de verdade.
+4. Redeploy. Pronto — **Tirar foto** e **Da galeria** passam a subir de verdade.
 
 Enquanto não existir o token, o upload falha com uma mensagem amigável (não quebra
-a tela). Encaixe no código: [app/api/upload/route.ts](../app/api/upload/route.ts)
-(gera o token, só equipe pode subir), o `upload()` em
-[mechanic-order.tsx](../app/mecanico/_components/mechanic-order.tsx) e a action
-`salvarFotos` em [os-actions.ts](../app/oficina/os-actions.ts).
+a tela) — o checklist, as avarias e os objetos continuam sendo salvos normalmente.
+Encaixe no código: [app/api/upload/route.ts](../app/api/upload/route.ts)
+(gera o token, só equipe pode subir), o componente
+[foto-upload.tsx](../app/oficina/_components/foto-upload.tsx) e as actions
+`salvarVistoria` / `salvarFotos` em [os-actions.ts](../app/oficina/os-actions.ts).
 
 ---
 

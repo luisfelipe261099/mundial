@@ -41,7 +41,7 @@ export const fluxoDoCarro: EtapaFluxo[] = [
     quem: "admin",
     onde: "Painel · Ordens de Serviço → botão \"Dar entrada\"",
     texto:
-      "A recepção registra cliente, veículo, quilometragem, nível de combustível, a vistoria de entrada (checklist item a item: OK, Atenção ou Avaria), objetos deixados no carro e o que o cliente autorizou. Ao salvar, nasce a Ordem de Serviço — daqui até a entrega, tudo acontece dentro dela.",
+      "A recepção registra cliente, veículo, quilometragem, nível de combustível, a vistoria de entrada (checklist item a item: OK, Atenção ou Avaria), as avarias, os objetos deixados no carro e o que o cliente autorizou. Pelo celular dá pra tirar as fotos do carro ali mesmo — elas ficam guardadas na OS e saem no PDF junto com o checklist, provando o estado em que o carro chegou. Ao salvar, nasce a Ordem de Serviço — daqui até a entrega, tudo acontece dentro dela. Se a OS foi aberta por outro caminho, o checklist pode ser preenchido depois, no card \"Vistoria de entrada\" dentro da própria OS.",
     status: "Aberta",
   },
   {

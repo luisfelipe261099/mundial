@@ -156,6 +156,29 @@ const s = StyleSheet.create({
   totalLabel: { fontFamily: "Outfit", fontWeight: 600, fontSize: 9, color: "#dbeafe", letterSpacing: 1 },
   totalValue: { fontFamily: "Outfit", fontWeight: 700, fontSize: 15, color: "#ffffff" },
 
+  // Vistoria de entrada
+  vistoriaGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 2 },
+  vistoriaItem: {
+    width: "50%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 2.5,
+    paddingRight: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: C.line,
+  },
+  vistoriaNome: { fontSize: 8.5, color: C.ink },
+  vistoriaStatus: { fontFamily: "Outfit", fontWeight: 600, fontSize: 8 },
+  fotosGrid: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
+  foto: {
+    width: 118,
+    height: 88,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: C.line,
+    objectFit: "cover",
+  },
+
   // Assinaturas
   signRow: { flexDirection: "row", gap: 40, marginTop: 40 },
   signCol: { flex: 1, alignItems: "center" },
@@ -189,17 +212,29 @@ function Meta({ k, v }: { k: string; v: string }) {
   );
 }
 
+// Cor e nome do estado de cada item da vistoria.
+const VISTORIA: Record<string, { label: string; fg: string }> = {
+  ok: { label: "OK", fg: "#15803d" },
+  atencao: { label: "Atenção", fg: "#b45309" },
+  avaria: { label: "Avaria", fg: "#be123c" },
+};
+
 export function ServiceOrderPDF({
   os,
   logo,
   geradoEm,
+  fotos = [],
 }: {
   os: OrdemPdf;
   logo: string;
   geradoEm: string;
+  /** Fotos da vistoria já em data-URI (baixadas na rota). */
+  fotos?: string[];
 }) {
   const status = STATUS[os.status] ?? { bg: C.brandSoft, fg: C.brandDark };
   const site = siteUrl.replace(/^https?:\/\//, "");
+  const v = os.vistoria;
+  const temVistoria = !!v && (v.checklist.length > 0 || !!v.avarias || !!v.objetos);
 
   return (
     <Document
@@ -306,6 +341,51 @@ export function ServiceOrderPDF({
             <View style={s.block}>
               <Text style={s.blockLabel}>Observações</Text>
               <Text style={s.blockText}>{os.observacoes}</Text>
+            </View>
+          )}
+
+          {/* Vistoria de entrada — estado do carro quando chegou na oficina. */}
+          {temVistoria && v && (
+            <View style={s.block}>
+              <Text style={s.blockLabel}>Vistoria de entrada</Text>
+              {v.checklist.length > 0 && (
+                <View style={s.vistoriaGrid}>
+                  {v.checklist.map((c) => {
+                    const e = VISTORIA[c.status] ?? { label: c.status, fg: C.muted };
+                    return (
+                      <View key={c.item} style={s.vistoriaItem} wrap={false}>
+                        <Text style={s.vistoriaNome}>{c.item}</Text>
+                        <Text style={[s.vistoriaStatus, { color: e.fg }]}>{e.label}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+              {!!v.avarias && (
+                <View style={{ marginTop: 8 }}>
+                  <Text style={s.blockLabel}>Avarias registradas na entrada</Text>
+                  <Text style={s.blockText}>{v.avarias}</Text>
+                </View>
+              )}
+              {!!v.objetos && (
+                <View style={{ marginTop: 8 }}>
+                  <Text style={s.blockLabel}>Objetos no veículo</Text>
+                  <Text style={s.blockText}>{v.objetos}</Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Fotos da entrada */}
+          {fotos.length > 0 && (
+            <View style={s.block} wrap={false}>
+              <Text style={s.blockLabel}>Fotos do veículo na entrada</Text>
+              <View style={s.fotosGrid}>
+                {fotos.map((src, i) => (
+                  // eslint-disable-next-line jsx-a11y/alt-text
+                  <Image key={i} src={src} style={s.foto} />
+                ))}
+              </View>
             </View>
           )}
 

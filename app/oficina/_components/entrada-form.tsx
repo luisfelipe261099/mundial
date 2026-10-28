@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Check, ClipboardList, ClipboardCheck, ArrowRight } from "lucide-react";
+import { Check, ClipboardList, ClipboardCheck, ArrowRight, Camera } from "lucide-react";
 import { darEntrada } from "../os-actions";
+import { FotoUpload } from "./foto-upload";
+import { CHECKLIST_ITENS, VISTORIA_STATUS } from "../_data/vistoria";
 
 interface ClienteOpt {
   id: string;
@@ -16,28 +18,7 @@ interface VeiculoOpt {
   placa: string;
 }
 
-const CHECKLIST_ITENS = [
-  "Pneus",
-  "Estepe",
-  "Freios",
-  "Luzes / faróis",
-  "Lataria / pintura",
-  "Vidros / retrovisores",
-  "Interior / bancos",
-  "Documentos",
-  "Nível de óleo",
-  "Palhetas",
-  "Bateria",
-  "Ar-condicionado",
-];
-
 const COMBUSTIVEL = ["Reserva", "1/4", "1/2", "3/4", "Cheio"];
-
-const STATUS: { key: string; label: string; on: string }[] = [
-  { key: "ok", label: "OK", on: "bg-emerald-600 text-white" },
-  { key: "atencao", label: "Atenção", on: "bg-amber-500 text-white" },
-  { key: "avaria", label: "Avaria", on: "bg-rose-600 text-white" },
-];
 
 const inputCls =
   "w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2.5 text-sm adm-ink outline-none transition-colors focus:border-[var(--ad-brand)]";
@@ -60,6 +41,9 @@ export function EntradaForm({
   );
   const [avarias, setAvarias] = useState("");
   const [objetos, setObjetos] = useState("");
+  const [fotos, setFotos] = useState<string[]>([]);
+  // Pasta das fotos desta entrada — a OS ainda não existe quando a foto sobe.
+  const [pasta] = useState(() => `vistoria/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const [authorized, setAuthorized] = useState(false);
   const [criada, setCriada] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -82,6 +66,7 @@ export function EntradaForm({
         checklist: CHECKLIST_ITENS.map((i) => ({ item: i, status: checklist[i] })),
         avarias,
         objetos,
+        fotos,
         authorized,
       });
       setCriada(r.id);
@@ -204,7 +189,7 @@ export function EntradaForm({
             <div key={item} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
               <span className="text-sm adm-ink">{item}</span>
               <div className="flex gap-1 rounded-lg border border-[var(--ad-line)] p-0.5">
-                {STATUS.map((s) => (
+                {VISTORIA_STATUS.map((s) => (
                   <button
                     key={s.key}
                     type="button"
@@ -242,6 +227,24 @@ export function EntradaForm({
               className={`${inputCls} resize-none`}
             />
           </div>
+        </div>
+
+        {/* Fotos do estado em que o carro chegou */}
+        <div className="mt-5 border-t border-[var(--ad-line)] pt-4">
+          <div className="mb-2 flex items-center gap-2">
+            <Camera className="size-4 adm-brand" />
+            <h3 className="text-sm font-semibold adm-ink">Fotos do carro na entrada</h3>
+          </div>
+          <p className="mb-3 text-xs adm-muted">
+            Volta, laterais, frente, painel com o km e cada risco ou amassado. É o que
+            prova o estado em que o carro chegou — sai no PDF junto com a vistoria.
+          </p>
+          <FotoUpload
+            fotos={fotos}
+            onChange={setFotos}
+            prefixo={pasta}
+            vazio="Nenhuma foto ainda — pelo celular, 'Tirar foto' abre a câmera direto."
+          />
         </div>
       </div>
 

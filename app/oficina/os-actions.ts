@@ -45,6 +45,7 @@ export interface EntradaInput {
   checklist: { item: string; status: string }[];
   avarias: string;
   objetos: string;
+  fotos?: string[];
   authorized: boolean;
 }
 
@@ -75,6 +76,7 @@ export async function darEntrada(input: EntradaInput): Promise<{ id: string }> {
           checklist: input.checklist,
           avarias: input.avarias,
           objetos: input.objetos,
+          fotos: input.fotos ?? [],
         } as Prisma.InputJsonValue,
         total: 0,
       },
@@ -458,6 +460,38 @@ export async function salvarTechChecklist(
   });
   revalidatePath(`/mecanico/${osId}`);
   revalidatePath(`/oficina/ordens/${osId}`);
+}
+
+// Vistoria de entrada: checklist, avarias, objetos e fotos do carro como ele
+// chegou. Mescla com o que já existe — a OS aberta pelo balcão ou pelo pedido
+// do cliente nasce sem vistoria, e o admin pode preencher depois.
+export interface VistoriaInput {
+  checklist?: { item: string; status: string }[];
+  avarias?: string;
+  objetos?: string;
+  fotos?: string[];
+}
+
+export async function salvarVistoria(osId: string, dados: VistoriaInput) {
+  await requireStaff();
+  const os = await prisma.serviceOrder.findUnique({
+    where: { id: osId },
+    select: { inspection: true },
+  });
+  const atual = (os?.inspection ?? {}) as VistoriaInput;
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: {
+      inspection: {
+        checklist: dados.checklist ?? atual.checklist ?? [],
+        avarias: dados.avarias ?? atual.avarias ?? "",
+        objetos: dados.objetos ?? atual.objetos ?? "",
+        fotos: dados.fotos ?? atual.fotos ?? [],
+      } as Prisma.InputJsonValue,
+    },
+  });
+  revalidatePath(`/oficina/ordens/${osId}`);
+  revalidatePath(`/mecanico/${osId}`);
 }
 
 // Fotos da OS (URLs no Vercel Blob), salvas pela equipe.

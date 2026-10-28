@@ -1,7 +1,7 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { requireAdmin } from "@/lib/auth";
 import { getOrdemParaPdf } from "@/lib/admin-data";
-import { registerPdfAssets, getLogoDataUri } from "./assets";
+import { registerPdfAssets, getLogoDataUri, carregarFotos } from "./assets";
 import { ServiceOrderPDF } from "./document";
 
 export const runtime = "nodejs";
@@ -29,8 +29,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     timeStyle: "short",
   });
 
+  const fotos = await carregarFotos(os.vistoria?.fotos ?? []);
+
   const pdf = await renderToBuffer(
-    <ServiceOrderPDF os={os} logo={getLogoDataUri()} geradoEm={geradoEm} />
+    <ServiceOrderPDF os={os} logo={getLogoDataUri()} geradoEm={geradoEm} fotos={fotos} />
   );
 
   const filename = `${os.id}-${slug(os.cliente)}.pdf`;

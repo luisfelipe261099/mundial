@@ -47,6 +47,28 @@ function mapVehicle(v: NonNullable<VehicleRow>, i = 0): Veiculo {
   };
 }
 
+// As fotos vêm de dois lugares e em dois formatos: a vistoria de entrada
+// (JSON `inspection.fotos`, lista de URLs) e as fotos do serviço (`photos`,
+// lista de URLs — nos dados antigos de demonstração, objetos {src, etapa}).
+// Normaliza tudo, porque uma URL faltando quebra o <Image> e derruba a página.
+function fotosDaOrdem(o: OrderRow): OrdemServico["fotos"] {
+  const entrada = (
+    ((o.inspection as { fotos?: unknown } | null)?.fotos ?? []) as unknown[]
+  ).filter((f): f is string => typeof f === "string");
+
+  const servico = ((o.photos ?? []) as unknown[]).flatMap((f): OrdemServico["fotos"] => {
+    if (typeof f === "string") return [{ src: f, etapa: "Durante" }];
+    const obj = f as { src?: unknown; etapa?: unknown };
+    if (obj && typeof obj.src === "string") {
+      const etapa = obj.etapa === "Antes" || obj.etapa === "Depois" ? obj.etapa : "Durante";
+      return [{ src: obj.src, etapa }];
+    }
+    return [];
+  });
+
+  return [...entrada.map((src) => ({ src, etapa: "Antes" as const })), ...servico];
+}
+
 function servicoDe(o: OrderRow): string {
   return o.items?.[0]?.description ?? o.defect ?? "Serviço";
 }
@@ -64,7 +86,7 @@ function mapOrder(o: OrderRow): OrdemServico {
     responsavel: o.responsible ?? "—",
     categoria: (o.category as OrdemServico["categoria"]) ?? "geral",
     status: o.status === "Finalizada" ? "Finalizada" : "Entregue",
-    fotos: (o.photos as OrdemServico["fotos"] | null) ?? [],
+    fotos: fotosDaOrdem(o),
   };
 }
 

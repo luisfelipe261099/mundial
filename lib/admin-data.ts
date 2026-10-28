@@ -253,12 +253,42 @@ export async function getOrdem(id: string): Promise<OrdemServicoAdmin | null> {
 
 // OS + dados de contato do cliente e detalhes do veículo, para o PDF "completo".
 // Faz fallback aos campos denormalizados quando a OS não tem vínculo (client/vehicle nulos).
+// Vistoria de entrada guardada em JSON. Normaliza porque o campo já carregou
+// formatos antigos (e fotos entraram depois) — nada aqui pode quebrar a OS.
+export interface Vistoria {
+  checklist: { item: string; status: string }[];
+  avarias: string;
+  objetos: string;
+  fotos: string[];
+}
+
+export function normalizaVistoria(valor: unknown): Vistoria | null {
+  if (!valor || typeof valor !== "object") return null;
+  const v = valor as Record<string, unknown>;
+  const checklist = Array.isArray(v.checklist)
+    ? (v.checklist as unknown[]).filter(
+        (c): c is { item: string; status: string } =>
+          !!c && typeof c === "object" && typeof (c as { item?: unknown }).item === "string"
+      )
+    : [];
+  const fotos = Array.isArray(v.fotos)
+    ? (v.fotos as unknown[]).filter((f): f is string => typeof f === "string")
+    : [];
+  return {
+    checklist,
+    avarias: typeof v.avarias === "string" ? v.avarias : "",
+    objetos: typeof v.objetos === "string" ? v.objetos : "",
+    fotos,
+  };
+}
+
 export type OrdemPdf = OrdemServicoAdmin & {
   clienteInfo: { cpf: string; telefone: string; cidade: string };
   veiculoInfo: { ano: string; cor: string; combustivel: string };
   horaEntrada: string | null;
   dataSaida: string | null;
   horaSaida: string | null;
+  vistoria: Vistoria | null;
 };
 
 export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
@@ -282,6 +312,7 @@ export async function getOrdemParaPdf(id: string): Promise<OrdemPdf | null> {
     horaEntrada: o.entryTime,
     dataSaida: o.deliveredAt,
     horaSaida: o.exitTime,
+    vistoria: normalizaVistoria(o.inspection),
   };
 }
 
@@ -293,11 +324,7 @@ export async function getOrdemControle(id: string) {
     where: { serviceOrderId: id },
     select: { status: true },
   });
-  const inspection = (o.inspection ?? null) as {
-    checklist?: { item: string; status: string }[];
-    avarias?: string;
-    objetos?: string;
-  } | null;
+  const inspection = normalizaVistoria(o.inspection);
   return {
     id: o.id,
     cliente: o.clientName,

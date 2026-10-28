@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -16,11 +15,12 @@ import {
   MessageCircle,
   FileDown,
   ArrowRight,
-  ClipboardList,
   Truck,
   AlertTriangle,
 } from "lucide-react";
 import { brl, osBadgeClass, type StatusOS, type Produto } from "../_data/mock";
+import { VistoriaCard } from "./vistoria-card";
+import { FotosServicoCard } from "./fotos-servico-card";
 import type { OsControle } from "@/lib/admin-data";
 import type { NotaFiscalView } from "@/lib/fiscal";
 import { emitirNfseOS } from "../fiscal/actions";
@@ -39,12 +39,6 @@ import {
 } from "../os-actions";
 
 const FLUXO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execução", "Finalizada", "Entregue"];
-const VISTORIA_COR: Record<string, string> = {
-  ok: "text-emerald-400",
-  atencao: "text-amber-400",
-  avaria: "text-rose-400",
-};
-const VISTORIA_LABEL: Record<string, string> = { ok: "OK", atencao: "Atenção", avaria: "Avaria" };
 
 const inputCls =
   "w-full rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-3 py-2.5 text-sm adm-ink outline-none focus:border-[var(--ad-brand)]";
@@ -617,46 +611,14 @@ export function OrderControl({
         </div>
       )}
 
-      {/* Vistoria de entrada */}
-      {os.inspection && (
-        <div className="adm-card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--ad-line)] px-5 py-3.5">
-            <h3 className="adm-display flex items-center gap-2 font-bold adm-ink">
-              <ClipboardList className="size-5 adm-brand" />
-              Vistoria de entrada
-            </h3>
-            <span className={os.authorized ? "osb osb-finalizada" : "osb osb-aguardando"}>
-              {os.authorized ? "Autorizada" : "Sem autorização"}
-            </span>
-          </div>
-          <div className="grid gap-x-6 gap-y-2 p-5 sm:grid-cols-2">
-            {(os.inspection.checklist ?? []).map((c) => (
-              <div key={c.item} className="flex items-center justify-between py-1 text-sm">
-                <span className="adm-ink">{c.item}</span>
-                <span className={`font-semibold ${VISTORIA_COR[c.status] ?? "adm-muted"}`}>
-                  {VISTORIA_LABEL[c.status] ?? c.status}
-                </span>
-              </div>
-            ))}
-          </div>
-          {(os.inspection.avarias || os.inspection.objetos) && (
-            <div className="grid gap-4 border-t border-[var(--ad-line)] p-5 sm:grid-cols-2">
-              {os.inspection.avarias && (
-                <div>
-                  <p className="text-xs uppercase tracking-wide adm-muted">Avarias</p>
-                  <p className="mt-1 text-sm adm-ink">{os.inspection.avarias}</p>
-                </div>
-              )}
-              {os.inspection.objetos && (
-                <div>
-                  <p className="text-xs uppercase tracking-wide adm-muted">Objetos no veículo</p>
-                  <p className="mt-1 text-sm adm-ink">{os.inspection.objetos}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Vistoria de entrada (checklist + fotos do carro como ele chegou) */}
+      <VistoriaCard
+        key={`vistoria-${os.id}`}
+        osId={os.id}
+        vistoria={os.inspection}
+        authorized={os.authorized}
+      />
+
 
       {/* Itens / orçamento — lista única na ordem que sai no PDF (setas para
           reordenar), com uma linha de adição para peça e outra para serviço. */}
@@ -893,24 +855,7 @@ export function OrderControl({
         </div>
       </div>
 
-      {os.fotos.length > 0 && (
-        <div className="adm-card p-5">
-          <p className="text-xs uppercase tracking-wide adm-muted">Fotos do serviço</p>
-          <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
-            {os.fotos.map((src) => (
-              <a
-                key={src}
-                href={src}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative aspect-square overflow-hidden rounded-lg border border-[var(--ad-line)]"
-              >
-                <Image src={src} alt="Foto da OS" fill sizes="120px" className="object-cover" unoptimized />
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      <FotosServicoCard key={`fotos-${os.id}`} osId={os.id} fotos={os.fotos} />
 
       {/* Footer */}
       <div className="flex flex-wrap gap-3">

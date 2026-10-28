@@ -32,6 +32,35 @@ export function registerPdfAssets() {
   registered = true;
 }
 
+// Fotos da vistoria em data-URI. O render do react-pdf não tolera imagem que
+// falha no download, então busca aqui, com prazo curto, e descarta o que não
+// vier (ou não for JPEG/PNG — é o que a biblioteca desenha).
+export async function carregarFotos(urls: string[], limite = 8): Promise<string[]> {
+  // O tipo sai dos bytes, não do cabeçalho: já apareceu PNG servido como
+  // image/jpeg, e aí a imagem sai em branco no PDF sem nenhum erro.
+  const tipoReal = (buf: Buffer): string | null => {
+    if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "image/jpeg";
+    if (buf.length > 8 && buf.subarray(0, 8).toString("hex") === "89504e470d0a1a0a") return "image/png";
+    return null; // webp/heic e afins o react-pdf não desenha
+  };
+
+  const fotos = await Promise.all(
+    urls.slice(0, limite).map(async (url) => {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(8000), cache: "no-store" });
+        if (!r.ok) return null;
+        const buf = Buffer.from(await r.arrayBuffer());
+        const tipo = tipoReal(buf);
+        if (!tipo) return null;
+        return `data:${tipo};base64,${buf.toString("base64")}`;
+      } catch {
+        return null;
+      }
+    })
+  );
+  return fotos.filter((f): f is string => f !== null);
+}
+
 // Logo em data-URI (lido uma vez e memoizado). Evita chamada de rede no render.
 let logoCache: string | null = null;
 

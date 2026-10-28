@@ -15,6 +15,7 @@ import {
   salvarFotos,
 } from "../../oficina/os-actions";
 import { salvarObservacoes } from "../actions";
+import { prepararFoto } from "@/lib/imagem";
 
 const FLUXO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execução", "Finalizada", "Entregue"];
 const CHECKLIST_TEC = [
@@ -55,6 +56,9 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
   const [draftPeca, setDraftPeca] = useState({ descricao: "", qtd: 1, valor: 0, productId: "" });
   const [draftServ, setDraftServ] = useState({ descricao: "", qtd: 1, valor: 0 });
 
+  // o que a recepção marcou como atenção/avaria na chegada
+  const alertasEntrada = (os.inspection?.checklist ?? []).filter((c) => c.status !== "ok");
+
   // fotos (Vercel Blob)
   const [fotos, setFotos] = useState<string[]>(os.fotos ?? []);
   const [enviando, setEnviando] = useState(false);
@@ -68,9 +72,12 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
     try {
       const novas: string[] = [];
       for (const file of Array.from(files)) {
-        const blob = await upload(`os/${os.id}/${Date.now()}-${file.name}`, file, {
+        // Reduz no celular antes de subir (e corrige a foto deitada).
+        const pronta = await prepararFoto(file);
+        const blob = await upload(`os/${os.id}/${Date.now()}-${pronta.nome}`, pronta.blob, {
           access: "public",
           handleUploadUrl: "/api/upload",
+          contentType: pronta.blob.type || "image/jpeg",
         });
         novas.push(blob.url);
       }
@@ -258,6 +265,72 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
           )}
         </div>
       </section>
+
+      {/* como o carro chegou — vistoria feita na recepção (só leitura) */}
+      {os.inspection &&
+        (alertasEntrada.length > 0 ||
+          os.inspection.avarias ||
+          os.inspection.objetos ||
+          os.inspection.fotos.length > 0) && (
+          <section>
+            <h2 className="mec-display mb-2 flex items-center gap-2 text-[1.05rem] font-bold mec-ink">
+              <ClipboardList className="size-5 mec-brand" />
+              Como o carro chegou
+            </h2>
+            <div className="mec-card space-y-3 p-4">
+              {alertasEntrada.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {alertasEntrada.map((c) => (
+                    <span
+                      key={c.item}
+                      className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                        c.status === "avaria"
+                          ? "bg-rose-500/15 text-rose-300"
+                          : "bg-amber-500/15 text-amber-300"
+                      }`}
+                    >
+                      {c.item}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {os.inspection.avarias && (
+                <div>
+                  <p className="text-xs mec-muted">Avarias na entrada</p>
+                  <p className="text-sm mec-ink">{os.inspection.avarias}</p>
+                </div>
+              )}
+              {os.inspection.objetos && (
+                <div>
+                  <p className="text-xs mec-muted">Objetos no veículo</p>
+                  <p className="text-sm mec-ink">{os.inspection.objetos}</p>
+                </div>
+              )}
+              {os.inspection.fotos.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {os.inspection.fotos.map((src) => (
+                    <a
+                      key={src}
+                      href={src}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="relative aspect-square overflow-hidden rounded-lg border border-[var(--mec-line)]"
+                    >
+                      <Image
+                        src={src}
+                        alt="Foto da entrada"
+                        fill
+                        sizes="120px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
       {/* vistoria técnica */}
       <section>
