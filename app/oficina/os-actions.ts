@@ -210,6 +210,8 @@ export async function excluirOS(osId: string): Promise<{ error?: string }> {
   await prisma.$transaction([
     prisma.transaction.deleteMany({ where: { serviceOrderId: osId } }),
     prisma.serviceOrderItem.deleteMany({ where: { serviceOrderId: osId } }),
+    // fotos guardadas no banco ficariam órfãs ocupando espaço
+    prisma.photo.deleteMany({ where: { serviceOrderId: osId } }),
     prisma.serviceOrder.delete({ where: { id: osId } }),
   ]);
 

@@ -280,6 +280,24 @@ model Transaction {
   @@map("transactions")
 }
 
+// Foto guardada no próprio banco. Nasceu porque o armazenamento externo
+// (Vercel Blob) depende de um store criado à mão no painel, e sem ele a foto
+// simplesmente não subia. Aqui a oficina tira a foto e ela fica, sem depender
+// de mais nada. Se um dia existir BLOB_READ_WRITE_TOKEN, as fotos novas vão
+// pro Blob e estas continuam servidas por /api/fotos/<id>.
+model Photo {
+  id             String   @id @default(cuid())
+  serviceOrderId String? // OS a que a foto pertence
+  kind           String   @default("servico") // vistoria | servico
+  mime           String
+  size           Int      @default(0)
+  data           Bytes
+  createdAt      DateTime @default(now())
+
+  @@index([serviceOrderId])
+  @@map("photos")
+}
+
 model Service {
   id       String  @id @default(cuid())
   name     String

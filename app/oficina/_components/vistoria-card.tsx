@@ -224,7 +224,8 @@ export function VistoriaCard({
         <FotoUpload
           fotos={fotos}
           onChange={trocarFotos}
-          prefixo={`os/${osId}/vistoria`}
+          osId={osId}
+          kind="vistoria"
           vazio="Nenhuma foto da entrada."
         />
       </div>

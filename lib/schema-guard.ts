@@ -78,6 +78,18 @@ const STATEMENTS = [
   `ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "notes" TEXT`,
   `UPDATE "transactions" SET "occurredAt" = "createdAt" WHERE "occurredAt" IS NULL`,
   `CREATE INDEX IF NOT EXISTS "transactions_occurredAt_idx" ON "transactions"("occurredAt")`,
+  // fotos guardadas no próprio banco (vistoria de entrada e serviço)
+  `CREATE TABLE IF NOT EXISTS "photos" (
+    "id" TEXT NOT NULL,
+    "serviceOrderId" TEXT,
+    "kind" TEXT NOT NULL DEFAULT 'servico',
+    "mime" TEXT NOT NULL,
+    "size" INTEGER NOT NULL DEFAULT 0,
+    "data" BYTEA NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "photos_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "photos_serviceOrderId_idx" ON "photos"("serviceOrderId")`,
   `UPDATE "service_order_items" i SET "position" = sub.rn
    FROM (SELECT "id", ROW_NUMBER() OVER (PARTITION BY "serviceOrderId" ORDER BY "id") rn
          FROM "service_order_items") sub

@@ -2,7 +2,6 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { upload } from "@vercel/blob/client";
 import { Check, Camera, ChevronRight, Plus, Pencil, Trash2, ClipboardList } from "lucide-react";
 import { brl, osBadgeClass, type StatusOS, type Produto } from "../../oficina/_data/mock";
 import type { OsControle } from "@/lib/admin-data";
@@ -15,7 +14,7 @@ import {
   salvarFotos,
 } from "../../oficina/os-actions";
 import { salvarObservacoes } from "../actions";
-import { prepararFoto } from "@/lib/imagem";
+import { apagarFoto, enviarFoto } from "@/lib/imagem";
 
 const FLUXO: StatusOS[] = ["Aberta", "Aguardando aprovação", "Em execução", "Finalizada", "Entregue"];
 const CHECKLIST_TEC = [
@@ -73,19 +72,13 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
       const novas: string[] = [];
       for (const file of Array.from(files)) {
         // Reduz no celular antes de subir (e corrige a foto deitada).
-        const pronta = await prepararFoto(file);
-        const blob = await upload(`os/${os.id}/${Date.now()}-${pronta.nome}`, pronta.blob, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-          contentType: pronta.blob.type || "image/jpeg",
-        });
-        novas.push(blob.url);
+        novas.push(await enviarFoto(file, { osId: os.id, kind: "servico" }));
       }
       const todas = [...fotos, ...novas];
       setFotos(todas);
       run(() => salvarFotos(os.id, todas));
-    } catch {
-      setErroFoto("Não foi possível enviar. Configure o Vercel Blob (veja docs/INTEGRACOES.md).");
+    } catch (e) {
+      setErroFoto(e instanceof Error ? e.message : "Não foi possível enviar a foto.");
     } finally {
       setEnviando(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -95,6 +88,7 @@ export function MechanicOrder({ os, estoque }: { os: OsControle; estoque: Produt
   function removerFoto(url: string) {
     const todas = fotos.filter((f) => f !== url);
     setFotos(todas);
+    void apagarFoto(url);
     run(() => salvarFotos(os.id, todas));
   }
 

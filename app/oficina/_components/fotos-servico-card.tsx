@@ -42,7 +42,8 @@ export function FotosServicoCard({ osId, fotos: iniciais }: { osId: string; foto
       <FotoUpload
         fotos={fotos}
         onChange={trocar}
-        prefixo={`os/${osId}/servico`}
+        osId={osId}
+        kind="servico"
         max={20}
         vazio="Nenhuma foto do serviço ainda."
       />

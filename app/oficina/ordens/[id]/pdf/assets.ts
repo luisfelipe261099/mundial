@@ -1,6 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Font } from "@react-pdf/renderer";
+import { prisma } from "@/lib/prisma";
+
+// Fotos guardadas no próprio banco (ver app/api/fotos).
+const PREFIXO_LOCAL = "/api/fotos/";
 
 // Fontes da marca (Outfit = títulos, Work Sans = corpo). Arquivos TTF commitados
 // em assets/fonts/ e lidos por caminho de filesystem — sem fetch de rede.
@@ -44,12 +48,28 @@ export async function carregarFotos(urls: string[], limite = 8): Promise<string[
     return null; // webp/heic e afins o react-pdf não desenha
   };
 
+  const escolhidas = urls.slice(0, limite);
+
+  // As fotos guardadas no banco vêm direto de lá — buscar pela própria URL
+  // exigiria cookie de sessão e saber o endereço do site.
+  const ids = escolhidas
+    .filter((u) => u.startsWith(PREFIXO_LOCAL))
+    .map((u) => u.slice(PREFIXO_LOCAL.length));
+  const doBanco = ids.length
+    ? await prisma.photo.findMany({ where: { id: { in: ids } }, select: { id: true, data: true } })
+    : [];
+  const porId = new Map(doBanco.map((f) => [f.id, Buffer.from(f.data)]));
+
   const fotos = await Promise.all(
-    urls.slice(0, limite).map(async (url) => {
+    escolhidas.map(async (url) => {
       try {
-        const r = await fetch(url, { signal: AbortSignal.timeout(8000), cache: "no-store" });
-        if (!r.ok) return null;
-        const buf = Buffer.from(await r.arrayBuffer());
+        let buf = porId.get(url.slice(PREFIXO_LOCAL.length));
+        if (!url.startsWith(PREFIXO_LOCAL)) {
+          const r = await fetch(url, { signal: AbortSignal.timeout(8000), cache: "no-store" });
+          if (!r.ok) return null;
+          buf = Buffer.from(await r.arrayBuffer());
+        }
+        if (!buf) return null;
         const tipo = tipoReal(buf);
         if (!tipo) return null;
         return `data:${tipo};base64,${buf.toString("base64")}`;

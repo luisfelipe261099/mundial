@@ -42,8 +42,6 @@ export function EntradaForm({
   const [avarias, setAvarias] = useState("");
   const [objetos, setObjetos] = useState("");
   const [fotos, setFotos] = useState<string[]>([]);
-  // Pasta das fotos desta entrada — a OS ainda não existe quando a foto sobe.
-  const [pasta] = useState(() => `vistoria/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const [authorized, setAuthorized] = useState(false);
   const [criada, setCriada] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -242,7 +240,7 @@ export function EntradaForm({
           <FotoUpload
             fotos={fotos}
             onChange={setFotos}
-            prefixo={pasta}
+            kind="vistoria"
             vazio="Nenhuma foto ainda — pelo celular, 'Tirar foto' abre a câmera direto."
           />
         </div>

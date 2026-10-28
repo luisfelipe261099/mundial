@@ -2,25 +2,26 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { upload } from "@vercel/blob/client";
 import { Camera, ImagePlus, Loader2, Trash2 } from "lucide-react";
-import { prepararFoto } from "@/lib/imagem";
+import { apagarFoto, enviarFoto } from "@/lib/imagem";
 
 // Grade de fotos com envio pelo celular (câmera) ou pelo computador (arquivo).
-// Sobe cada foto pro Vercel Blob e devolve as URLs — quem chama decide onde
-// salvar (vistoria de entrada ou fotos do serviço).
+// Envia cada foto e devolve as URLs — quem chama decide onde salvar (vistoria
+// de entrada ou fotos do serviço).
 
 export function FotoUpload({
   fotos,
   onChange,
-  prefixo,
+  osId,
+  kind,
   max = 12,
   vazio = "Nenhuma foto ainda.",
   disabled = false,
 }: {
   fotos: string[];
   onChange: (fotos: string[]) => void;
-  prefixo: string;
+  osId?: string;
+  kind: "vistoria" | "servico";
   max?: number;
   vazio?: string;
   disabled?: boolean;
@@ -44,19 +45,11 @@ export function FotoUpload({
     const novas: string[] = [];
     try {
       for (const file of lista) {
-        const pronta = await prepararFoto(file);
-        const blob = await upload(`${prefixo}/${Date.now()}-${pronta.nome}`, pronta.blob, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-          contentType: pronta.blob.type || "image/jpeg",
-        });
-        novas.push(blob.url);
+        novas.push(await enviarFoto(file, { osId, kind }));
         setEnviando((n) => n - 1);
       }
-    } catch {
-      setErro(
-        "Não foi possível enviar a foto. O armazenamento de fotos ainda não está ligado (Vercel Blob)."
-      );
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível enviar a foto.");
     } finally {
       setEnviando(0);
       if (camRef.current) camRef.current.value = "";
@@ -134,7 +127,7 @@ export function FotoUpload({
               key={src}
               className="group relative aspect-square overflow-hidden rounded-lg border border-[var(--ad-line)]"
             >
-              <a href={src} target="_blank" rel="noreferrer">
+              <a href={src} target="_blank" rel="noreferrer" className="absolute inset-0">
                 <Image
                   src={src}
                   alt="Foto do veículo"
@@ -147,7 +140,10 @@ export function FotoUpload({
               {!disabled && (
                 <button
                   type="button"
-                  onClick={() => onChange(fotos.filter((f) => f !== src))}
+                  onClick={() => {
+                    onChange(fotos.filter((f) => f !== src));
+                    void apagarFoto(src);
+                  }}
                   aria-label="Remover foto"
                   className="absolute right-1 top-1 grid size-6 place-items-center rounded-md bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
                 >

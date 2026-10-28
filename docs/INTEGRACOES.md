@@ -56,7 +56,7 @@ O projeto não usa migrations. O schema é aplicado de duas formas:
 |---|---|---|
 | `DATABASE_URL` | Postgres (Retool/Neon) | [prisma.config.ts](../prisma.config.ts), [lib/prisma.ts](../lib/prisma.ts) |
 | `SESSION_SECRET` | Assina o cookie de sessão (HMAC) | [lib/auth.ts](../lib/auth.ts) |
-| `BLOB_READ_WRITE_TOKEN` | Upload de fotos (Vercel Blob) | [app/api/upload/route.ts](../app/api/upload/route.ts) |
+| `BLOB_READ_WRITE_TOKEN` | *(opcional)* manda as fotos novas pro Vercel Blob em vez do banco | [app/api/fotos/route.ts](../app/api/fotos/route.ts) |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push (chave pública, vai pro cliente) | [lib/push.ts](../lib/push.ts), [push-toggle.tsx](../app/app/perfil/push-toggle.tsx) |
 | `VAPID_PRIVATE_KEY` | Web Push (chave privada, servidor) | [lib/push.ts](../lib/push.ts) |
 | `CRON_SECRET` | Protege o cron de lembretes | [app/api/cron/reminders/route.ts](../app/api/cron/reminders/route.ts) |
@@ -66,7 +66,7 @@ em todos os ambientes, senão as sessões existentes caem no próximo deploy.
 
 ---
 
-## 1. Fotos das OS — Vercel Blob  ✅ código pronto
+## 1. Fotos das OS  ✅ funcionando, sem configurar nada
 
 São dois conjuntos de fotos, nos dois pontos em que elas importam:
 
@@ -79,28 +79,34 @@ São dois conjuntos de fotos, nos dois pontos em que elas importam:
   pelo mecânico ou pelo balcão, guardadas em `ServiceOrder.photos`, visíveis pro
   cliente no app (junto com as da entrada, marcadas "Antes").
 
-Antes de subir, a foto é reduzida pra 1600px no próprio celular e a rotação do
-EXIF é aplicada ([lib/imagem.ts](../lib/imagem.ts)) — upload rápido no 4G e
-nenhuma foto deitada.
+Antes de subir, a foto é reduzida pra 1400px no próprio celular (~200 KB) e a
+rotação do EXIF é aplicada ([lib/imagem.ts](../lib/imagem.ts)) — upload rápido
+no 4G e nenhuma foto deitada.
 
-**Falta só criar o store e o token:**
+### Onde a foto fica guardada
 
-1. Vercel → **Storage → Create → Blob**.
-2. Conecte ao projeto. A Vercel injeta `BLOB_READ_WRITE_TOKEN` automaticamente
-   nos deploys.
-3. Para rodar **local**, copie o token (Storage → seu store → `.env.local`) para
-   o seu `.env`:
-   ```
-   BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxx
-   ```
-4. Redeploy. Pronto — **Tirar foto** e **Da galeria** passam a subir de verdade.
+O envio passa por [app/api/fotos](../app/api/fotos/route.ts), que escolhe sozinho:
 
-Enquanto não existir o token, o upload falha com uma mensagem amigável (não quebra
-a tela) — o checklist, as avarias e os objetos continuam sendo salvos normalmente.
-Encaixe no código: [app/api/upload/route.ts](../app/api/upload/route.ts)
-(gera o token, só equipe pode subir), o componente
-[foto-upload.tsx](../app/oficina/_components/foto-upload.tsx) e as actions
-`salvarVistoria` / `salvarFotos` em [os-actions.ts](../app/oficina/os-actions.ts).
+- **Sem configuração nenhuma** (é o caso hoje): a foto vai pro **próprio Postgres**,
+  na tabela `photos`, e é servida por `GET /api/fotos/<id>` — só com sessão aberta,
+  então foto de carro de cliente não fica solta na internet. É o padrão porque o
+  Blob depende de um store criado à mão no painel, e sem ele a foto simplesmente
+  não subia.
+- **Com `BLOB_READ_WRITE_TOKEN` no ambiente**: as fotos **novas** vão pro Vercel
+  Blob e não ocupam banco. As antigas continuam saindo de `/api/fotos/<id>`. Não
+  precisa mexer em código — só criar o store (Vercel → Storage → Create → Blob),
+  conectar ao projeto e redeploy.
+
+Apagar a foto na tela apaga a linha do banco (`DELETE /api/fotos/<id>`), e excluir
+a OS leva junto as fotos dela. Conta de guardanapo: ~200 KB por foto, ou seja
+**1 GB ≈ 5 mil fotos**. Se um dia pesar, criar o store do Blob tira as novas do
+banco sem mudar nada.
+
+Encaixe no código: [app/api/fotos](../app/api/fotos/route.ts) (envio),
+[app/api/fotos/[id]](../app/api/fotos/[id]/route.ts) (entrega e exclusão),
+o componente [foto-upload.tsx](../app/oficina/_components/foto-upload.tsx) e as
+actions `salvarVistoria` / `salvarFotos` em
+[os-actions.ts](../app/oficina/os-actions.ts).
 
 ---
 
@@ -187,7 +193,7 @@ notificações continuam aparecendo dentro do app.
 
 - [ ] `DATABASE_URL` (produção) na Vercel
 - [ ] `SESSION_SECRET` forte e igual em todos os ambientes
-- [ ] `BLOB_READ_WRITE_TOKEN` (após criar o Blob store) — habilita as fotos
+- [ ] (opcional) `BLOB_READ_WRITE_TOKEN` — tira as fotos novas do banco; sem ele as fotos funcionam igual
 - [ ] `NEXT_PUBLIC_VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` — habilita o push
 - [ ] `CRON_SECRET` — protege o cron de lembretes
 - [ ] (opcional) `MP_ACCESS_TOKEN`, `WHATSAPP_*`/`TWILIO_*`, `NEXT_PUBLIC_MAPS_API_KEY`
