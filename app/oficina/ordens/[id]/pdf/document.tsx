@@ -31,7 +31,7 @@ const s = StyleSheet.create({
     fontSize: 9,
     color: C.ink,
     backgroundColor: C.paper,
-    paddingBottom: 56,
+    paddingBottom: 46,
     lineHeight: 1.4,
   },
 
@@ -42,7 +42,7 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     paddingHorizontal: 40,
-    paddingTop: 22,
+    paddingTop: 18,
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   logo: { width: 46, height: 46, borderRadius: 8 },
@@ -92,13 +92,16 @@ const s = StyleSheet.create({
     textTransform: "uppercase",
     marginBottom: 5,
   },
-  cardTitle: { fontFamily: "Outfit", fontWeight: 600, fontSize: 11, color: C.ink },
+  // Nome de gente e de carro vai em Work Sans, não em Outfit: com a Outfit o
+  // react-pdf come a primeira letra em alguns pares ("Rafael" vira "afael",
+  // "Carlos" vira "arlos"). A Outfit segue nos títulos e números fixos.
+  cardTitle: { fontFamily: "Work Sans", fontWeight: 600, fontSize: 11, color: C.ink },
   metaRow: { flexDirection: "row", marginTop: 3 },
   metaKey: { fontSize: 8, color: C.muted, width: 68 },
   metaVal: { fontSize: 8, color: C.ink, flex: 1 },
 
   // Blocos de texto
-  block: { marginTop: 14 },
+  block: { marginTop: 12 },
   blockLabel: {
     fontFamily: "Outfit",
     fontWeight: 600,
@@ -159,16 +162,16 @@ const s = StyleSheet.create({
   // Vistoria de entrada
   vistoriaGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 2 },
   vistoriaItem: {
-    width: "50%",
+    width: "33.333%",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 2.5,
-    paddingRight: 14,
+    paddingVertical: 2,
+    paddingRight: 12,
     borderBottomWidth: 1,
     borderBottomColor: C.line,
   },
-  vistoriaNome: { fontSize: 8.5, color: C.ink },
-  vistoriaStatus: { fontFamily: "Outfit", fontWeight: 600, fontSize: 8 },
+  vistoriaNome: { fontSize: 8, color: C.ink },
+  vistoriaStatus: { fontFamily: "Outfit", fontWeight: 600, fontSize: 7.5 },
   fotosGrid: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
   foto: {
     width: 118,
@@ -180,10 +183,10 @@ const s = StyleSheet.create({
   },
 
   // Assinaturas
-  signRow: { flexDirection: "row", gap: 40, marginTop: 40 },
+  signRow: { flexDirection: "row", gap: 40, marginTop: 18 },
   signCol: { flex: 1, alignItems: "center" },
   signLine: { width: "100%", borderTopWidth: 1, borderTopColor: C.ink, marginBottom: 4 },
-  signName: { fontFamily: "Outfit", fontWeight: 600, fontSize: 9, color: C.ink },
+  signName: { fontFamily: "Work Sans", fontWeight: 600, fontSize: 9, color: C.ink },
   signRole: { fontSize: 7.5, color: C.muted, marginTop: 1 },
 
   // Rodapé fixo

@@ -65,6 +65,8 @@ export function OrderControl({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // Só oferece o PDF enxuto quando há foto pra deixar de fora.
+  const temFotosVistoria = (os.inspection?.fotos.length ?? 0) > 0;
   // Rascunhos separados: peça e serviço têm cada um a sua linha de adição —
   // acabou o seletor de tipo que exigia um clique a mais a cada item.
   const [draftPeca, setDraftPeca] = useState({ descricao: "", qtd: 1, valor: 0, productId: "" });
@@ -867,6 +869,16 @@ export function OrderControl({
           <FileDown className="size-4 adm-brand" />
           Gerar PDF
         </a>
+        {temFotosVistoria && (
+          <a
+            href={`/oficina/ordens/${encodeURIComponent(os.id)}/pdf?fotos=0`}
+            title="Mesmo PDF, sem as fotos — costuma caber em uma folha só"
+            className="flex items-center gap-2 rounded-lg border border-[var(--ad-line)] px-4 py-2.5 text-sm font-semibold adm-muted hover:bg-[var(--ad-surface-2)] hover:adm-ink"
+          >
+            <FileDown className="size-4" />
+            PDF sem fotos
+          </a>
+        )}
       </div>
 
       {/* Excluir OS */}

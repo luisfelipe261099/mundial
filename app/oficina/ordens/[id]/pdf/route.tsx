@@ -16,7 +16,7 @@ function slug(v: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await requireAdmin(); // Route Handlers não herdam o layout — protege explicitamente.
   const { id } = await params;
   const os = await getOrdemParaPdf(id);
@@ -29,7 +29,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     timeStyle: "short",
   });
 
-  const fotos = await carregarFotos(os.vistoria?.fotos ?? []);
+  // ?fotos=0 imprime sem as fotos — economiza folha e tinta no dia a dia.
+  const comFotos = new URL(req.url).searchParams.get("fotos") !== "0";
+  const fotos = comFotos ? await carregarFotos(os.vistoria?.fotos ?? []) : [];
 
   const pdf = await renderToBuffer(
     <ServiceOrderPDF os={os} logo={getLogoDataUri()} geradoEm={geradoEm} fotos={fotos} />
