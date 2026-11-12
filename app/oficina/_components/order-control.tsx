@@ -33,6 +33,7 @@ import {
   editarOS,
   excluirOS,
   salvarObservacoesOS,
+  salvarDesconto,
   enviarParaAprovacao,
   entregarOS,
   atribuirMecanico,
@@ -131,6 +132,32 @@ export function OrderControl({
   const totalServicos = os.itens
     .filter((i) => i.tipo === "Serviço")
     .reduce((s, i) => s + i.valor * i.qtd, 0);
+  const totalPecas = os.itens
+    .filter((i) => i.tipo === "Peça")
+    .reduce((s, i) => s + i.valor * i.qtd, 0);
+  const subtotal = totalPecas + totalServicos;
+
+  // Desconto: o balcão digita em reais ou em %, mas o que fica guardado é
+  // sempre o valor em reais já fechado.
+  const [descModo, setDescModo] = useState<"R$" | "%">("R$");
+  const [descInput, setDescInput] = useState(os.desconto > 0 ? String(os.desconto) : "");
+  const [erroDesconto, setErroDesconto] = useState<string | null>(null);
+  const descDigitado = Number(descInput.replace(",", ".")) || 0;
+  // Sem cortar no teto aqui de propósito: um "12000" digitado no lugar de
+  // "120" tem que dar recusa com aviso, não zerar a OS caladamente.
+  const descontoEmReais = Math.max(
+    Math.round(descModo === "%" ? (subtotal * descDigitado) / 100 : descDigitado),
+    0
+  );
+
+  function aplicarDesconto() {
+    setErroDesconto(null);
+    startTransition(async () => {
+      const r = await salvarDesconto(os.id, descontoEmReais);
+      if (r?.error) setErroDesconto(r.error);
+      else router.refresh();
+    });
+  }
 
   function emitirNota() {
     setErroNota(null);
@@ -686,13 +713,67 @@ export function OrderControl({
         <div className="space-y-1 border-t border-[var(--ad-line)] px-5 py-3.5">
           <div className="flex items-center justify-between text-xs adm-muted">
             <span>Peças</span>
-            <span>{brl(os.itens.filter((i) => i.tipo === "Peça").reduce((t, i) => t + i.valor * i.qtd, 0))}</span>
+            <span>{brl(totalPecas)}</span>
           </div>
           <div className="flex items-center justify-between text-xs adm-muted">
             <span>Serviços (mão de obra)</span>
             <span>{brl(totalServicos)}</span>
           </div>
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center justify-between border-t border-[var(--ad-line)] pt-1.5 text-xs adm-muted">
+            <span>Subtotal</span>
+            <span>{brl(subtotal)}</span>
+          </div>
+
+          {/* Desconto fechado com o cliente — sai do total e vai assim pro
+              orçamento, pro PDF e pro financeiro. */}
+          <div className="flex flex-wrap items-center justify-between gap-2 py-1">
+            <span className="text-xs adm-muted">Desconto</span>
+            <div className="flex items-center gap-1.5">
+              {erroDesconto && (
+                <span className="text-xs text-rose-400">{erroDesconto}</span>
+              )}
+              <div className="flex overflow-hidden rounded-lg border border-[var(--ad-line)]">
+                {(["R$", "%"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setDescModo(m)}
+                    className={`px-2.5 py-1.5 text-xs font-semibold transition-colors ${
+                      descModo === m ? "bg-[var(--ad-brand)] text-white" : "adm-muted hover:adm-ink"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={descInput}
+                onChange={(e) => {
+                  setDescInput(e.target.value);
+                  setErroDesconto(null);
+                }}
+                placeholder="0"
+                aria-label="Valor do desconto"
+                className="w-24 rounded-lg border border-[var(--ad-line)] bg-[var(--ad-surface-2)] px-2.5 py-1.5 text-right text-sm adm-ink outline-none focus:border-[var(--ad-brand)]"
+              />
+              <button
+                type="button"
+                disabled={pending || descontoEmReais === (os.desconto ?? 0)}
+                onClick={aplicarDesconto}
+                className="rounded-lg bg-[var(--ad-brand)] px-3 py-1.5 text-xs font-semibold text-white enabled:hover:bg-[#1b5fe0] disabled:opacity-40"
+              >
+                Aplicar
+              </button>
+              <span className="w-24 text-right text-sm font-semibold text-emerald-400">
+                {os.desconto > 0 ? `- ${brl(os.desconto)}` : "—"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-[var(--ad-line)] pt-1.5">
             <span className="text-sm adm-muted">Total da OS</span>
             <span className="adm-display text-xl font-bold adm-ink">{brl(os.total)}</span>
           </div>

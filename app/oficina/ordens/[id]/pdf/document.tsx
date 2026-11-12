@@ -147,6 +147,19 @@ const s = StyleSheet.create({
 
   // Total
   totalRow: { flexDirection: "row", justifyContent: "flex-end", marginTop: 12 },
+  // Subtotal e desconto ficam AO LADO da caixa do total, não acima: assim o
+  // resumo não acrescenta altura nenhuma e a OS continua cabendo numa folha.
+  resumoLado: { justifyContent: "center", marginRight: 16 },
+  resumoLinha: { flexDirection: "row", alignItems: "center", paddingVertical: 1 },
+  resumoChave: { fontSize: 8, color: C.muted, textAlign: "right", width: 54 },
+  resumoValor: {
+    fontFamily: "Work Sans",
+    fontWeight: 600,
+    fontSize: 9,
+    color: C.ink,
+    textAlign: "right",
+    width: 76,
+  },
   totalBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -236,6 +249,7 @@ export function ServiceOrderPDF({
 }) {
   const status = STATUS[os.status] ?? { bg: C.brandSoft, fg: C.brandDark };
   const site = siteUrl.replace(/^https?:\/\//, "");
+  const desconto = os.desconto ?? 0;
   const v = os.vistoria;
   const temVistoria = !!v && (v.checklist.length > 0 || !!v.avarias || !!v.objetos);
 
@@ -333,6 +347,19 @@ export function ServiceOrderPDF({
 
           {/* Total */}
           <View style={s.totalRow}>
+            {/* Com desconto, o cliente precisa ver a conta fechada. */}
+            {desconto > 0 && (
+              <View style={s.resumoLado}>
+                <View style={s.resumoLinha}>
+                  <Text style={s.resumoChave}>Subtotal</Text>
+                  <Text style={s.resumoValor}>{brl(os.total + desconto)}</Text>
+                </View>
+                <View style={s.resumoLinha}>
+                  <Text style={s.resumoChave}>Desconto</Text>
+                  <Text style={[s.resumoValor, { color: "#15803d" }]}>- {brl(desconto)}</Text>
+                </View>
+              </View>
+            )}
             <View style={s.totalBox}>
               <Text style={s.totalLabel}>TOTAL</Text>
               <Text style={s.totalValue}>{brl(os.total)}</Text>

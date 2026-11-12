@@ -49,7 +49,7 @@ export const fluxoDoCarro: EtapaFluxo[] = [
     quem: "admin",
     onde: "Painel · Ordens de Serviço → abrir a OS",
     texto:
-      "Adicione as peças e os serviços com seus valores. Dica importante: ao adicionar uma peça, vincule-a a um produto do Estoque — é esse vínculo que faz a baixa automática acontecer lá na frente. Com o orçamento pronto, clique em \"Enviar para aprovação\": o cliente recebe na hora, no app.",
+      "Adicione as peças e os serviços com seus valores. Dica importante: ao adicionar uma peça, vincule-a a um produto do Estoque — é esse vínculo que faz a baixa automática acontecer lá na frente. Embaixo da lista fica o desconto: digite em reais ou em porcentagem e clique em Aplicar — o total da OS já sai com ele descontado, e é esse valor que vai pro orçamento do cliente, pro PDF e pro financeiro. Com o orçamento pronto, clique em \"Enviar para aprovação\": o cliente recebe na hora, no app.",
     status: "Aguardando aprovação",
   },
   {

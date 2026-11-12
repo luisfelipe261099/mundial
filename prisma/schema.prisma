@@ -79,7 +79,8 @@ model ServiceOrder {
   mechanicId   String? // mecânico atribuído (User.id)
   techChecklist Json? // vistoria técnica do mecânico durante a execução
   category     String?
-  total        Int                @default(0)
+  discount     Int                @default(0) // desconto em reais fechado com o cliente
+  total        Int                @default(0) // já com o desconto descontado
   observations String?
   warranty     String?
   responsible  String?

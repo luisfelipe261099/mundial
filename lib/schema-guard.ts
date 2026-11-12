@@ -78,6 +78,8 @@ const STATEMENTS = [
   `ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "notes" TEXT`,
   `UPDATE "transactions" SET "occurredAt" = "createdAt" WHERE "occurredAt" IS NULL`,
   `CREATE INDEX IF NOT EXISTS "transactions_occurredAt_idx" ON "transactions"("occurredAt")`,
+  // desconto fechado com o cliente na OS (o total já sai com ele descontado)
+  `ALTER TABLE "service_orders" ADD COLUMN IF NOT EXISTS "discount" INTEGER NOT NULL DEFAULT 0`,
   // fotos guardadas no próprio banco (vistoria de entrada e serviço)
   `CREATE TABLE IF NOT EXISTS "photos" (
     "id" TEXT NOT NULL,

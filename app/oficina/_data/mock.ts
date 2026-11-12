@@ -103,6 +103,8 @@ export interface OrdemServicoAdmin {
   status: StatusOS;
   mecanico: string;
   itens: ItemOS[];
+  /** Desconto em reais fechado com o cliente (o total já vem com ele aplicado). */
+  desconto?: number;
   total: number;
   observacoes: string;
 }

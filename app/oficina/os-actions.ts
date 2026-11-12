@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { requireAdmin, requireStaff } from "@/lib/auth";
 import { criarComNumeroOS } from "@/lib/numeracao";
+import { brl } from "./_data/mock";
 
 // Data e hora no fuso da oficina — o servidor da Vercel roda em UTC, então sem
 // o timeZone a data virava "amanhã" a partir das 21h de Curitiba.
@@ -30,10 +31,55 @@ async function notificar(clientId: string | null, type: string, title: string, t
   revalidatePath("/app/notificacoes");
 }
 
-async function recomputeTotal(osId: string) {
+// Soma dos itens, antes do desconto.
+async function somaItens(osId: string) {
   const items = await prisma.serviceOrderItem.findMany({ where: { serviceOrderId: osId } });
-  const total = items.reduce((s, i) => s + i.value * i.qty, 0);
-  await prisma.serviceOrder.update({ where: { id: osId }, data: { total } });
+  return items.reduce((s, i) => s + i.value * i.qty, 0);
+}
+
+// O desconto nunca pode passar do subtotal nem ser negativo — total negativo
+// entraria como receita errada no financeiro.
+function descontoValido(desconto: number, subtotal: number) {
+  if (!Number.isFinite(desconto)) return 0;
+  return Math.min(Math.max(Math.round(desconto), 0), subtotal);
+}
+
+// `total` é sempre o valor final: soma dos itens menos o desconto. Recalcula a
+// cada mudança de item, porque o desconto antigo pode ter ficado maior que a
+// nova soma (item apagado, por exemplo).
+async function recomputeTotal(osId: string) {
+  const os = await prisma.serviceOrder.findUnique({
+    where: { id: osId },
+    select: { discount: true },
+  });
+  const subtotal = await somaItens(osId);
+  const discount = descontoValido(os?.discount ?? 0, subtotal);
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: { discount, total: subtotal - discount },
+  });
+}
+
+// Desconto fechado com o cliente. Só admin: mexe em dinheiro.
+export async function salvarDesconto(osId: string, desconto: number): Promise<{ error?: string }> {
+  await requireAdmin();
+  const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, select: { id: true } });
+  if (!os) return { error: "OS não encontrada." };
+
+  const subtotal = await somaItens(osId);
+  const valor = descontoValido(desconto, subtotal);
+  if (desconto > subtotal) {
+    return { error: `O desconto não pode passar do valor da OS (${brl(subtotal)}).` };
+  }
+
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: { discount: valor, total: subtotal - valor },
+  });
+  revalidatePath(`/oficina/ordens/${osId}`);
+  revalidatePath("/oficina/ordens");
+  revalidatePath("/oficina");
+  return {};
 }
 
 export interface EntradaInput {
@@ -356,7 +402,9 @@ export async function enviarParaAprovacao(osId: string) {
   await requireAdmin();
   const os = await prisma.serviceOrder.findUnique({ where: { id: osId }, include: { items: { orderBy: [{ position: "asc" }, { id: "asc" }] } } });
   if (!os) return;
-  const total = os.items.reduce((s, i) => s + i.value * i.qty, 0);
+  const subtotal = os.items.reduce((s, i) => s + i.value * i.qty, 0);
+  const desconto = descontoValido(os.discount, subtotal);
+  const total = subtotal - desconto;
   const itensBudget = os.items.map((i) => ({
     kind: i.type === "Peça" ? "peca" : "servico",
     description: i.description,
@@ -369,7 +417,14 @@ export async function enviarParaAprovacao(osId: string) {
     await prisma.budgetItem.deleteMany({ where: { budgetId: existing.id } });
     await prisma.budget.update({
       where: { id: existing.id },
-      data: { status: "pendente", subtotal: total, total, date: hoje(), items: { create: itensBudget } },
+      data: {
+        status: "pendente",
+        subtotal,
+        discount: desconto,
+        total,
+        date: hoje(),
+        items: { create: itensBudget },
+      },
     });
   } else {
     const dados = {
@@ -377,8 +432,8 @@ export async function enviarParaAprovacao(osId: string) {
       vehicleName: os.vehicleName,
       date: hoje(),
       status: "pendente",
-      subtotal: total,
-      discount: 0,
+      subtotal,
+      discount: desconto,
       total,
       serviceOrderId: osId,
       items: { create: itensBudget },
@@ -397,7 +452,10 @@ export async function enviarParaAprovacao(osId: string) {
     }
   }
 
-  await prisma.serviceOrder.update({ where: { id: osId }, data: { status: "Aguardando aprovação", total } });
+  await prisma.serviceOrder.update({
+    where: { id: osId },
+    data: { status: "Aguardando aprovação", discount: desconto, total },
+  });
   await notificar(os.clientId, "revisao", "Orçamento pronto", `Seu orçamento da ${osId} está pronto. Toque para aprovar ou rejeitar.`);
   revalidatePath(`/oficina/ordens/${osId}`);
   revalidatePath("/oficina/ordens");

@@ -83,6 +83,9 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
     (o.itens ?? []).reduce((s, i) => s + (i.tipo === tipo ? i.valor * i.qtd : 0), 0);
   const totalPecas = lista.reduce((s, o) => s + somaPorTipo(o, "Peça"), 0);
   const totalServicos = lista.reduce((s, o) => s + somaPorTipo(o, "Serviço"), 0);
+  // Sem isto a conta não fecha na tela: peças + mão de obra fica maior que o
+  // faturamento justamente o tanto que foi dado de desconto.
+  const totalDescontos = lista.reduce((s, o) => s + (o.desconto ?? 0), 0);
 
   // Resumo do que está filtrado, em texto, para o cabeçalho da impressão.
   const descricaoFiltros = [
@@ -218,6 +221,14 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
               <p className="text-xs adm-muted">Mão de obra</p>
               <p className="adm-display text-xl font-bold adm-ink">{brl(totalServicos)}</p>
             </div>
+            {totalDescontos > 0 && (
+              <div>
+                <p className="text-xs adm-muted">Descontos</p>
+                <p className="adm-display text-xl font-bold text-emerald-400">
+                  - {brl(totalDescontos)}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-xs adm-muted">Recebido (pagas)</p>
               <p className="adm-display text-xl font-bold text-emerald-400">{brl(recebido)}</p>
@@ -316,6 +327,12 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
             <tr>
               <th>Em aberto</th>
               <td>{brl(faturamento - recebido)}</td>
+              <th>Descontos</th>
+              <td>{totalDescontos > 0 ? `- ${brl(totalDescontos)}` : brl(0)}</td>
+            </tr>
+            <tr>
+              <th />
+              <td />
               <th>Faturamento total</th>
               <td className="destaque">{brl(faturamento)}</td>
             </tr>
@@ -332,6 +349,7 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
               <th>Status</th>
               <th className="num">Peças</th>
               <th className="num">Mão de obra</th>
+              {totalDescontos > 0 && <th className="num">Desconto</th>}
               <th className="num">Total</th>
             </tr>
           </thead>
@@ -347,6 +365,9 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
                 <td>{o.status}</td>
                 <td className="num">{brl(somaPorTipo(o, "Peça"))}</td>
                 <td className="num">{brl(somaPorTipo(o, "Serviço"))}</td>
+                {totalDescontos > 0 && (
+                  <td className="num">{(o.desconto ?? 0) > 0 ? `- ${brl(o.desconto ?? 0)}` : "—"}</td>
+                )}
                 <td className="num">{brl(o.total)}</td>
               </tr>
             ))}
@@ -356,6 +377,7 @@ export function OrdersTable({ ordens }: { ordens: OrdemServicoAdmin[] }) {
               <td colSpan={5}>Total — {lista.length} ordens</td>
               <td className="num">{brl(totalPecas)}</td>
               <td className="num">{brl(totalServicos)}</td>
+              {totalDescontos > 0 && <td className="num">- {brl(totalDescontos)}</td>}
               <td className="num">{brl(faturamento)}</td>
             </tr>
           </tfoot>

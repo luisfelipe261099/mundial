@@ -64,6 +64,7 @@ function mapOrdem(o: {
   defect: string | null;
   status: string;
   mechanic: string | null;
+  discount?: number;
   total: number;
   observations: string | null;
   paid?: boolean;
@@ -87,6 +88,7 @@ function mapOrdem(o: {
     status: o.status as OrdemServicoAdmin["status"],
     mecanico: o.mechanic ?? "—",
     itens: (o.items ?? []).map((i) => ({ tipo: i.type as "Peça" | "Serviço", descricao: i.description, qtd: i.qty, valor: i.value })),
+    desconto: o.discount ?? 0,
     total: o.total,
     observacoes: o.observations ?? "—",
   };
@@ -339,6 +341,7 @@ export async function getOrdemControle(id: string) {
     defeito: o.defect ?? "—",
     status: o.status,
     mecanico: o.mechanic ?? "—",
+    desconto: o.discount,
     total: o.total,
     observacoes: o.observations ?? "",
     authorized: o.authorized,
