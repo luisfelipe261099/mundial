@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, Trash2, Check, ClipboardList } from "lucide-react";
 import { brl } from "../_data/mock";
 import { criarOS } from "../actions";
+import { BuscaSelect } from "./busca-select";
 
 interface ClienteOpt {
   id: string;
@@ -126,22 +127,28 @@ export function NewOrderForm({
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelCls}>Cliente</label>
-            <select value={clienteId} onChange={(e) => { setClienteId(e.target.value); setVeiculoId(""); }} className={inputCls}>
-              <option value="">Selecione…</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>{c.nome}</option>
-              ))}
-            </select>
+            <label className={labelCls} htmlFor="nova-cliente">Cliente</label>
+            <BuscaSelect
+              id="nova-cliente"
+              opcoes={clientes.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+              valor={clienteId}
+              onChange={(v) => {
+                setClienteId(v);
+                setVeiculoId("");
+              }}
+              placeholder="Digite o nome do cliente…"
+            />
           </div>
           <div>
-            <label className={labelCls}>Veículo</label>
-            <select value={veiculoId} onChange={(e) => setVeiculoId(e.target.value)} className={inputCls}>
-              <option value="">Selecione…</option>
-              {veiculosDoCliente.map((v) => (
-                <option key={v.id} value={v.id}>{v.modelo} · {v.placa}</option>
-              ))}
-            </select>
+            <label className={labelCls} htmlFor="nova-veiculo">Veículo</label>
+            <BuscaSelect
+              id="nova-veiculo"
+              opcoes={veiculosDoCliente.map((v) => ({ valor: v.id, rotulo: v.modelo, detalhe: v.placa }))}
+              valor={veiculoId}
+              onChange={setVeiculoId}
+              placeholder="Digite o modelo ou a placa…"
+              vazio="Nenhum veículo com esse modelo ou placa."
+            />
           </div>
           <div>
             <label className={labelCls}>Data de entrada</label>

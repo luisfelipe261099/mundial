@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Check, ClipboardList, ClipboardCheck, ArrowRight, Camera } from "lucide-react";
 import { darEntrada } from "../os-actions";
 import { FotoUpload } from "./foto-upload";
+import { BuscaSelect } from "./busca-select";
 import { CHECKLIST_ITENS, VISTORIA_STATUS } from "../_data/vistoria";
 
 interface ClienteOpt {
@@ -115,33 +116,28 @@ export function EntradaForm({
         <h2 className="adm-display mb-4 font-bold adm-ink">Veículo & recepção</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelCls}>Cliente</label>
-            <select
-              value={clienteId}
-              onChange={(e) => {
-                setClienteId(e.target.value);
+            <label className={labelCls} htmlFor="entrada-cliente">Cliente</label>
+            <BuscaSelect
+              id="entrada-cliente"
+              opcoes={clientes.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+              valor={clienteId}
+              onChange={(v) => {
+                setClienteId(v);
                 setVeiculoId("");
               }}
-              className={inputCls}
-            >
-              <option value="">Selecione…</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
+              placeholder="Digite o nome do cliente…"
+            />
           </div>
           <div>
-            <label className={labelCls}>Veículo</label>
-            <select value={veiculoId} onChange={(e) => setVeiculoId(e.target.value)} className={inputCls}>
-              <option value="">Selecione…</option>
-              {veiculosDoCliente.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.modelo} · {v.placa}
-                </option>
-              ))}
-            </select>
+            <label className={labelCls} htmlFor="entrada-veiculo">Veículo</label>
+            <BuscaSelect
+              id="entrada-veiculo"
+              opcoes={veiculosDoCliente.map((v) => ({ valor: v.id, rotulo: v.modelo, detalhe: v.placa }))}
+              valor={veiculoId}
+              onChange={setVeiculoId}
+              placeholder="Digite o modelo ou a placa…"
+              vazio="Nenhum veículo com esse modelo ou placa."
+            />
           </div>
           <div>
             <label className={labelCls}>Km de entrada</label>

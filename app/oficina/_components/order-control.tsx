@@ -19,6 +19,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { brl, osBadgeClass, type StatusOS, type Produto } from "../_data/mock";
+import { BuscaSelect } from "./busca-select";
 import { VistoriaCard } from "./vistoria-card";
 import { FotosServicoCard } from "./fotos-servico-card";
 import type { OsControle } from "@/lib/admin-data";
@@ -486,31 +487,26 @@ export function OrderControl({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className={labelCls} htmlFor="os-cliente">Cliente</label>
-              <select
+              <BuscaSelect
                 id="os-cliente"
-                className={inputCls}
-                value={fichaOS.clienteId}
-                onChange={(e) => setFichaOS((f) => ({ ...f, clienteId: e.target.value }))}
-              >
-                <option value="">Sem cliente vinculado</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nome}</option>
-                ))}
-              </select>
+                opcoes={clientes.map((c) => ({ valor: c.id, rotulo: c.nome }))}
+                valor={fichaOS.clienteId}
+                onChange={(v) => setFichaOS((f) => ({ ...f, clienteId: v }))}
+                placeholder="Digite o nome do cliente…"
+                nenhum="Sem cliente vinculado"
+              />
             </div>
             <div>
               <label className={labelCls} htmlFor="os-veiculo">Veículo</label>
-              <select
+              <BuscaSelect
                 id="os-veiculo"
-                className={inputCls}
-                value={fichaOS.veiculoId}
-                onChange={(e) => setFichaOS((f) => ({ ...f, veiculoId: e.target.value }))}
-              >
-                <option value="">Sem veículo vinculado</option>
-                {veiculos.map((v) => (
-                  <option key={v.id} value={v.id}>{v.modelo} · {v.placa}</option>
-                ))}
-              </select>
+                opcoes={veiculos.map((v) => ({ valor: v.id, rotulo: v.modelo, detalhe: v.placa }))}
+                valor={fichaOS.veiculoId}
+                onChange={(v) => setFichaOS((f) => ({ ...f, veiculoId: v }))}
+                placeholder="Digite o modelo ou a placa…"
+                nenhum="Sem veículo vinculado"
+                vazio="Nenhum veículo com esse modelo ou placa."
+              />
             </div>
             <div>
               <label className={labelCls} htmlFor="os-data">Data de entrada</label>
